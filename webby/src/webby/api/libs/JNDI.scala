@@ -1,0 +1,41 @@
+package webby.api.libs
+
+import javax.naming.Context._
+import javax.naming._
+
+import webby.api._
+
+/**
+ * JNDI Helpers.
+ */
+object JNDI {
+
+  private val IN_MEMORY_JNDI = "tyrex.naming.MemoryContextFactory"
+  private val IN_MEMORY_URL = "/"
+
+  /**
+   * An in memory JNDI implementation.
+   */
+  lazy val initialContext = {
+
+    val env = new java.util.Hashtable[String, String]
+
+    env.put(INITIAL_CONTEXT_FACTORY, {
+      App.maybeApp.flatMap(_.configuration.getString(INITIAL_CONTEXT_FACTORY)).getOrElse {
+        System.setProperty(INITIAL_CONTEXT_FACTORY, IN_MEMORY_JNDI)
+        IN_MEMORY_JNDI
+      }
+    })
+
+    env.put(PROVIDER_URL, {
+      App.maybeApp.flatMap(_.configuration.getString(PROVIDER_URL)).getOrElse {
+        System.setProperty(PROVIDER_URL, IN_MEMORY_URL)
+        IN_MEMORY_URL
+      }
+    })
+
+    new InitialContext(env)
+
+  }
+
+}
