@@ -40,6 +40,8 @@ import javax.annotation.Nullable
 trait StdHostProfile
 
 abstract class HostProfileObject[HP <: StdHostProfile] {
+  HostProfileFacade.setDelegate(this)
+
   /**
     * Профайл, заданный при старте приложения. Задаётся только в продакшне.
     * На локальной версии всегда null.
@@ -80,14 +82,19 @@ class HostProfileObjectStub extends HostProfileObject[StdHostProfile] {
 
 
 object HostProfileFacade {
-  private[api] var _delegate: HostProfileObject[StdHostProfile] = _
+  private var _delegate: HostProfileObject[_ <: StdHostProfile] = _
 
-  def delegate: HostProfileObject[StdHostProfile] = {
+  private[api] def setDelegate(delegate: HostProfileObject[_ <: StdHostProfile]): Unit = {
+    require(_delegate == null, "Delegate already set")
+    _delegate = delegate
+  }
+
+  def delegate: HostProfileObject[_ <: StdHostProfile] = {
     if (_delegate == null) _delegate = new HostProfileObjectStub
     _delegate
   }
 
   @Nullable def get: StdHostProfile = delegate.get
-  def localSet(profile: StdHostProfile): Unit = delegate.localSet(profile)
+  def localSet(profile: StdHostProfile): Unit = delegate.asInstanceOf[HostProfileObject[StdHostProfile]].localSet(profile)
   def localRemove(): Unit = delegate.localRemove()
 }

@@ -3,7 +3,7 @@ package webby.route.v2
 import javax.annotation.Nullable
 
 import io.netty.handler.codec.http.HttpMethod
-import webby.commons.net.{CommonUrl, Url}
+import webby.commons.io.{CommonUrl, Url}
 import webby.commons.text.SB
 
 class Route(val methods: Seq[HttpMethod], val domain: String, val parts: Seq[String], val args: Seq[Any], val httpsOnly: Boolean) extends Url {

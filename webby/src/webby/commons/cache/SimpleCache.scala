@@ -4,8 +4,8 @@ import java.time.{LocalDateTime, ZoneId}
 
 import com.google.common.net.HttpHeaders
 import webby.api.mvc._
-import webby.commons.codec.MD5
-import webby.commons.date.StdDates
+import webby.commons.io.codec.MD5
+import webby.commons.time.StdDates
 
 /**
   * Простой кешер, кеширующий только одно значение.

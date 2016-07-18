@@ -4,7 +4,7 @@ import java.util.regex.{Matcher, Pattern}
 
 import io.netty.handler.codec.http.HttpMethod
 import webby.api.mvc.Handler
-import webby.commons.net.Url
+import webby.commons.io.Url
 import webby.route._
 
 import scala.annotation.tailrec

@@ -13,8 +13,8 @@ import org.apache.commons.lang3.StringUtils
 import webby.api.mvc.Results._
 import webby.api.mvc._
 import webby.api.{Application, Logger}
-import webby.commons.cookie.CookieEncoderV0
-import webby.commons.log.{LogWriterHolder, PageLog, PageLogWriterPlugin}
+import webby.commons.io.cookie.CookieEncoderV0
+import webby.commons.system.log.{LogWriterHolder, PageLog, PageLogWriterPlugin}
 import webby.core.server.Server
 
 import scala.util.{Failure, Success}

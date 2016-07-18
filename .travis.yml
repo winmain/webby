@@ -1,0 +1,10 @@
+language: scala
+scala:
+   - 2.11.8
+
+branches:
+  only:
+    - master
+
+jdk:
+  - oraclejdk8

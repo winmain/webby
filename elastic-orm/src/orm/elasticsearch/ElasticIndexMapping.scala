@@ -5,7 +5,7 @@ import org.elasticsearch.action.index.{IndexRequestBuilder, IndexResponse}
 import org.elasticsearch.action.search.{MultiSearchRequestBuilder, MultiSearchResponse, SearchRequestBuilder, SearchResponse}
 import org.elasticsearch.client.Client
 import org.slf4j.LoggerFactory
-import webby.commons.log.PageLog
+import webby.commons.system.log.PageLog
 
 /**
  * Класс для выполнения прямых запросов к Эластику для заданного индекса и типа (index, tpe).

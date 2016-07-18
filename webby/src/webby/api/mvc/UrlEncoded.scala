@@ -5,8 +5,8 @@ import java.{util => ju}
 import io.netty.handler.codec.http.QueryStringDecoder
 
 /**
- * Доступ к распарсенным данным application/x-www-form-urlencoded, либо к query string.
- */
+  * Доступ к распарсенным данным application/x-www-form-urlencoded, либо к query string.
+  */
 trait UrlEncoded {
   def get(key: String): Option[String]
   def get(key: String, default: String): String
@@ -16,9 +16,9 @@ trait UrlEncoded {
   def asJavaMultiMap: ju.Map[String, ju.List[String]]
 
   /**
-   * Оригинальная строка, из которой были разобраны параметры.
-   * Например: "a=123&b=foo". Если параметров не было, то здесь будет пустая строка "".
-   */
+    * Оригинальная строка, из которой были разобраны параметры.
+    * Например: "a=123&b=foo". Если параметров не было, то здесь будет пустая строка "".
+    */
   def original: String
 
   def isEmpty: Boolean
@@ -40,8 +40,8 @@ object EmptyUrlEncoded extends UrlEncoded {
 }
 
 /**
- * Легковесная обёртка над QueryStringDecoder
- */
+  * Легковесная обёртка над QueryStringDecoder
+  */
 class UrlEncodedFromDecoder(decoder: QueryStringDecoder, val original: String) extends UrlEncoded {
 
   import scala.collection.JavaConverters._

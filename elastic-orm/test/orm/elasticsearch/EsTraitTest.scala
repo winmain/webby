@@ -3,7 +3,7 @@ import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneId}
 
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FunSuite, Matchers}
-import webby.commons.date.StdDates
+import webby.commons.time.StdDates
 
 class EsTraitTest extends FunSuite with Matchers with TableDrivenPropertyChecks {
   test("LocalDateTimeTimestampConv packTime") {

@@ -6,7 +6,7 @@ import com.google.common.net.HttpHeaders
 import io.netty.handler.codec.http.HttpResponseStatus
 import webby.api.libs.MimeTypes
 import webby.api.mvc._
-import webby.commons.log.PageLog
+import webby.commons.system.log.PageLog
 import webby.mvc.{StdCtl, StdPaths}
 
 /**
@@ -17,7 +17,7 @@ object StaticCtl extends StdCtl {
 
   def at(basePath: String, subPath: String) = SimpleAction {req =>
     PageLog.noLog()
-    val path = StdPaths.root.resolve(basePath).resolve(subPath)
+    val path = StdPaths.get.root.resolve(basePath).resolve(subPath)
     if (!Files.exists(path)) {
       NotFoundRaw
     } else {

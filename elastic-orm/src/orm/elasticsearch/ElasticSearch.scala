@@ -17,7 +17,7 @@ import org.elasticsearch.common.unit.TimeValue
 import org.slf4j.LoggerFactory
 import querio.TableRecord
 import webby.commons.io.IOUtils
-import webby.commons.log.PageLog
+import webby.commons.system.log.PageLog
 import webby.mvc.AppPluginHolder
 
 import scala.annotation.tailrec

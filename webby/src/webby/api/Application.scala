@@ -5,7 +5,7 @@ import java.nio.file.Path
 import io.netty.handler.codec.http.HttpHeaderNames
 import webby.api.mvc._
 import webby.commons.concurrent.Threads
-import webby.commons.log.SentryRavenFactory
+import webby.commons.system.log.SentryRavenFactory
 import webby.commons.text.SB
 import webby.core.system.SourceMapper
 

@@ -1,7 +1,7 @@
 package orm.elasticsearch
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneId}
 
-import webby.commons.date.StdDates
+import webby.commons.time.StdDates
 
 // ------------------------------- Conv -------------------------------
 

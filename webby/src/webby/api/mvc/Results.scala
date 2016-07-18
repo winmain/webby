@@ -8,9 +8,8 @@ import com.google.common.net.HttpHeaders._
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpResponseStatus._
 import webby.api.http.ContentTypes
-import webby.commons.html.StdHtmlView
-import webby.commons.json.StdJs
-import webby.commons.net.{Url, UrlEncoder}
+import webby.commons.io.{StdJs, Url, UrlEncoder}
+import webby.commons.text.html.StdHtmlView
 
 /**
   * Generates default `SimpleResult` from a content type, headers and content.
@@ -65,7 +64,7 @@ trait Results {
   def Ok: ResultOk = new ResultOk
   def Ok(htmlView: StdHtmlView): PlainResult = OkHtml(htmlView.result)
   def OkHtml(htmlViewResult: String): PlainResult = Ok(htmlViewResult, ContentTypes.textHtmlUtf8)
-  def JsonOk(obj: Any): PlainResult = StdJs.js.result(obj)
+  def JsonOk(obj: Any): PlainResult = StdJs.get.result(obj)
 
   /** Generates a ‘201 CREATED’ result. */
   def Created = new ResultStatus(CREATED)

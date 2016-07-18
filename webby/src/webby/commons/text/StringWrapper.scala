@@ -3,8 +3,8 @@ import java.io.{File, PrintWriter}
 
 import jregex.{Matcher, Pattern, REFlags}
 import org.apache.commons.lang3.{StringEscapeUtils, StringUtils => SU}
-import webby.commons.date.StdDateFmt
-import webby.commons.net.UrlEncoder
+import webby.commons.io.UrlEncoder
+import webby.commons.time.StdDateFmt
 
 object StringWrapper {
   import scala.language.implicitConversions

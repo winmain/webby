@@ -17,8 +17,8 @@ import io.netty.util.concurrent
 import io.netty.util.concurrent.DefaultThreadFactory
 import org.apache.commons.lang3.StringUtils
 import webby.api._
-import webby.commons.bean.mbean.AnnotatedStandardMBean
 import webby.commons.concurrent.{ThreadUtils, Threads}
+import webby.commons.system.mbean.AnnotatedStandardMBean
 import webby.core._
 import webby.core.server.netty._
 import webby.core.system.{ApplicationProvider, ReloadableAppProvider, StaticAppProvider}

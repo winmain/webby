@@ -4,8 +4,8 @@ import java.util.concurrent.{BlockingQueue, LinkedBlockingDeque, ThreadPoolExecu
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory
 import webby.api.Plugin
-import webby.commons.bean.annotation.Description
 import webby.commons.collection.LazyIterator
+import webby.commons.system.mbean.Description
 
 /**
   * Плагин, который содержит в себе очередь и executor для выполнения действий над
