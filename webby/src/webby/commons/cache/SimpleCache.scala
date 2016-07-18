@@ -3,8 +3,8 @@ package webby.commons.cache
 import java.time.{LocalDateTime, ZoneId}
 
 import com.google.common.net.HttpHeaders
+import org.apache.commons.codec.digest.DigestUtils
 import webby.api.mvc._
-import webby.commons.io.codec.MD5
 import webby.commons.time.StdDates
 
 /**
@@ -67,11 +67,11 @@ class SimpleCache[V](expireMillis: Long, cacheLoader: => V) {
 class SimpleCachePlainResultWithETag(expireMillis: Long, cacheLoader: => PlainResult)
   extends SimpleCache[(PlainResult, String)](expireMillis, {
     val result: PlainResult = cacheLoader
-    val eTag: String = MD5.hex(result.body)
+    val eTag: String = DigestUtils.md5Hex(result.body)
     result.withHeader(HttpHeaders.ETAG, eTag) -> eTag
   }) {
 
-  def eTagFrom(result: PlainResult): String = MD5.hex(result.body)
+  def eTagFrom(result: PlainResult): String = DigestUtils.md5Hex(result.body)
 
   def handle(req: RequestHeader): PlainResult = {
     // Сначала проверяем, работает ли клиент по E-TAG'у

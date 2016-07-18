@@ -8,12 +8,12 @@ import java.util.Date
 import com.google.common.io.ByteStreams
 import com.google.common.net.HttpHeaders._
 import io.netty.handler.codec.http.HttpResponseStatus
+import org.apache.commons.codec.digest.DigestUtils
 import webby.api._
 import webby.api.libs._
 import webby.api.mvc._
-import webby.commons.io.codec.MD5
-import webby.commons.time.StdDates
 import webby.commons.system.log.PageLog
+import webby.commons.time.StdDates
 import webby.mvc.StdCtl
 
 import scala.collection.JavaConverters._
@@ -170,7 +170,7 @@ class AssetsCtlBuilder extends StdCtl {
 
   private def etagFor(resource: java.net.URL): Option[String] = {
     etags.get(resource.toExternalForm).filter(_ => App.isProd).orElse {
-      val maybeEtag = lastModifiedFor(resource).map(_ + " -> " + resource.toExternalForm).map("\"" + MD5.hex(_) + "\"")
+      val maybeEtag = lastModifiedFor(resource).map(_ + " -> " + resource.toExternalForm).map("\"" + DigestUtils.md5Hex(_) + "\"")
       maybeEtag.foreach(etags.put(resource.toExternalForm, _))
       maybeEtag
     }

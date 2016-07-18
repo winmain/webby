@@ -134,7 +134,6 @@ object WebbyBuild extends Build {
         deps += "org.scala-stm" %% "scala-stm" % "0.7" % "optional" // Used in webby.api.libs.concurrent.Promise
         deps += "com.zaxxer" % "HikariCP" % "2.4.7" % "optional" // Database connector, used in webby.api.db.HikariCPPlugin
         deps += "org.jsoup" % "jsoup" % "1.6.3" % "optional" // Html parsing, used in webby.commons.text.StdStrHtmlJsoup
-        deps += "de.xam" % "md5" % "2.6.3" % "optional" // Used in webby.commons.io.codec.MD5
         deps += "org.zeroturnaround" % "jr-sdk" % "6.4.6" % "optional" // JRebel SDK (class reloader), used in webby.commons.system.JRebelUtils
         deps += "uk.co.caprica" % "juds" % "0.94.1" % "optional" // Unix socket support, used in webby.commons.system.SdDaemon
         deps += "javax.servlet" % "javax.servlet-api" % "3.1.0" % "optional" // Servlet api for dump Sentry client
