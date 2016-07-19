@@ -54,7 +54,7 @@ object WebbyBuild extends Build {
 
     deps.result()
   }
-  val querio = "com.github.winmain.querio" %% "querio" % "0.5.2" // querio orm
+  val querio = "com.github.citrum.querio" %% "querio" % "0.5.2" // querio orm
 
   /**
     * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
