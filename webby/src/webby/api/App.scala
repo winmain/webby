@@ -3,7 +3,8 @@ import java.util.concurrent.{ExecutorService, SynchronousQueue, ThreadPoolExecut
 import javax.annotation.Nullable
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory
-import webby.commons.concurrent.{ForceQueuePolicy, Threads}
+import webby.commons.concurrent.Threads
+import webby.commons.concurrent.executors.ForceQueuePolicy
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.NonFatal

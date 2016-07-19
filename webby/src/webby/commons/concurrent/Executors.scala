@@ -1,7 +1,7 @@
 package webby.commons.concurrent
 import java.util.concurrent._
 
-import webby.commons.concurrent.executors.{ExecutorScalingQueue, ScalingThreadPoolExecutor}
+import webby.commons.concurrent.executors.{ExecutorScalingQueue, ForceQueuePolicy, ScalingThreadPoolExecutor}
 
 object Executors {
 

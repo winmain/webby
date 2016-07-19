@@ -38,7 +38,6 @@ import scala.collection.mutable
   *
   *   override protected def statePath: Path = Paths.state.resolve("quartz")
   *   override protected def jsMapper: ObjectMapper = Js.mapper
-  *   protected def cronLogFactory: CronLogFactory = CronLogs
   * }
   * }}}
   *
