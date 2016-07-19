@@ -6,10 +6,7 @@ object WebbySbtPluginBuild extends Build {
     "sbt-plugin",
     file("."),
     settings = Defaults.coreDefaultSettings ++ Seq(
-      //      resolvers ++= Seq(
-      //        "local nexus" at "http://nexus/content/groups/public",
-      //        "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"),
-      organization := "webby",
+      organization := "com.github.citrum.webby",
       version := "0.1-SNAPSHOT",
 
       ivyLoggingLevel := UpdateLogging.DownloadOnly,

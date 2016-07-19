@@ -1,12 +1,13 @@
+import bintray.BintrayKeys._
 import sbt.Keys._
 import sbt._
 
 object WebbyBuild extends Build {
   val buildScalaVersion = "2.11.8"
 
-  val commonSettings = Seq(
-    organization := "webby",
-    version := "0.1-SNAPSHOT",
+  val commonSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
+    organization := "com.github.citrum.webby",
+    version := "0.1",
 
     scalaVersion := buildScalaVersion,
 
@@ -18,12 +19,20 @@ object WebbyBuild extends Build {
     scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
     javacOptions in doc := Seq("-source", "1.8"),
-    // Эта опция для более быстрого обновления зависимостей sbt
-//    updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true),
     ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)), // forcing scala version
     ivyLoggingLevel := UpdateLogging.DownloadOnly,
     publishMavenStyle := false,
-    mainClass in Compile := None
+    mainClass in Compile := None,
+
+    // Deploy settings
+    startYear := Some(2016),
+    homepage := Some(url("https://github.com/citrum/webby")),
+    licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+    bintrayOrganization := Some("citrum"),
+    // No Javadoc
+    publishArtifact in(Compile, packageDoc) := false,
+    publishArtifact in packageDoc := false,
+    sources in(Compile, doc) := Seq.empty
   )
 
   // Минимальный набор зависимостей
@@ -43,16 +52,7 @@ object WebbyBuild extends Build {
 
     deps.result()
   }
-
-  val querioVersion = "0.5.2"
-  val querio = "com.github.winmain" %% "querio" % querioVersion exclude("com.google.code.findbugs", "jsr305") // querio orm
-  val useQuerioRoot = false
-  lazy val QuerioProject = RootProject(file("../querio"))
-  lazy val QuerioProjectCodegen = ProjectRef(file("../querio"), "querio-codegen")
-  implicit class _ProjectWrapper(proj: Project) {
-    def dependsOnQuerio(): Project = if (useQuerioRoot) proj.dependsOn(QuerioProject) else proj.settings(libraryDependencies += querio)
-    def dependsOnQuerioCodegen(): Project = if (useQuerioRoot) proj.dependsOn(QuerioProjectCodegen) else proj.settings(libraryDependencies += querio)
-  }
+  val querio = "com.github.winmain.querio" %% "querio" % "0.5.2" // querio orm
 
   /**
     * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
@@ -80,8 +80,9 @@ object WebbyBuild extends Build {
     file("elastic-orm"),
     settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
       libraryDependencies ++= commonDependencies,
-      libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.2.0" exclude("com.google.guava", "guava") // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
-  )).dependsOnQuerio().dependsOn(webby)
+      libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.2.0" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
+      libraryDependencies += querio
+    )).dependsOn(webby)
 
   // ------------------------------ routes project ------------------------------
 
@@ -129,6 +130,7 @@ object WebbyBuild extends Build {
         deps += "com.intellij" % "annotations" % "12.0" // для интеграции IDEA language injection
 
         // Optional dependencies
+        deps += querio % "optional" // Querio ORM
         deps += "com.typesafe.akka" %% "akka-actor" % "2.4.8" % "optional" // Used in webby.api.libs.concurrent.Akka
         deps += "com.typesafe.akka" %% "akka-slf4j" % "2.4.8" % "optional"
         deps += "org.scala-stm" %% "scala-stm" % "0.7" % "optional" // Used in webby.api.libs.concurrent.Promise
@@ -145,23 +147,11 @@ object WebbyBuild extends Build {
         deps += "net.sf.ehcache" % "ehcache-core" % "2.6.11" % "optional" // Cache, used in webby.commons.cache.CachePlugin
         deps += "com.esotericsoftware.kryo" % "kryo" % "2.24.0" % "optional" // For serializing objects in cache, used in webby.commons.cache.KryoNamedCache
         deps += "com.carrotsearch" % "hppc" % "0.7.1" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
-        deps += "com.github.winmain" %% "querio" % querioVersion % "optional" exclude("com.google.code.findbugs", "jsr305") // Querio ORM
         deps += "com.google.javascript" % "closure-compiler" % "v20160619" % "optional" // Google Closure Compiler
         deps.result()
       },
-//      unmanagedClasspath in Compile += (baseDirectory in root).value / "unmanaged/log-utils/build",
-
       javacOptions ++= Seq("-XDenableSunApiLintControl"),
       scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-Xlint", "-Xlint:-nullary-unit") // nullary-unit нужен только для оператора def > : Unit в CommonTag
-//      publishArtifact in packageDoc := buildWithDoc,
-//      publishArtifact in (Compile, packageSrc) := true,
-//      parallelExecution in Test := false
-
-      // Добавить скомпилированные классы из папки unmanaged в сборку финального jar файла
-//      mappings in (Compile, packageBin) ++= {
-//        (((baseDirectory in root).value / "unmanaged/log-utils/build" ** "*") filter {_.isFile})
-//          .get pair relativeTo((baseDirectory in root).value / "unmanaged/log-utils/build")
-//      }
     )
   ).dependsOn(scriptCompiler) //.dependsOn(SbtSharedProject)
 
