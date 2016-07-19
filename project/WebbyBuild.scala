@@ -14,7 +14,9 @@ object WebbyBuild extends Build {
     incOptions := incOptions.value.withNameHashing(nameHashing = true),
     resolvers ++= Seq(
       "Local Nexus" at "http://nexus/content/groups/public",
-      "Typesafe releases" at "http://repo.typesafe.com/typesafe/releases"),
+      "zeroturnaround repository" at "https://repos.zeroturnaround.com/nexus/content/repositories/zt-public/", // The zeroturnaround.com repository
+      Resolver.bintrayRepo("citrum", "maven") // Temporary repo for querio
+    ),
     sources in doc in Compile := List(), // Выключить генерацию JavaDoc, ScalaDoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
