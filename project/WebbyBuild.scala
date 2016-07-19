@@ -23,13 +23,13 @@ object WebbyBuild extends Build {
     javacOptions in doc := Seq("-source", "1.8"),
     ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)), // forcing scala version
     ivyLoggingLevel := UpdateLogging.DownloadOnly,
-    publishMavenStyle := false,
     mainClass in Compile := None,
 
     // Deploy settings
     startYear := Some(2016),
     homepage := Some(url("https://github.com/citrum/webby")),
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+    bintrayVcsUrl := Some("https://github.com/citrum/webby"),
     bintrayOrganization := Some("citrum"),
     // No Javadoc
     publishArtifact in(Compile, packageDoc) := false,
@@ -167,6 +167,7 @@ object WebbyBuild extends Build {
       publishArtifact := false,
       publishLocal := {},
       publish := {},
+      bintrayUnpublish := {},
 
       // Наводим красоту в командной строке sbt
       shellPrompt := {state: State => "[" + scala.Console.GREEN + "webby" + scala.Console.RESET + "] "}

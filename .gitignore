@@ -1,4 +1,3 @@
-*.pyc
 /project/project
 /project/target
 /target
@@ -7,7 +6,3 @@
 /routes/target
 /script-compiler/target
 /webby/target
-/sbt-plugin/.idea
-/sbt-plugin/project/project
-/sbt-plugin/project/target
-/sbt-plugin/target
