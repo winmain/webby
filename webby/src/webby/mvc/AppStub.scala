@@ -48,7 +48,7 @@ object AppStub {
   def ensure(profile: Profile, allowPlugins: Boolean = true) = app match {
     case null => start(profile, allowPlugins)
     case a =>
-      require(app.profile == profile, "App started with another profile")
+      require(app.profile == profile, "App started with another profile: " + app.profile + ", trying to start with profile: " + profile)
       a
   }
 
