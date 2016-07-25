@@ -12,8 +12,8 @@ import webby.api.App
 import webby.api.http.ContentTypes
 import webby.api.libs.MimeTypes
 import webby.api.mvc._
-import webby.commons.time.StdDates
 import webby.commons.system.log.PageLog
+import webby.commons.time.StdDates
 import webby.mvc.{StdCtl, StdPaths}
 
 import scala.annotation.tailrec
@@ -96,11 +96,11 @@ class ScriptServer(val watchDir: Path,
 
 object ScriptServer {
 
-  def apply(paths: StdPaths.Value, relativePath: String, compilers: List[ScriptCompiler], watcherFactory: Path => Watcher): String => Action = {
+  def apply(paths: StdPaths.Value, assetType: StdPaths.AssetType, compilers: List[ScriptCompiler], watcherFactory: Path => Watcher): String => Action = {
     if (!App.isDev) sys.error("ScriptServer can work only with Profile.Dev")
     val server = new ScriptServer(
-      watchDir = paths.assets.resolve(relativePath),
-      targetDir = paths.targetAssets.resolve(relativePath),
+      watchDir = assetType.assetsPath,
+      targetDir = assetType.targetAssetsPath,
       compilers, watcherFactory)
     (path) => server.at(path)
   }

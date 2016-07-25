@@ -6,6 +6,7 @@ import java.util
 import com.google.common.base.Charsets
 import com.google.javascript.jscomp._
 import webby.commons.io.IOUtils
+import webby.commons.text.SB
 
 import scala.collection.JavaConversions._
 
@@ -18,15 +19,13 @@ import scala.collection.JavaConversions._
   *   deps += "com.google.javascript" % "closure-compiler" % "v20160619"
   * }}}
   */
-class GoogleClosureCompiler(externFiles: Seq[Path],
-                            jQueryPrependPath: Path,
+class GoogleClosureCompiler(externs: Seq[SourceFile],
+                            prepends: Seq[SourceFile],
                             resultDir: Path,
-                            commonIncludes: Seq[String],
+                            commonIncludes: Seq[SourceFile],
                             restModuleWrapper: String => String) {
 
-  lazy val prependScript: String = IOUtils.readString(jQueryPrependPath)
-
-  def compileModule(moduleName: String, jsFiles: Iterable[String], jsRestFiles: Iterable[String]): Seq[Path] = {
+  def compileModule(moduleName: String, jsFiles: Iterable[SourceFile], jsRestFiles: Iterable[SourceFile]): Seq[Path] = {
     val compiler: Compiler = new Compiler(System.err)
     val options = new CompilerOptions
 
@@ -38,10 +37,8 @@ class GoogleClosureCompiler(externFiles: Seq[Path],
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6_STRICT)
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5)
 
-    val externs: util.List[SourceFile] = AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment)
-    externFiles.foreach(p => externs.add(SourceFile.fromFile(p.toFile)))
-
-    def mkSource(fileName: String): SourceFile = SourceFile.fromFile(fileName, Charsets.UTF_8)
+    val externList: util.List[SourceFile] = AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment)
+    externList.addAll(externs)
 
     val jsModules = new util.ArrayList[JSModule]()
     val entryPoints = new util.ArrayList[ModuleIdentifier]()
@@ -49,8 +46,8 @@ class GoogleClosureCompiler(externFiles: Seq[Path],
     val mainModule = new JSModule(moduleName)
     jsModules.add(mainModule)
     entryPoints.add(ModuleIdentifier.forClosure(moduleName + "_js"))
-    commonIncludes.foreach(p => mainModule.add(mkSource(p)))
-    jsFiles.foreach(p => mainModule.add(mkSource(p)))
+    commonIncludes.foreach(p => mainModule.add(p))
+    jsFiles.foreach(p => mainModule.add(p))
 
     if (jsRestFiles.nonEmpty) {
       val jsFileSet = jsFiles.toSet
@@ -58,7 +55,7 @@ class GoogleClosureCompiler(externFiles: Seq[Path],
       jsModules.add(restModule)
       entryPoints.add(ModuleIdentifier.forClosure(moduleName + "_rest_js"))
       restModule.addDependency(mainModule)
-      jsRestFiles.foreach(p => if (!jsFileSet.contains(p)) restModule.add(mkSource(p)))
+      jsRestFiles.foreach(p => if (!jsFileSet.contains(p)) restModule.add(p))
     }
 
     options.setDependencyOptions(new DependencyOptions()
@@ -68,7 +65,7 @@ class GoogleClosureCompiler(externFiles: Seq[Path],
       .setEntryPoints(entryPoints))
 
     compiler.initOptions(options)
-    val result: Result = compiler.compileModules(externs, jsModules, options)
+    val result: Result = compiler.compileModules(externList, jsModules, options)
 
     if (result.errors.nonEmpty) Nil
     else {
@@ -76,7 +73,10 @@ class GoogleClosureCompiler(externFiles: Seq[Path],
         val source: String = compiler.toSource(jsMod)
         val totalSource: String =
           if (jsMod eq mainModule) {
-            prependScript + source
+            new SB {
+              prepends.foreach(+_.getCode)
+              +source
+            }.str
           } else {
             // rest module
             restModuleWrapper(source)

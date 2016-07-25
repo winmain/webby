@@ -6,20 +6,20 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.CharMatcher
 import com.google.common.net.HttpHeaders
+import com.google.javascript.jscomp.SourceFile
 import compiler.ScriptCompiler
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.commons.lang3.StringUtils
 import watcher.{FileExtTransform, TargetFileTransform}
 import webby.api.mvc.{PlainResult, RequestHeader, ResultException, Results}
-import webby.commons.collection.IterableWrapper.wrapIterable
-import webby.commons.time.StdDates
-import webby.commons.io.IOUtils
 import webby.commons.text.SB
 import webby.commons.text.StringWrapper.wrapper
+import webby.commons.time.StdDates
 
 import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 /**
@@ -27,75 +27,37 @@ import scala.io.Source
   * для сборки ресурсов в production.
   * Для dev-closure версии умеет запускать google closure compiler для этих скриптов.
   * Может работать как сервер, так и как компилятор.
+  * Для того, чтобы создать этот класс, следует использовать [[GoogleClosure.serverBuilder]]
   *
-  * Пример использования этого класса:
-  * {{{
-  * object GoogleClosureServers {
-  *   def create(profile: String, targetClosureCompiledDir: Path): GoogleClosureServer = {
-  *     val isDev: Boolean = App.isDevOrJenkins
-  *     val closureLibDir = Paths.root.resolve("script/closure-library")
-  *     new GoogleClosureServer(
-  *       closureBasePath = Paths.root.resolve("public/js/google-closure/base.js"),
-  *       closureDepsPath = Paths.root.resolve("public/js/google-closure/deps.js"),
-  *       jsSourceDir = Paths.assets.resolve("js"),
-  *       jsSourceProfileDir = Paths.assets.resolve("profiles/" + profile),
-  *       jsDepsAliases = Vector("../../../~closure-library/" -> closureLibDir),
-  *       jsDepsIgnore = Vector("../../../assets/"),
-  *       compilers = List(
-  *         ExternalCoffeeScriptCompiler(goog = true),
-  *         ExternalJadeClosureCompiler(noDebug = !isDev, pretty = isDev)),
-  *       prependJQuery = Some(Paths.public.resolve(Public.jQueryPath)),
-  *       externFiles = Vector(
-  *         Paths.public.resolve("js/externs/jquery-1.9.js"),
-  *         Paths.assets.resolve("js/lib/externs.js")),
-  *       jQueryPrependMinifiedPath = Paths.public.resolve(Public.jQueryMinPath),
-  *       closureLibDir = closureLibDir,
-  *       targetDir = Paths.targetAssets.resolve("js"),
-  *       targetClosureCompiledDir = targetClosureCompiledDir
-  *     )
-  *   }
-  *   def create(profile: String): GoogleClosureServer =
-  *     create(profile, targetClosureCompiledDir = Paths.targetAssets.resolve("js-closure-compiled"))
-  * }
-  * }}}
-  *
-  * Специальный объект для компиляции js google closure compiler'ом в production.
-  * Далее, этот объект (GoogleClosureAdvancedCompiler) вызывается при сборке production ресурсов.
-  * {{{
-  * object GoogleClosureAdvancedCompiler {
-  *   def main(args: Array[String]) {
-  *     require(args.length == 1, "Must be one arg: profile name")
-  *     println("--- Google Closure Compiler step ---")
-  *     val t0 = System.currentTimeMillis()
-  *     AppStub.withAppNoPluginsDev {
-  *       val server = GoogleClosureServer.create(args(0),
-  *         targetClosureCompiledDir = Paths.root.resolve("target/assets-release/js-prod"))
-  *       server.compileClosure(Seq("main", "mobile", "adm"))
-  *     }
-  *     val t1 = System.currentTimeMillis()
-  *     println("--- Google Closure Compiler finished in " + (t1 - t0) + " ms ---")
-  *   }
-  * }
-  * }}}
+  * Пример использования этого класса см. в описании метода [[GoogleClosure.serverBuilder]].
+  * Для запуска сервера в режиме сборки ресурсов для production, см. метод [[GoogleClosure.runAdvancedCompiler]].
   *
   * Requires sbt dependency
   * {{{
   *   deps += "com.google.javascript" % "closure-compiler" % "v20160619"
   * }}}
+  *
+  * @param libSource    Исходник библиотеки google closure library. Может быть как в jar-архиве, так и простыми файлами.
+  * @param jsSourceDirs Каталоги, в которых лежат js-исходники проекта для компиляции.
+  * @param preCompilers Список компиляторов, которые должны быть вызываны для каждого исходного файла,
+  *                     прежде чем он уйдёт в gcc. Например, здесь могут быть coffeescript, jade компиляторы.
+  * @param prepends     В самое начало результирующих файлов gcc будут подставлены эти исходники.
+  *                     Если мы собираем dev версию, то будут подставлены полные исходники [[JsSourcePair.source]],
+  *                     а для prod версии будет использоваться minified [[JsSourcePair.minified]].
+  *                     Например, здесь можно использовать jQuery.
+  * @param externs      Gcc externs - специально составленные js файлы, задающие исключения при обработке компилятором.
+  *                     Например, [[GoogleClosure.jQueryExtern]]
+  * @param targetDir    Каталог, где будут храниться скомпилированные через [[preCompilers]]
+  *                     промежуточные версии скриптов.
+  * @param targetGccDir Каталог, куда будут сохраняться скомпилированные gcc финальные скрипты.
   */
-class GoogleClosureServer(closureBasePath: Path,
-                          closureDepsPath: Path,
-                          jsSourceDir: Path,
-                          jsSourceProfileDir: Path,
-                          jsDepsAliases: Iterable[(String, Path)],
-                          jsDepsIgnore: Iterable[String],
-                          compilers: List[ScriptCompiler],
-                          prependJQuery: Option[Path],
-                          externFiles: Seq[Path],
-                          jQueryPrependMinifiedPath: Path,
-                          closureLibDir: Path,
+class GoogleClosureServer(libSource: GoogleClosureLibSource,
+                          jsSourceDirs: Seq[Path],
+                          preCompilers: List[ScriptCompiler],
+                          prepends: Seq[JsSourcePair],
+                          externs: Seq[SourceFile],
                           targetDir: Path,
-                          targetClosureCompiledDir: Path) {
+                          targetGccDir: Path) {
 
   val log = webby.api.Logger(getClass)
 
@@ -104,89 +66,59 @@ class GoogleClosureServer(closureBasePath: Path,
   def restModuleWrapper(source: String): String = restModulePrepend + source + restModulePrepend
 
   private val closureCompiler = new GoogleClosureCompiler(
-    externFiles = externFiles,
-    jQueryPrependPath = jQueryPrependMinifiedPath,
-    resultDir = targetClosureCompiledDir,
-    commonIncludes = Seq(closureBasePath.toAbsolutePath.toString),
+    externs = externs,
+    prepends = prepends.map(_.minified),
+    resultDir = targetGccDir,
+    commonIncludes = Seq(libSource.baseJs),
     restModuleWrapper = restModuleWrapper)
 
   def targetContentType: String = "application/x-javascript"
-  private val allowedExtensions: Vector[String] = Vector(".js", ".coffee", ".jade")
-  private val canonicalSourceDir: Path = canonicalize(jsSourceDir)
-  private val canonicalSourceProfileDir: Path = canonicalize(jsSourceProfileDir)
+  private val allowedExtensions: Vector[String] = (Set(".js") ++ preCompilers.map(_.sourceDotExt)).toVector
+  private val canonicalSourceDirs: Seq[Path] = jsSourceDirs.map(canonicalize)
   private val canonicalTargetDir: Path = canonicalize(targetDir)
-  private val canonicalDepsAliases: Iterable[(String, Path)] = jsDepsAliases.map(a => a._1 -> canonicalize(a._2))
 
   private var baseJsBody: String = null
-  private var jQueryBody: String = null
 
-  case class ClosureFile(path: Path,
+  case class ClosureFile(source: SourceFile,
                          provides: Iterable[String],
                          requires: Iterable[String],
-                         compiledJsPath: Path,
                          ignoreMainDeps: Option[String] = None,
                          entryPoint: Boolean = false,
-                         var body: String = null,
-                         lastModified: Long = 0) {
-    //    val isInSourceDir: Boolean = file.getPath.startsWith(canonicalSourceDir.getPath)
-    //    def localPath: String = if (isInSourceDir) file.getPath.substring(canonicalSourceDir.getPath.length + 1) else null
-  }
+                         lastModified: Long = 0)
+
   val fileMap = mutable.Map.empty[String, ClosureFile]
   var classMap: Map[String, ClosureFile] = _
 
-  def makeClassMap(): Map[String, ClosureFile] =
+  private def makeClassMap(): Map[String, ClosureFile] =
     (for {closureFile <- fileMap.values
           cls <- closureFile.provides
     } yield (cls, closureFile)) (scala.collection.breakOut)
 
-  class DepsParser(pathAliases: Iterable[(String, Path)], pathIgnore: Iterable[String]) {
+  private class DepsParser {
     val regex = "goog\\.addDependency\\((.*)\\);.*".r
     val mapper = new ObjectMapper().configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
 
-    def parse(depsPath: Path): Long = {
+    /**
+      * Этот метод не только возвращает maxTimestamp, но и заполняет дерево зависимостей [[fileMap]]
+      */
+    def parse: Long = {
       var maxTimestamp = 0L
-      for (line <- Source.fromFile(depsPath.toFile).getLines()) {
+      for (line <- Source.fromString(libSource.depsJs.getCode).getLines()) {
         line match {
           case regex(params) =>
             val tree = mapper.readTree("[" + params + "]")
             val path = tree.get(0).asText()
             val provides = tree.get(1)
             val requires = tree.get(2)
-            if (!pathIgnore.exists(alias => path.startsWith(alias))) {
-              val pathPath: Path = pathAliases.find(alias => path.startsWith(alias._1)) match {
-                case Some((prefix, basePath)) => canonicalize(basePath.resolve(path.substring(prefix.length)))
-                case None => sys.error(s"Unknown alias for path '$path' in google closure deps.js file")
-              }
-              val absPath: Path = pathPath.toAbsolutePath
-              val cf = ClosureFile(absPath, provides = provides.map(_.asText()), requires = requires.map(_.asText()),
-                compiledJsPath = absPath)
-              fileMap.update(pathPath.toAbsolutePath.toString, cf)
-              val modified: Long = lastModified(pathPath)
-              if (modified > maxTimestamp) maxTimestamp = modified
-            }
+            val cf = ClosureFile(libSource.forPath(path), provides = provides.map(_.asText()), requires = requires.map(_.asText()))
+            fileMap.update(cf.source.getName, cf)
+            val modified: Long = 1
+            if (modified > maxTimestamp) maxTimestamp = modified
           case _ => ()
         }
       }
       maxTimestamp
     }
-  }
-
-  def saveDeps() {
-    IOUtils.writeToFile(closureDepsPath, new SB {
-      for (classPath <- fileMap.keys.toVector.sorted) {
-        val closurePath = fileMap(classPath)
-        val path = closurePath.path.toString
-        val publicPath = canonicalDepsAliases.find(alias => path.startsWith(alias._2.toString)) match {
-          case Some((prefix, basePath)) => prefix + path.substring(basePath.toString.length + 1)
-          case None => sys.error(s"Unknown alias for path '$path' while creating google closure deps.js file")
-        }
-        +"goog.addDependency('" + publicPath + "', " + "["
-        closurePath.provides.foreachWithSep(+"'" + _ + "'", +", ")
-        +"], ["
-        closurePath.requires.foreachWithSep(+"'" + _ + "'", +", ")
-        +"]);\n"
-      }
-    }.toString)
   }
 
   /**
@@ -220,7 +152,7 @@ class GoogleClosureServer(closureBasePath: Path,
 
   private val closureClassNameMatcher = CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.anyOf("._"))
 
-  private def parseClosureFile(sourcePath: Path, body: String, lastModified: Long, compiledJsPath: Path) = {
+  private def parseClosureFile(source: SourceFile, lastModified: Long, compiledJsPath: Path) = {
     val googProvide = "goog.provide("
     val googRequire = "goog.require("
     val ignoreMainDepsStr = "// ignoreMainDeps "
@@ -234,7 +166,7 @@ class GoogleClosureServer(closureBasePath: Path,
       cls
     }
 
-    for (gotLine <- body.linesWithSeparators) {
+    for (gotLine <- source.getCode.linesWithSeparators) {
       val line = StringUtils.stripStart(gotLine, null)
       if (line.startsWith(googProvide)) {
         val closeParenIdx: Int = line.indexOf(')')
@@ -249,60 +181,71 @@ class GoogleClosureServer(closureBasePath: Path,
       else if (line.startsWith(entryPointStr))
         entryPoint = true
     }
-    new ClosureFile(sourcePath, provides = providesBuilder.result(), requires = requiresBuilder.result(),
-      compiledJsPath = compiledJsPath, body = body, lastModified = lastModified, ignoreMainDeps = ignoreMainDeps, entryPoint = entryPoint)
+    new ClosureFile(source, provides = providesBuilder.result(), requires = requiresBuilder.result(),
+      lastModified = lastModified, ignoreMainDeps = ignoreMainDeps, entryPoint = entryPoint)
   }
 
-  private def autoCompile(localPath: String): Path = autoCompile(localPath, compilers)
+  private def autoCompile(sourceDir: Path, localPath: String): Path = autoCompile(sourceDir, localPath, preCompilers)
 
+  /**
+    * Автоматическая компиляция скрипта, используя список компиляторов #compilersLeft.
+    * Например, исходный скрипт может быть в формате CoffeeScript, тогда здесь он компилируется в js,
+    * и сохраняется в [[canonicalTargetDir]].
+    * Компиляция здесь ленивая. Исходный скрипт компилируется только один раз. Для перекомпиляции,
+    * его скомпилированная версия должна устареть (проверяем по lastModifiedTime), либо её нужно удалить.
+    *
+    * @param sourceDir     Исходный каталог скриптов
+    * @param localPath     Путь до скрипта внутри исходного каталога
+    * @param compilersLeft Список компиляторов, которые могут скомпилировать скрипт
+    * @return Возвращает путь к скомпилированному файлу. Он может быть как в #sourceDir (если компиляция не требуется),
+    *         так и в [[canonicalTargetDir]], если была компиляция.
+    */
   @tailrec
-  private def autoCompile(localPath: String, compilersLeft: List[ScriptCompiler]): Path =
-    compilersLeft match {
-      case Nil => canonicalSourceDir.resolve(localPath)
-      case jsCompiler :: tail =>
-        localPath match {
-          case _ if localPath.endsWith(jsCompiler.sourceDotExt) =>
-            canonicalSourceDir.resolve(localPath) match {
-              case path if Files.exists(path) =>
-                val filePath: String = canonicalize(path).toString
-                if (!filePath.startsWith(canonicalSourceDir.toString)) {
-                  log.error(s"File '$filePath' not in sourceDir '$canonicalSourceDir'")
-                  throw ResultException(Results.BadRequest("File not in sourceDir"))
-                } else {
-                  val targetPath = TargetFileTransform(canonicalSourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath)
-                  def checkRecompile(): Boolean = {
-                    synchronized {
-                      if (!Files.exists(targetPath) || Files.getLastModifiedTime(targetPath).compareTo(Files.getLastModifiedTime(path)) < 0) {
-                        val t0 = System.currentTimeMillis()
-                        val compileResult = jsCompiler.compileFile(path, targetPath)
-                        val t1 = System.currentTimeMillis()
-                        if (compileResult.isLeft) {
-                          log.error("Error compiling:\n" + compileResult.left.get)
-                          return false
-                        }
-                        log.info("Compiled " + localPath + " in " + (t1 - t0) + " ms")
+  private def autoCompile(sourceDir: Path, localPath: String, compilersLeft: List[ScriptCompiler]): Path =
+  compilersLeft match {
+    case Nil => sourceDir.resolve(localPath)
+    case jsCompiler :: tail =>
+      localPath match {
+        // Компилируем только те скрипты, расширения файлов которых есть в списке #compilersLeft
+        case _ if localPath.endsWith(jsCompiler.sourceDotExt) =>
+          sourceDir.resolve(localPath) match {
+            case path if Files.exists(path) =>
+              val filePath: String = canonicalize(path).toString
+              if (!filePath.startsWith(sourceDir.toString)) {
+                log.error(s"File '$filePath' not in sourceDir '$sourceDir'")
+                throw ResultException(Results.BadRequest("File not in sourceDir"))
+              } else {
+                val targetPath = TargetFileTransform(sourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath)
+                def checkRecompile(): Boolean = {
+                  synchronized {
+                    if (!Files.exists(targetPath) || Files.getLastModifiedTime(targetPath).compareTo(Files.getLastModifiedTime(path)) < 0) {
+                      val t0 = System.currentTimeMillis()
+                      val compileResult = jsCompiler.compileFile(path, targetPath)
+                      val t1 = System.currentTimeMillis()
+                      if (compileResult.isLeft) {
+                        log.error("Error compiling:\n" + compileResult.left.get)
+                        return false
                       }
+                      log.info("Compiled " + localPath + " in " + (t1 - t0) + " ms")
                     }
-                    true
                   }
-
-                  if (checkRecompile()) {
-                    targetPath
-                    //                    SimpleResult(HttpResponseStatus.OK, Resource.fromFile(targetFile).byteArray)
-                    //                      .withHeader(HttpHeaders.Names.CONTENT_TYPE, compiler.targetContentType)
-                  } else {
-                    throw ResultException(Results.InternalServerError("Compilation error"))
-                  }
+                  true
                 }
-              case _ => autoCompile(localPath, tail)
-            }
-          //          case _ if compiler.sourceMapDotExt.exists(localPath.endsWith) => new File(canonicalTargetDir, localPath)
-          case _ => autoCompile(localPath, tail)
-        }
-    }
 
-  def readAndPatchBaseJs(): String = {
-    val body = IOUtils.readString(closureBasePath)
+                if (checkRecompile()) {
+                  targetPath
+                } else {
+                  throw ResultException(Results.InternalServerError("Compilation error"))
+                }
+              }
+            case _ => autoCompile(sourceDir, localPath, tail)
+          }
+        case _ => autoCompile(sourceDir, localPath, tail)
+      }
+  }
+
+  private def readAndPatchBaseJs(): String = {
+    val body = libSource.baseJs.getCode
     // Заменим функцию goog.require заглушкой, чтобы она не подключала сторонние файлы
     body.replaceStd(
       "goog.define('goog.ENABLE_DEBUG_LOADER', true);",
@@ -313,7 +256,7 @@ class GoogleClosureServer(closureBasePath: Path,
     * Максимальное время модификации среди всех исходных файлов. Выставляется в методе [[lazyUpdateFiles()]].
     * Нужен, чтобы определить, что исходные файлы были изменены и требуется перекомпиляция.
     */
-  var maxModified: Long = 0L
+  private var maxModified: Long = 0L
 
   /**
     * Пройтись по всем файлам в исходных каталогах и отследить их изменение/добавление/удаление.
@@ -322,13 +265,13 @@ class GoogleClosureServer(closureBasePath: Path,
     *
     * @return есть ли изменённые файлы с прошлой проверки?
     */
-  def lazyUpdateFiles(): Boolean = synchronized {
+  private def lazyUpdateFiles(): Boolean = synchronized {
     var changed = false
 
     if (baseJsBody == null) baseJsBody = readAndPatchBaseJs()
-    if (jQueryBody == null) jQueryBody = prependJQuery.fold("")(IOUtils.readString)
     if (fileMap.isEmpty) {
-      maxModified = Math.max(maxModified, new DepsParser(canonicalDepsAliases, jsDepsIgnore).parse(closureDepsPath))
+      // Получить не только maxModified, но и заполнить дерево зависимостей здесь
+      maxModified = Math.max(maxModified, new DepsParser().parse)
       changed = true
     }
 
@@ -337,7 +280,7 @@ class GoogleClosureServer(closureBasePath: Path,
       resource.managed(Files.newDirectoryStream(sourceDir)).foreach(_.foreach {sourcePath =>
         if (Files.isDirectory(sourcePath)) inDir(sourcePath)
         else if (allowedExtensions.exists(e => sourcePath.toString.endsWith(e))) {
-          val localPathStr = getLocalSourcePath(sourcePath.toString)
+          val localPathStr = getLocalSourcePath(sourceDir, sourcePath.toString)
           val targetPath = canonicalTargetDir.resolve(new FileExtTransform("js").transform(localPathStr))
           val isPureJsFile = sourcePath.toString.endsWith(".js")
           var changeFile = false
@@ -360,28 +303,25 @@ class GoogleClosureServer(closureBasePath: Path,
           if (changeFile) {
             // Файл изменён. Обновить данные о нём
             val bodyPath: Path = if (isPureJsFile) sourcePath else targetPath
-            if (!isPureJsFile) autoCompile(localPathStr)
+            if (!isPureJsFile) autoCompile(sourceDir, localPathStr)
             val modified: Long = lastModified(bodyPath)
             if (modified > maxModified) maxModified = modified
-            val closureFile = parseClosureFile(sourcePath, IOUtils.readString(bodyPath), modified, bodyPath)
+            val closureFile = parseClosureFile(SourceFile.builder().withOriginalPath(localPathStr).buildFromFile(bodyPath.toString), modified, bodyPath)
             fileMap.update(sourcePath.toString, closureFile)
             changed = true
           }
         }
       })
     }
-    inDir(canonicalSourceDir)
-    inDir(canonicalSourceProfileDir)
+    canonicalSourceDirs.foreach(inDir)
 
     if (changed) classMap = makeClassMap()
     changed
   }
 
-  def getLocalSourcePath(sourcePath: String): String = {
-    if (sourcePath.startsWith(canonicalSourceDir.toString)) {
-      sourcePath.substring(canonicalSourceDir.toString.length + 1)
-    } else if (sourcePath.startsWith(canonicalSourceProfileDir.toString)) {
-      sourcePath.substring(canonicalSourceProfileDir.toString.length + 1)
+  private def getLocalSourcePath(sourceDir: Path, sourcePath: String): String = {
+    if (sourcePath.startsWith(sourceDir.toString)) {
+      sourcePath.substring(sourceDir.toString.length + 1)
     } else {
       sys.error(s"Path $sourcePath not in source dir")
     }
@@ -405,38 +345,37 @@ class GoogleClosureServer(closureBasePath: Path,
       if (isRest) +restModulePrepend + '\n'
       val included = mutable.Set.empty[String]
       def addFile(closureFile: ClosureFile) {
-        val path: String = closureFile.path.toString
-        if (!included.contains(path)) {
+        val name: String = closureFile.source.getName
+        if (!included.contains(name)) {
           closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap(n)))
           if (closureFile.entryPoint) {
-            +jQueryBody
+            prepends.foreach(+_.source.getCode)
             +baseJsBody
           }
-          included += path
+          included += name
           for (cls <- closureFile.requires) {
             classMap.get(cls) match {
               case Some(file) => addFile(file)
-              case None => log.error("Cannot find class " + cls + "\n  in " + path)
+              case None => log.error("Cannot find class " + cls + "\n  in " + name)
             }
           }
-          // Прочитать содержимое файла из google library
-          if (closureFile.body == null) closureFile.body = IOUtils.readString(closureFile.path)
-
-          +"// ------------- " + path + " -------------\n"
-          +closureFile.body + "\n"
+          +"// ------------- " + name + " -------------\n"
+          +closureFile.source.getCode + "\n"
 
           totalCount += 1
           if (closureFile.lastModified > lastModified) lastModified = closureFile.lastModified
         }
       }
       def ignoreJsWithDeps(closureFile: ClosureFile): Unit = {
-        included += closureFile.path.toString
+        included += closureFile.source.getName
         closureFile.requires.foreach {n =>
           ignoreJsWithDeps(classMap.get(n).getOrElse(sys.error("Dependency not found " + n + " in " + closureFile)))
         }
       }
-      val sourcePath: Path = canonicalSourceDir.resolve(servePath)
-      fileMap.get(sourcePath.toString).foreach(addFile)
+      canonicalSourceDirs.foreach {sourceDir =>
+        val sourcePath: Path = sourceDir.resolve(servePath)
+        fileMap.get(sourcePath.toString).foreach(addFile)
+      }
       if (isRest) +"\n" + restModuleAppend
     }.toString
 
@@ -455,29 +394,28 @@ class GoogleClosureServer(closureBasePath: Path,
     * Это тоже девелоперская версия, но выходной js получается максимально близкий к тому, который
     * будет на продакшне.
     */
-  def serveClosureCompiled(servePath: String)(implicit req: RequestHeader): PlainResult =
-    synchronized {
-      if (!servePath.endsWith(".js") || servePath.contains("/")) Results.NotFoundRaw
-      else {
-        val fullModule = StringUtils.removeEnd(servePath, ".js")
-        val (module: String, isRest: Boolean) =
-          if (fullModule.endsWith("_rest")) (StringUtils.removeEnd(fullModule, "_rest"), true)
-          else (fullModule, false)
+  def serveClosureCompiled(servePath: String)(implicit req: RequestHeader): PlainResult = synchronized {
+    if (!servePath.endsWith(".js") || servePath.contains("/")) Results.NotFoundRaw
+    else {
+      val fullModule = StringUtils.removeEnd(servePath, ".js")
+      val (module: String, isRest: Boolean) =
+        if (fullModule.endsWith("_rest")) (StringUtils.removeEnd(fullModule, "_rest"), true)
+        else (fullModule, false)
 
-        val compiledPath = targetClosureCompiledDir.resolve(fullModule + ".js")
-        lazyUpdateFiles()
-        val needRecompile: Boolean = !Files.exists(compiledPath) || lastModified(compiledPath) < maxModified
-        if (needRecompile) {
-          log.info("Compiling js closure module \"" + module + "\"")
-          printCompiledResult(compileClosureModule(module))
-        }
-        val resultPath = targetClosureCompiledDir.resolve(module + (if (isRest) "_rest.js" else ".js"))
-        if (Files.exists(resultPath)) {
-          val modified = lastModified(resultPath)
-          makeResult(modified.toString, modified)(Files.readAllBytes(resultPath))
-        } else Results.InternalServerError("Compile error")
+      val compiledPath = targetGccDir.resolve(fullModule + ".js")
+      lazyUpdateFiles()
+      val needRecompile: Boolean = !Files.exists(compiledPath) || lastModified(compiledPath) < maxModified
+      if (needRecompile) {
+        log.info("Compiling js closure module \"" + module + "\"")
+        printCompiledResult(compileClosureModule(module))
       }
+      val resultPath = targetGccDir.resolve(module + (if (isRest) "_rest.js" else ".js"))
+      if (Files.exists(resultPath)) {
+        val modified = lastModified(resultPath)
+        makeResult(modified.toString, modified)(Files.readAllBytes(resultPath))
+      } else Results.InternalServerError("Compile error")
     }
+  }
 
   /**
     * Запустить компиляцию нескольких модулей Google closure compiler'ом
@@ -493,37 +431,43 @@ class GoogleClosureServer(closureBasePath: Path,
     * Запустить компиляцию одного модуля Google closure compiler'ом
     */
   private def compileClosureModule(module: String): Seq[Path] = {
-    val sourcePath: Path = canonicalSourceDir.resolve(module + ".js")
-    val sourceRestPath: Path = canonicalSourceDir.resolve(module + "_rest.js")
-    require(Files.exists(sourcePath), "File for module " + sourcePath.toAbsolutePath + " does not exist")
+    val sourceDir: Path = canonicalSourceDirs.find(d => Files.exists(d.resolve(module + ".js")))
+      .getOrElse(sys.error("File for module " + module + " does not exist. Using sourceDirs: " + canonicalSourceDirs))
+    val sourcePath: Path = sourceDir.resolve(module + ".js")
+    val sourceRestPath: Path = sourceDir.resolve(module + "_rest.js")
 
-    val mainDeps: Iterable[String] = getDepsFor(sourcePath.toString)
-    val restDeps: Iterable[String] = if (Files.exists(sourceRestPath)) getDepsFor(sourceRestPath.toString) else Nil
+    val mainDeps: Iterable[SourceFile] = getDepsFor(sourcePath.toString)
+    val restDeps: Iterable[SourceFile] = if (Files.exists(sourceRestPath)) getDepsFor(sourceRestPath.toString) else Nil
     closureCompiler.compileModule(module, mainDeps, restDeps)
   }
 
-  class JsDepsAggregator() {
-    val included = mutable.Set.empty[String]
+  private class JsDepsAggregator {
+    val included = mutable.Set[String]()
+    val includedSources = ArrayBuffer[SourceFile]()
+
     def addFile(closureFile: ClosureFile) {
-      val path: String = closureFile.compiledJsPath.toString
-      if (!included.contains(path)) {
+      val name = closureFile.source.getName
+      if (!included.contains(name)) {
         closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap(n)))
-        included += path
+        included += name
+        includedSources += closureFile.source
         for (cls <- closureFile.requires) {
-          addFile(classMap.getOrElse(cls, sys.error(s"Cannot find module '$cls' in file $path")))
+          addFile(classMap.getOrElse(cls, sys.error(s"Cannot find module '$cls' in file $name")))
         }
       }
     }
+
     private def ignoreJsWithDeps(closureFile: ClosureFile): Unit = {
-      included += closureFile.compiledJsPath.toString
+      if (included.add(closureFile.source.getName))
+        includedSources += closureFile.source
       closureFile.requires.foreach(n => ignoreJsWithDeps(classMap(n)))
     }
   }
 
-  private def getDepsFor(jsFilePath: String): Iterable[String] = {
+  private def getDepsFor(jsFilePath: String): Iterable[SourceFile] = {
     val agg = new JsDepsAggregator
     fileMap.get(jsFilePath).foreach(agg.addFile)
-    agg.included
+    agg.includedSources
   }
 
   private def printCompiledResult(resultFiles: Seq[Path]): Unit = {

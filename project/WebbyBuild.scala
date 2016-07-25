@@ -7,7 +7,7 @@ object WebbyBuild extends Build {
 
   val commonSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
     organization := "com.github.citrum.webby",
-    version := "0.1",
+    version := "0.2",
 
     scalaVersion := buildScalaVersion,
 
@@ -30,11 +30,7 @@ object WebbyBuild extends Build {
     homepage := Some(url("https://github.com/citrum/webby")),
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     bintrayVcsUrl := Some("https://github.com/citrum/webby"),
-    bintrayOrganization := Some("citrum"),
-    // No Javadoc
-    publishArtifact in(Compile, packageDoc) := false,
-    publishArtifact in packageDoc := false,
-    sources in(Compile, doc) := Seq.empty
+    bintrayOrganization := Some("citrum")
   )
 
   // Минимальный набор зависимостей
@@ -84,16 +80,6 @@ object WebbyBuild extends Build {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.2.0" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
       libraryDependencies += querio
-    )).dependsOn(webby)
-
-  // ------------------------------ routes project ------------------------------
-
-  lazy val routes: Project  = Project(
-    "routes",
-    file("routes"),
-    settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
-      libraryDependencies ++= commonDependencies
-//      libraryDependencies ++= Seq(jsr305, jregex, commonsLang3)
     )).dependsOn(webby)
 
   // ------------------------------- script-compiler project -------------------------------
@@ -150,6 +136,7 @@ object WebbyBuild extends Build {
         deps += "com.esotericsoftware.kryo" % "kryo" % "2.24.0" % "optional" // For serializing objects in cache, used in webby.commons.cache.KryoNamedCache
         deps += "com.carrotsearch" % "hppc" % "0.7.1" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
         deps += "com.google.javascript" % "closure-compiler" % "v20160619" % "optional" // Google Closure Compiler
+        deps += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" % "optional" // Google Closure Library
         deps.result()
       },
       javacOptions ++= Seq("-XDenableSunApiLintControl"),
@@ -160,7 +147,7 @@ object WebbyBuild extends Build {
   lazy val root = Project(
     "webby-root",
     file("."),
-    aggregate = Seq(webby, elasticOrm, routes, scriptCompiler),
+    aggregate = Seq(webby, elasticOrm, scriptCompiler),
     settings = Seq(
       // Disable packaging & publishing artifact
       Keys.`package` := file(""),

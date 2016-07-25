@@ -24,9 +24,19 @@ object StdPaths extends OverridableObject {
 
     val state = root / "state"
 
+    val public = root / "public"
+
     val assets = if (App.isDev) root / "app/assets" else root / "assets"
+    val assetsProfiles = assets / "profiles"
+    def assetsProfile(profileName: String) = assetsProfiles / profileName
+
     val targetAssets = root / "target/assets"
-    val profileAssets = assets / ("profiles/" + App.profile.name)
+
+    def cssAssetType = AssetType("css")
+    def jsAssetType = AssetType("js")
+    // Google Closure Compiled js, only for dev profile
+    def jsGccAssetType = AssetType("js-gcc")
+    def jsSimpleAssetType = AssetType("js-simple")
 
     // ------------------------------- convenience java.nio.file.Paths methods -------------------------------
 
@@ -34,4 +44,13 @@ object StdPaths extends OverridableObject {
   }
 
   override protected def default: Value = new Value
+
+  /**
+    * Тип ассетов: css, js, js-simple.
+    * Удобен как enum при генерации путей к каталогам ассетов.
+    */
+  case class AssetType(name: String) {
+    def assetsPath = StdPaths.get.assets.resolve(name)
+    def targetAssetsPath = StdPaths.get.targetAssets.resolve(name)
+  }
 }

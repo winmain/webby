@@ -1,6 +1,7 @@
 package webby.commons.io
 
 import java.io.{IOException, InputStream}
+import java.net.URL
 import java.nio.file.{Files, Path, Paths}
 
 import com.google.common.io.ByteStreams
@@ -11,6 +12,8 @@ import webby.api.App
   * Работа с локальными ресурсами.
   */
 object Resources {
+  def classLoader: ClassLoader = Thread.currentThread().getContextClassLoader
+
   def nameForClass(cls: Class[_], append: String) = {
     val name = StringUtils.removeEnd(cls.getCanonicalName, "$")
     StringUtils.replaceChars(name, '.', '/') + append
@@ -19,8 +22,10 @@ object Resources {
   def localPathDev(path: String): Path =
     App.maybeApp.fold(Paths.get("."))(_.path).resolve(path)
 
+  def url(path: String): URL = classLoader.getResource(path)
+
   def load(path: String): InputStream = {
-    val stream: InputStream = Thread.currentThread().getContextClassLoader.getResourceAsStream(path)
+    val stream: InputStream = classLoader.getResourceAsStream(path)
     if (stream == null) throw new IOException(s"Resource file $path not found")
     stream
   }

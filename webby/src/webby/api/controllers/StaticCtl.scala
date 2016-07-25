@@ -1,6 +1,6 @@
 package webby.api.controllers
 
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 
 import com.google.common.net.HttpHeaders
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -15,9 +15,15 @@ import webby.mvc.{StdCtl, StdPaths}
   */
 object StaticCtl extends StdCtl {
 
+  /**
+    * Действие выдачи содержимого файла по пути basePath + subPath.
+    *
+    * @param basePath Базовый путь без слеша вначале. Иначе, файл будет с абсолютным путём.
+    * @param subPath  Вторая часть пути.
+    */
   def at(basePath: String, subPath: String) = SimpleAction {req =>
     PageLog.noLog()
-    val path = StdPaths.get.root.resolve(basePath).resolve(subPath)
+    val path: Path = StdPaths.get.root.resolve(basePath).resolve(subPath)
     if (!Files.exists(path)) {
       NotFoundRaw
     } else {
