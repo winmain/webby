@@ -36,7 +36,9 @@ abstract class OverridableObject {
   type Value <: Base
 
   trait Base {self: Value =>
-    require(_obj == null, "Object cannot be initialized twice: " + getClass.getName)
+    require(_obj == null, "Object cannot be initialized twice: " + _obj.getClass.getName + ". " +
+      "Seems, this object already initialized to default value, and you trying to reinitialize it. " +
+      "To prevent this error you must initialize your non-default object first.")
     _obj = this
   }
 

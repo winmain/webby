@@ -23,6 +23,12 @@ abstract class GlobalSettings {
   import Results._
 
   /**
+    * Initialize all objects here.
+    * [[webby.commons.system.OverridableObject]] successors must be called here.
+    */
+  def initObjects(app: Application) {}
+
+  /**
    * Called before the application starts.
    *
    * Resources managed by plugins, such as database connections, are likely not available at this point.

@@ -48,6 +48,7 @@ object App {
     _app = app
 
     Threads.withContextClassLoader(app.classloader) {
+      app.global.initObjects(app)
       // --- for debug ---
       // app.plugins.foreach {plugin =>
       //   val t0 = System.currentTimeMillis()
