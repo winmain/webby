@@ -1,5 +1,6 @@
 package webby.mvc.script
 import com.google.javascript.jscomp.SourceFile
+import webby.commons.io.Resources
 
 trait GoogleClosureLibSource {
   def forPath(path: String): SourceFile
@@ -10,7 +11,7 @@ trait GoogleClosureLibSource {
 class ResourceGoogleClosureLibSource(prefixPath: String = "goog/") extends GoogleClosureLibSource {
   override def forPath(subPath: String): SourceFile = {
     val path = prefixPath + subPath
-    SourceFile.builder().withOriginalPath(path).buildFromUrl(getClass.getClassLoader.getResource(path))
+    SourceFile.builder().withOriginalPath(path).buildFromUrl(Resources.url(path))
   }
 
   override val baseJs: SourceFile = forPath("base.js")
