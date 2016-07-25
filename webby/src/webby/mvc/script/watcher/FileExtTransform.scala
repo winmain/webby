@@ -1,4 +1,4 @@
-package watcher
+package webby.mvc.script.watcher
 
 class FileExtTransform(toExtension: String) {
 

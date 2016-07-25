@@ -1,4 +1,4 @@
-package watcher
+package webby.mvc.script.watcher
 
 import java.nio.file.{Path, Paths}
 

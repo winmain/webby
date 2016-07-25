@@ -7,13 +7,12 @@ object WebbyBuild extends Build {
 
   val commonSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
     organization := "com.github.citrum.webby",
-    version := "0.2",
+    version := "0.2.1",
 
     scalaVersion := buildScalaVersion,
 
     incOptions := incOptions.value.withNameHashing(nameHashing = true),
     resolvers ++= Seq(
-      "Local Nexus" at "http://nexus/content/groups/public",
       "zeroturnaround repository" at "https://repos.zeroturnaround.com/nexus/content/repositories/zt-public/", // The zeroturnaround.com repository
       Resolver.bintrayRepo("citrum", "maven") // Temporary repo for querio
     ),
@@ -82,21 +81,13 @@ object WebbyBuild extends Build {
       libraryDependencies += querio
     )).dependsOn(webby)
 
-  // ------------------------------- script-compiler project -------------------------------
-
-  lazy val scriptCompiler: Project = Project(
-    "script-compiler",
-    file("script-compiler"),
-    settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
-      libraryDependencies ++= commonDependencies
-    ))
-
   // ------------------------------ webby project ------------------------------
 
   lazy val webby: Project = Project(
     "webby",
     file("webby"),
     settings = commonSettings ++ makeSourceDirs() ++ Seq(
+      description := "Webby is a scala web framework",
       libraryDependencies := {
         val deps = Seq.newBuilder[ModuleID]
         deps ++= commonDependencies
@@ -142,12 +133,12 @@ object WebbyBuild extends Build {
       javacOptions ++= Seq("-XDenableSunApiLintControl"),
       scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-Xlint", "-Xlint:-nullary-unit") // nullary-unit нужен только для оператора def > : Unit в CommonTag
     )
-  ).dependsOn(scriptCompiler) //.dependsOn(SbtSharedProject)
+  )
 
   lazy val root = Project(
     "webby-root",
     file("."),
-    aggregate = Seq(webby, elasticOrm, scriptCompiler),
+    aggregate = Seq(webby, elasticOrm),
     settings = Seq(
       // Disable packaging & publishing artifact
       Keys.`package` := file(""),

@@ -1,4 +1,4 @@
-package compiler
+package webby.mvc.script.compiler
 import java.nio.file.Path
 
 /**

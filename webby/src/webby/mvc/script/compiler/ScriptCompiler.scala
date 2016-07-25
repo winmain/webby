@@ -1,8 +1,9 @@
-package compiler
+package webby.mvc.script.compiler
 import java.io.OutputStream
 import java.nio.file.{Files, Path}
 
 import com.google.common.base.Charsets
+import webby.commons.io.IOUtils
 
 abstract class ScriptCompiler {
 
@@ -28,8 +29,8 @@ abstract class ScriptCompiler {
     val os: OutputStream = proc.getOutputStream
     os.write(input.getBytes)
     os.close()
-    val result: String = IOUtils.slurp(proc.getInputStream)
-    val errors: String = IOUtils.slurp(proc.getErrorStream)
+    val result: String = IOUtils.readString(proc.getInputStream)
+    val errors: String = IOUtils.readString(proc.getErrorStream)
     proc.waitFor()
     if (proc.exitValue() == 0 && errors.isEmpty) Right(result)
     else Left(errors)
