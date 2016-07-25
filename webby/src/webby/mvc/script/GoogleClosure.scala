@@ -40,7 +40,7 @@ object GoogleClosure {
     *   }
     * }}}
     */
-  def runAdvancedCompiler(builder: GoogleClosureServerBuilder,
+  def runAdvancedCompiler(builder: => GoogleClosureServerBuilder,
                           compileModules: Seq[String]): Unit = {
     println("--- Google Closure Compiler step ---")
     val t0 = System.currentTimeMillis()
