@@ -334,6 +334,7 @@ trait EsTypeRecord extends EsRecord {
   def id: String
   def idInt: Int = Integer.parseInt(id)
   def idString: String = id
+  def score: Option[Float] = data.score
 }
 
 /**
