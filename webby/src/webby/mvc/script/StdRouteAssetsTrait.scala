@@ -31,7 +31,7 @@ trait StdRouteAssetsTrait[R] extends BaseRoute[R] {
   * Пример использования:
   * {{{
   *   object HandlersMain extends RouteHandlers with RouteMainTrait[Handler] with StdRouteAssetsHandlers {
-  *     override object RouteUtils extends StdRouteUtils(Paths, GoogleClosureServers.create)
+  *     override object RouteUtils extends StdScriptRouteUtils(Paths, GoogleClosureServers.builder(_).build)
   *     ...
   *   }
   * }}}

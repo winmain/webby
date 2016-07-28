@@ -407,6 +407,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
       val needRecompile: Boolean = !Files.exists(compiledPath) || lastModified(compiledPath) < maxModified
       if (needRecompile) {
         log.info("Compiling js closure module \"" + module + "\"")
+        externs.foreach(_.clearCachedSource()) // Externs могли обновиться, поэтому сбросить кеш для них
         printCompiledResult(compileClosureModule(module))
       }
       val resultPath = targetGccDir.resolve(module + (if (isRest) "_rest.js" else ".js"))
