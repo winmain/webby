@@ -6,13 +6,13 @@ import webby.api.Profile
 
 /**
   * Класс для запуска object методов из консоли в Console режиме (Profile.Console).
-  * Usage: rosrabota webby.mvc.ConsoleRun module.Class methodName
+  * Usage: app webby.mvc.ConsoleRun module.Class methodName
   */
 object ConsoleRun {
 
   def main(args: Array[String]) {
     if (args.length < 1 || args.length > 2) {
-      println("Usage: rosrabota webby.mvc.ConsoleRun module.Class methodName")
+      println("Usage: webby webby.mvc.ConsoleRun module.Class methodName")
       sys.exit(-1)
     }
     val className = args(0)

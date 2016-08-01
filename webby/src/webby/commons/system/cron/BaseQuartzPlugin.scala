@@ -12,6 +12,7 @@ import org.quartz.spi.{JobFactory, MutableTrigger, TriggerFiredBundle}
 import org.quartz.{CronTrigger, TriggerKey, _}
 import webby.api.{App, Plugin}
 import webby.commons.io.{IOUtils, StdJs}
+import webby.commons.system.mbean.{Description, MBeans, PName}
 import webby.commons.text.StringWrapper.wrapper
 
 import scala.collection.JavaConversions._
@@ -48,7 +49,7 @@ import scala.collection.mutable
   *
   * @param testMode Quartz запущен для тестирования? Не для продакшна. В этом режиме задания сами не выполняются.
   */
-abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {
+abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
   // ------------------------------- Abstract methods -------------------------------
 
   /**
@@ -260,6 +261,23 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {
   }
 
   private var triggerInitDate: Date = null
+
+  // ------------------------------- MBean -------------------------------
+  trait MBean {
+    @Description("Run job task")
+    def runJob(@PName("group") group: String, @PName("name") name: String)
+
+    @Description("Run job task with JSON data")
+    def runJobJsonString(@PName("group") group: String, @PName("name") name: String, @PName("jsonData") jsonData: String)
+  }
+
+  object MBeanImpl extends MBean {
+    override def runJob(group: String, name: String): Unit = self.runJob(group, name)
+    override def runJobJsonString(group: String, name: String, jsonData: String): Unit = runJobJsonString(group, name, jsonData)
+  }
+
+  def mBeanName = "Quartz"
+  MBeans.register(MBeanImpl, classOf[MBean]).withName(mBeanName)
 }
 
 /**

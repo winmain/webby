@@ -18,12 +18,12 @@ public interface MBeanRegistrar {
 
     interface MBeanRegBuilder {
         /**
-         * Зарегистрировать mbean по имени "rosrabota:type={type}"
+         * Зарегистрировать mbean по имени "webby:type={type}"
          */
         void withName(String type);
 
         /**
-         * Зарегистрировать mbean по имени "rosrabota:type={type},name={name}"
+         * Зарегистрировать mbean по имени "webby:type={type},name={name}"
          */
         void withName(String type, String name);
 

@@ -149,7 +149,7 @@ abstract class NettyServer(appProvider: ApplicationProvider, port: Int, address:
     }
   }
 
-  private def getMBeanObjectName = new ObjectName("rosrabota:type=NettyServer")
+  private def getMBeanObjectName = new ObjectName("webby:type=NettyServer")
 
   private def initMbean(): Unit = {
     ManagementFactory.getPlatformMBeanServer.registerMBean(

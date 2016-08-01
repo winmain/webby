@@ -17,13 +17,13 @@ class LoggerSB(capacity: Int = 128) extends SB(capacity) {
       zpad2(v.getHour) + ":" + zpad2(v.getMinute) + ":" + zpad2(v.getSecond)
   }
 
-  // Формат: "2012-07-18T13:55:02 [POST rosrabota.ru/=/moder/res~moder] "
+  // Формат: "2012-07-18T13:55:02 [POST example.com/=/moder/res~moder] "
   def writeCommonPrefix(v: LocalDateTime): Unit = {
     writeDateTime(v)
     this + " [" + Thread.currentThread().getName + "] "
   }
 
-  // Формат: "2012-07-18T13:55:02 144.76.172.79 [POST rosrabota.ru/=/moder/res~moder] "
+  // Формат: "2012-07-18T13:55:02 144.76.172.79 [POST example.com/=/moder/res~moder] "
   def writeCommonPrefixWithIp(v: LocalDateTime)(implicit req: RequestHeader): Unit = {
     writeDateTime(v)
     this + " " + req.remoteAddress + " [" + Thread.currentThread().getName + "] "
