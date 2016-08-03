@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.deser.Deserializers
 import com.fasterxml.jackson.databind.ser.Serializers
 import com.fasterxml.jackson.module.scala.JacksonModule
-import querio._
+import querio.{AnyScalaDbEnum, AnyScalaDbEnumCls, _}
 
 private object ScalaDbEnumSerializers extends Serializers.Base {
 
