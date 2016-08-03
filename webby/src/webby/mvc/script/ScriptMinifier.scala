@@ -66,7 +66,7 @@ class ScriptMinifier(dirPrefix: String,
     println("--- Minifier step: " + dirPrefix + " ---")
     val executorThreadNum = 4
     val t0 = System.currentTimeMillis()
-    Executors.synchronousQueueExecutor(executorThreadNum) {executor =>
+    Executors.withSynchronousQueueExecutor("minifier-%d", executorThreadNum) {executor =>
       def minifyDir(subDir: String): Unit = {
         val sourceDir = makeSourcePath(subDir, subDir)
         val targetDir = makeTargetPath(subDir, subDir)

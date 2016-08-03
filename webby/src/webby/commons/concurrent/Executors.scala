@@ -1,14 +1,22 @@
 package webby.commons.concurrent
 import java.util.concurrent._
 
+import org.apache.commons.lang3.concurrent.BasicThreadFactory
+import org.slf4j.LoggerFactory
 import webby.commons.concurrent.executors.{ExecutorScalingQueue, ForceQueuePolicy, ScalingThreadPoolExecutor}
 
 object Executors {
 
-  class Executor(service: ExecutorService) {
-    def execute(command: => Any) {
-      service.execute(new Runnable {
-        override def run(): Unit = command
+  class Executor(val service: ExecutorService) {
+    def execute[A](command: => A): java.util.concurrent.Future[A] = {
+      service.submit(new Callable[A] {
+        override def call(): A =
+          try command
+          catch {
+            case e: Throwable =>
+              LoggerFactory.getLogger(Executors.getClass).error("Unhandled exception", e)
+              throw e
+          }
       })
     }
   }
@@ -19,21 +27,30 @@ object Executors {
     * <p>
     * Пример:
     * {{{
-    * Executors.synchronousQueueExecutor() { ex =>
+    * Executors.synchronousQueueExecutor("actions-%d", 4) { ex =>
     *    for (action <- actions) {
     *      ex.execute(action)
     *    }
     * }
     * }}}
+    *
+    * @param threads             Fixed thread number
+    * @param threadNamingPattern Thread naming pattern, like "JobAppSender-%d" (see [[org.apache.commons.lang3.concurrent.BasicThreadFactory]])
+    * @param awaitTerminationFor Time to wait for executor after shutdown
     */
-  def synchronousQueueExecutor[R](threads: Int = 4)(block: Executor => R): R = {
+  def withSynchronousQueueExecutor[R](threadNamingPattern: String,
+                                      threads: Int,
+                                      awaitTerminationFor: (Long, TimeUnit) = (1, TimeUnit.HOURS)
+                                     )(block: Executor => R): R = {
     val executor = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS,
-      new SynchronousQueue[Runnable], new ForceQueuePolicy)
+      new SynchronousQueue[Runnable],
+      new BasicThreadFactory.Builder().namingPattern(threadNamingPattern).build(),
+      new ForceQueuePolicy)
 
     try block(new Executor(executor))
     finally {
       executor.shutdown()
-      executor.awaitTermination(1, TimeUnit.HOURS)
+      executor.awaitTermination(awaitTerminationFor._1, awaitTerminationFor._2)
     }
   }
 

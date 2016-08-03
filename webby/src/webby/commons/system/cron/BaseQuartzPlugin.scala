@@ -7,6 +7,7 @@ import java.util.Date
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import org.apache.commons.lang3.StringUtils
+import org.quartz.impl.matchers.GroupMatcher
 import org.quartz.impl.{JobDetailImpl, StdSchedulerFactory}
 import org.quartz.spi.{JobFactory, MutableTrigger, TriggerFiredBundle}
 import org.quartz.{CronTrigger, TriggerKey, _}
@@ -80,7 +81,7 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
 
   protected val log = webby.api.Logger(getClass)
 
-  private[cron] var scheduler: Scheduler = _
+  protected[cron] var scheduler: Scheduler = _
 
   val jobMap = mutable.Map[JobKey, Job]()
 
@@ -264,6 +265,15 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
 
   // ------------------------------- MBean -------------------------------
   trait MBean {
+    @Description("All job groups and names")
+    def getJobs: Array[String]
+
+    @Description("All currently executing jobs")
+    def getCurrentlyExecutingJobs: java.util.List[String]
+
+    @Description("Run job task")
+    def runJob(@PName("group.name") groupName: String)
+
     @Description("Run job task")
     def runJob(@PName("group") group: String, @PName("name") name: String)
 
@@ -272,6 +282,20 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
   }
 
   object MBeanImpl extends MBean {
+    override def getJobs: Array[String] = {
+      scheduler.getJobKeys(GroupMatcher.anyJobGroup()).toArray.map(_.toString).sorted
+    }
+    override def getCurrentlyExecutingJobs: java.util.List[String] = {
+      val ret = new java.util.ArrayList[String]()
+      scheduler.getCurrentlyExecutingJobs.foreach {jec =>
+        ret.add(jec.getJobDetail.getKey + ": started " + jec.getFireTime)
+      }
+      ret
+    }
+    override def runJob(groupName: String): Unit = {
+      val Array(group, name) = groupName.splitChars(".", 2)
+      self.runJob(group, name)
+    }
     override def runJob(group: String, name: String): Unit = self.runJob(group, name)
     override def runJobJsonString(group: String, name: String, jsonData: String): Unit = runJobJsonString(group, name, jsonData)
   }

@@ -7,7 +7,7 @@ object WebbyBuild extends Build {
 
   val commonSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
     organization := "com.github.citrum.webby",
-    version := "0.2.7",
+    version := "0.2.8",
 
     scalaVersion := buildScalaVersion,
 

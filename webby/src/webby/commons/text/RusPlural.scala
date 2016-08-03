@@ -6,9 +6,9 @@ import scala.annotation.switch
   *
   * Примеры:
   * {{{
-  * val days = Plural("день", "дня", "дней")
-  * val months = Plural("месяц", "месяца", "месяцев")
-  * val years = Plural("год", "года", "лет")
+  * val days = RusPlural("день", "дня", "дней")
+  * val months = RusPlural("месяц", "месяца", "месяцев")
+  * val years = RusPlural("год", "года", "лет")
   *
   * println(days(4).str)
   * }}}
