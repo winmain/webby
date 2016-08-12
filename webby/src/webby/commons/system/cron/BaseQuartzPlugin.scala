@@ -11,7 +11,7 @@ import org.quartz.impl.matchers.GroupMatcher
 import org.quartz.impl.{JobDetailImpl, StdSchedulerFactory}
 import org.quartz.spi.{JobFactory, MutableTrigger, TriggerFiredBundle}
 import org.quartz.{CronTrigger, TriggerKey, _}
-import webby.api.{App, Plugin}
+import webby.api.{App, Plugin, Profile}
 import webby.commons.io.{IOUtils, StdJs}
 import webby.commons.system.mbean.{Description, MBeans, PName}
 import webby.commons.text.StringWrapper.wrapper
@@ -71,6 +71,8 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
 
   protected def createCronLog(group: String, name: String): CronLog = CronLogFactory.get.forQuartz(group, name)
 
+  protected def canRunInProfile(profile: Profile): Boolean = profile.isProd
+
   // ------------------------------- Public methods -------------------------------
 
   def runJob(group: String, name: String): Unit = scheduler.triggerJob(new JobKey(name, group))
@@ -86,7 +88,7 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
   val jobMap = mutable.Map[JobKey, Job]()
 
   override def onStart() {
-    if (!testMode) require(App.isProd, "Quartz can only run in production")
+    if (!testMode) require(canRunInProfile(App.profile), "Quartz cannot run in profile '" + App.profile + "'")
 
     scheduler = StdSchedulerFactory.getDefaultScheduler
     scheduler.setJobFactory(new JobFactory {

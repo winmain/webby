@@ -32,6 +32,7 @@ object App {
   def isDevOrJenkins: Boolean = profile.isDevOrJenkins
   def isDevOrJenkinsOrTest: Boolean = profile.isDevOrJenkinsOrTest
   def isDevOrConsole: Boolean = profile.isDevOrConsole
+  def isJenkinsOrProd: Boolean = profile.isJenkinsOrProd
   def isProdOrConsole: Boolean = profile.isProdOrConsole
 
   def noTest: Boolean = _app != null && !_app.profile.isTest
