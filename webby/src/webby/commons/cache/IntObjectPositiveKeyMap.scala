@@ -7,7 +7,7 @@ import com.carrotsearch.hppc.procedures.IntObjectProcedure
 
 /**
   * (Не оттестирован, нужно писать тесты).
-  * Реализация похожа на [[IntIntPositiveValueMap]], только здесь отрицательное значение ключей рарезервировано.
+  * Реализация похожа на [[IntIntPositiveValueMap]], только здесь отрицательное значение ключей зарезервировано.
   *
   * Requires sbt dependencies
   * {{{
