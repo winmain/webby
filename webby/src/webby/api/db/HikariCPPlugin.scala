@@ -22,7 +22,7 @@ abstract class HikariCPPlugin extends DBPlugin {
   override def onStart() {
     val config = getConfig
     ds = new HikariDataSource(config)
-    if (!App.isDev) {
+    if (isTestConnection) {
       try {
         ds.getConnection.close()
       } catch {
@@ -38,6 +38,8 @@ abstract class HikariCPPlugin extends DBPlugin {
 
   override def getConnection: Connection = ds.getConnection
   override def shutdownPool() = ds.close()
+
+  def isTestConnection = App.profile.isJenkinsOrProd
 
   // ------------------------------- Abstract methods -------------------------------
 
