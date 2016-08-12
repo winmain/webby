@@ -36,11 +36,13 @@ class DevServer {
   def onServerStarted(): Unit = {}
   onServerStarted()
 
-  Runtime.getRuntime.addShutdownHook(new Thread {
+  var shutdownHook: Thread = new Thread {
     override def run() {
+      shutdownHook = null
       stopServers()
     }
-  })
+  }
+  Runtime.getRuntime.addShutdownHook(shutdownHook)
 
   // Run application
   server.applicationProvider.get.left.foreach {e =>
@@ -57,7 +59,10 @@ class DevServer {
       stopServers() // Получен enter с клавиатуры, завершаемся
   }
 
-  def stopServers(): Unit = server.stop()
+  def stopServers(): Unit = {
+    if (shutdownHook != null) Runtime.getRuntime.removeShutdownHook(shutdownHook)
+    server.stop()
+  }
 }
 
 object DevServer {
