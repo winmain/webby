@@ -6,13 +6,23 @@ import java.{util => ju}
 import webby.core.SBTLink
 
 /**
-  * Сервер для локальной разработки. Приспособлен останавливаться по нажатию на Enter в консоли.
+  * Базовый класс сервера для локальной разработки. Приспособлен останавливаться по нажатию на Enter в консоли.
   * Также, его можно немного изменить, переопределив некоторые методы внутри него.
+  *
+  * Example usage:
+  * {{{
+  *   object DevServer extends WebbyDevServer(8080) {
+  *     def main(args: Array[String]): Unit = {
+  *       DevServer
+  *     }
+  *   }
+  * }}}
+  *
+  * @param defaultPort Дефолтный порт, на котором будет работать сервер.
+  *                    Его можно переопределить внешним параметром http.port
   */
-class DevServer {
+class WebbyDevServer(defaultPort: Int) {
   var firstReload = true
-
-  def defaultPort = 9000
 
   // Start server
   val port: Int = Option(System.getProperty("http.port")).fold(defaultPort)(Integer.parseInt)
@@ -62,11 +72,5 @@ class DevServer {
   def stopServers(): Unit = {
     if (shutdownHook != null) Runtime.getRuntime.removeShutdownHook(shutdownHook)
     server.stop()
-  }
-}
-
-object DevServer {
-  def main(args: Array[String]): Unit = {
-    new DevServer
   }
 }
