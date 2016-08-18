@@ -128,6 +128,7 @@ object WebbyBuild extends Build {
         deps += "com.carrotsearch" % "hppc" % "0.7.1" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
         deps += "com.google.javascript" % "closure-compiler" % "v20160619" % "optional" // Google Closure Compiler
         deps += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" % "optional" // Google Closure Library
+        deps += "org.glassfish.external" % "opendmk_jmxremote_optional_jar" % "1.0-b01-ea" % "optional" // JMXMP - better replacement for RMI
         deps.result()
       },
       javacOptions ++= Seq("-XDenableSunApiLintControl"),

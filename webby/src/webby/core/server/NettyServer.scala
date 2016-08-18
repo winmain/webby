@@ -3,8 +3,9 @@ package webby.core.server
 import java.lang.management.ManagementFactory
 import java.net.InetSocketAddress
 import java.nio.file.{Files, Path, Paths}
-import java.util.TimeZone
 import java.util.concurrent._
+import java.util.{Collections, TimeZone}
+import javax.management.remote.{JMXConnectorServerFactory, JMXServiceURL}
 import javax.management.{MBeanServer, ObjectName}
 
 import io.netty.bootstrap.ServerBootstrap
@@ -152,8 +153,19 @@ abstract class NettyServer(appProvider: ApplicationProvider, port: Int, address:
   private def getMBeanObjectName = new ObjectName("webby:type=NettyServer")
 
   private def initMbean(): Unit = {
-    ManagementFactory.getPlatformMBeanServer.registerMBean(
+    val mBeanServer = ManagementFactory.getPlatformMBeanServer
+    mBeanServer.registerMBean(
       new AnnotatedStandardMBean(NettyServerMBeanImpl, classOf[NettyServerMBean]), getMBeanObjectName)
+
+    // To use JMXMP server you must add sbt dependency:
+    // deps += "org.glassfish.external" % "opendmk_jmxremote_optional_jar" % "1.0-b01-ea" % "optional"
+    Option(System.getProperty("jmxmp.port")).foreach {port =>
+      JMXConnectorServerFactory.newJMXConnectorServer(
+        new JMXServiceURL("service:jmx:jmxmp://127.0.0.1:" + port),
+        Collections.emptyMap(),
+        mBeanServer
+      ).start()
+    }
   }
 
   private def deinitMbean(): Unit = {
