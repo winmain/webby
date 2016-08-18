@@ -3,8 +3,8 @@ package webby.core.server
 import java.lang.management.ManagementFactory
 import java.net.InetSocketAddress
 import java.nio.file.{Files, Path, Paths}
+import java.util.Collections
 import java.util.concurrent._
-import java.util.{Collections, TimeZone}
 import javax.management.remote.{JMXConnectorServerFactory, JMXServiceURL}
 import javax.management.{MBeanServer, ObjectName}
 
@@ -210,17 +210,9 @@ class DevNettyServer(appProvider: ApplicationProvider, port: Int, address: Strin
   */
 object NettyServer {
 
-  def init(): Unit = {
-  }
+  def init(): Unit = {}
 
-  /**
-    * Глобальная инициализация состояния при старте production сервера
-    */
-  def initProd(): Unit = {
-    // Принудительно поставить московское время (иначе, часы будут показывать на час вперёд).
-    // Время нужно установить до инициализации логов.
-    TimeZone.setDefault(TimeZone.getTimeZone("GMT+0300"))
-  }
+  def initProd(): Unit = {}
 
   /**
     * creates a NettyServer based on the application represented by applicationPath
