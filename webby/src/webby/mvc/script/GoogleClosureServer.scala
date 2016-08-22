@@ -7,14 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.base.CharMatcher
 import com.google.common.net.HttpHeaders
 import com.google.javascript.jscomp.SourceFile
-import compiler.ScriptCompiler
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.commons.lang3.StringUtils
-import watcher.{FileExtTransform, TargetFileTransform}
 import webby.api.mvc.{PlainResult, RequestHeader, ResultException, Results}
 import webby.commons.text.SB
 import webby.commons.text.StringWrapper.wrapper
 import webby.commons.time.StdDates
+import webby.mvc.script.compiler.ScriptCompiler
+import webby.mvc.script.watcher.{FileExtTransform, TargetFileTransform}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConversions._
@@ -201,47 +201,48 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     *         так и в [[canonicalTargetDir]], если была компиляция.
     */
   @tailrec
-  private def autoCompile(sourceDir: Path, localPath: String, compilersLeft: List[ScriptCompiler]): Path =
-  compilersLeft match {
-    case Nil => sourceDir.resolve(localPath)
-    case jsCompiler :: tail =>
-      localPath match {
-        // Компилируем только те скрипты, расширения файлов которых есть в списке #compilersLeft
-        case _ if localPath.endsWith(jsCompiler.sourceDotExt) =>
-          sourceDir.resolve(localPath) match {
-            case path if Files.exists(path) =>
-              val filePath: String = canonicalize(path).toString
-              if (!filePath.startsWith(sourceDir.toString)) {
-                log.error(s"File '$filePath' not in sourceDir '$sourceDir'")
-                throw ResultException(Results.BadRequest("File not in sourceDir"))
-              } else {
-                val targetPath = TargetFileTransform(sourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath)
-                def checkRecompile(): Boolean = {
-                  synchronized {
-                    if (!Files.exists(targetPath) || Files.getLastModifiedTime(targetPath).compareTo(Files.getLastModifiedTime(path)) < 0) {
-                      val t0 = System.currentTimeMillis()
-                      val compileResult = jsCompiler.compileFile(path, targetPath)
-                      val t1 = System.currentTimeMillis()
-                      if (compileResult.isLeft) {
-                        log.error("Error compiling:\n" + compileResult.left.get)
-                        return false
-                      }
-                      log.info("Compiled " + localPath + " in " + (t1 - t0) + " ms")
-                    }
-                  }
-                  true
-                }
-
-                if (checkRecompile()) {
-                  targetPath
+  private def autoCompile(sourceDir: Path, localPath: String, compilersLeft: List[ScriptCompiler]): Path = {
+    compilersLeft match {
+      case Nil => sourceDir.resolve(localPath)
+      case jsCompiler :: tail =>
+        localPath match {
+          // Компилируем только те скрипты, расширения файлов которых есть в списке #compilersLeft
+          case _ if localPath.endsWith(jsCompiler.sourceDotExt) =>
+            sourceDir.resolve(localPath) match {
+              case path if Files.exists(path) =>
+                val filePath: String = canonicalize(path).toString
+                if (!filePath.startsWith(sourceDir.toString)) {
+                  log.error(s"File '$filePath' not in sourceDir '$sourceDir'")
+                  throw ResultException(Results.BadRequest("File not in sourceDir"))
                 } else {
-                  throw ResultException(Results.InternalServerError("Compilation error"))
+                  val targetPath = TargetFileTransform(sourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath)
+                  def checkRecompile(): Boolean = {
+                    synchronized {
+                      if (!Files.exists(targetPath) || Files.getLastModifiedTime(targetPath).compareTo(Files.getLastModifiedTime(path)) < 0) {
+                        val t0 = System.currentTimeMillis()
+                        val compileResult = jsCompiler.compileFile(path, targetPath)
+                        val t1 = System.currentTimeMillis()
+                        if (compileResult.isLeft) {
+                          log.error("Error compiling:\n" + compileResult.left.get)
+                          return false
+                        }
+                        log.info("Compiled " + localPath + " in " + (t1 - t0) + " ms")
+                      }
+                    }
+                    true
+                  }
+
+                  if (checkRecompile()) {
+                    targetPath
+                  } else {
+                    throw ResultException(Results.InternalServerError("Compilation error"))
+                  }
                 }
-              }
-            case _ => autoCompile(sourceDir, localPath, tail)
-          }
-        case _ => autoCompile(sourceDir, localPath, tail)
-      }
+              case _ => autoCompile(sourceDir, localPath, tail)
+            }
+          case _ => autoCompile(sourceDir, localPath, tail)
+        }
+    }
   }
 
   private def readAndPatchBaseJs(): String = {
@@ -275,10 +276,10 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
       changed = true
     }
 
-    def inDir(sourceDir: Path) {
-      require(Files.isDirectory(sourceDir), "Not a directory: " + sourceDir)
-      resource.managed(Files.newDirectoryStream(sourceDir)).foreach(_.foreach {sourcePath =>
-        if (Files.isDirectory(sourcePath)) inDir(sourcePath)
+    def inDir(sourceDir: Path, dir: Path) {
+      require(Files.isDirectory(dir), "Not a directory: " + dir)
+      resource.managed(Files.newDirectoryStream(dir)).foreach(_.foreach {sourcePath =>
+        if (Files.isDirectory(sourcePath)) inDir(sourceDir, sourcePath)
         else if (allowedExtensions.exists(e => sourcePath.toString.endsWith(e))) {
           val localPathStr = getLocalSourcePath(sourceDir, sourcePath.toString)
           val targetPath = canonicalTargetDir.resolve(new FileExtTransform("js").transform(localPathStr))
@@ -313,7 +314,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
         }
       })
     }
-    canonicalSourceDirs.foreach(inDir)
+    canonicalSourceDirs.foreach(dir => inDir(dir, dir))
 
     if (changed) classMap = makeClassMap()
     changed
