@@ -37,19 +37,22 @@ import scala.io.Source
   *   deps += "com.google.javascript" % "closure-compiler" % "v20160619"
   * }}}
   *
-  * @param libSource    Исходник библиотеки google closure library. Может быть как в jar-архиве, так и простыми файлами.
-  * @param jsSourceDirs Каталоги, в которых лежат js-исходники проекта для компиляции.
-  * @param preCompilers Список компиляторов, которые должны быть вызываны для каждого исходного файла,
-  *                     прежде чем он уйдёт в gcc. Например, здесь могут быть coffeescript, jade компиляторы.
-  * @param prepends     В самое начало результирующих файлов gcc будут подставлены эти исходники.
-  *                     Если мы собираем dev версию, то будут подставлены полные исходники [[JsSourcePair.source]],
-  *                     а для prod версии будет использоваться minified [[JsSourcePair.minified]].
-  *                     Например, здесь можно использовать jQuery.
-  * @param externs      Gcc externs - специально составленные js файлы, задающие исключения при обработке компилятором.
-  *                     Например, [[GoogleClosure.jQueryExtern]]
-  * @param targetDir    Каталог, где будут храниться скомпилированные через [[preCompilers]]
-  *                     промежуточные версии скриптов.
-  * @param targetGccDir Каталог, куда будут сохраняться скомпилированные gcc финальные скрипты.
+  * @param libSource        Исходник библиотеки google closure library. Может быть как в jar-архиве, так и простыми файлами.
+  * @param jsSourceDirs     Каталоги, в которых лежат js-исходники проекта для компиляции.
+  * @param preCompilers     Список компиляторов, которые должны быть вызываны для каждого исходного файла,
+  *                         прежде чем он уйдёт в gcc. Например, здесь могут быть coffeescript, jade компиляторы.
+  * @param prepends         В самое начало результирующих файлов gcc будут подставлены эти исходники.
+  *                         Если мы собираем dev версию, то будут подставлены полные исходники [[JsSourcePair.source]],
+  *                         а для prod версии будет использоваться minified [[JsSourcePair.minified]].
+  *                         Например, здесь можно использовать jQuery.
+  * @param externs          Gcc externs - специально составленные js файлы, задающие исключения при обработке компилятором.
+  *                         Например, [[GoogleClosure.jQueryExtern]]
+  * @param targetDir        Каталог, где будут храниться скомпилированные через [[preCompilers]]
+  *                         промежуточные версии скриптов.
+  * @param targetGccDir     Каталог, куда будут сохраняться скомпилированные gcc финальные скрипты.
+  * @param remapEntryPoints Переназначение входных файлов (entry points). Например, если у нас есть
+  *                         класс MainEntryPoint.hx, а мы хотим, чтобы он был как main.js, поэтому
+  *                         маппинг будет таким: Map("main.js" -> "MainEntryPoint.js")
   */
 class GoogleClosureServer(libSource: GoogleClosureLibSource,
                           jsSourceDirs: Seq[Path],
@@ -57,7 +60,8 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                           prepends: Seq[JsSourcePair],
                           externs: Seq[SourceFile],
                           targetDir: Path,
-                          targetGccDir: Path) {
+                          targetGccDir: Path,
+                          remapEntryPoints: Map[String, String] = Map.empty) {
 
   val log = webby.api.Logger(getClass)
 
@@ -77,6 +81,10 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
   private val canonicalSourceDirs: Seq[Path] = jsSourceDirs.map(canonicalize)
   private val canonicalTargetDir: Path = canonicalize(targetDir)
 
+  private val lazyDotExts: Vector[String] = preCompilers.withFilter(_.lazyCompiler).map(_.sourceDotExt)(scala.collection.breakOut)
+
+  private val reverseRemapEntryPoints: Map[String, String] = remapEntryPoints.map(_.swap)
+
   private var baseJsBody: String = null
 
   case class ClosureFile(source: SourceFile,
@@ -86,7 +94,23 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                          entryPoint: Boolean = false,
                          lastModified: Long = 0)
 
+  /**
+    * Этот класс отличается от [[ClosureFile]] тем, что такой файл не компилируется при каждом
+    * проходе [[lazyUpdateFiles()]] по всем внутренним каталогам. Эти файлы компилируются только
+    * тогда, когда юзер явно их запросил. Они являются точками входа (entry points).
+    * Также, при изменении любого вложенного файла, все entry points становятся устаревшими, и их
+    * следует пересобрать при следующем обращении.
+    */
+  case class LazyClosureFile(sourceDir: Path,
+                             localPathStr: String,
+                             targetPath:Path,
+                             lastModified: Long) {
+    def make(): ClosureFile =
+      makeClosureFile(isPureJsFile = false, sourceDir = sourceDir, localPathStr = localPathStr, bodyPath = targetPath, sourceModified = lastModified)
+  }
+
   val fileMap = mutable.Map.empty[String, ClosureFile]
+  val lazyFileMap = mutable.Map.empty[String, LazyClosureFile]
   var classMap: Map[String, ClosureFile] = _
 
   private def makeClassMap(): Map[String, ClosureFile] =
@@ -215,7 +239,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                   log.error(s"File '$filePath' not in sourceDir '$sourceDir'")
                   throw ResultException(Results.BadRequest("File not in sourceDir"))
                 } else {
-                  val targetPath = TargetFileTransform(sourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath)
+                  val targetPath = TargetFileTransform(sourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath, reverseRemapEntryPoints)
                   def checkRecompile(): Boolean = {
                     synchronized {
                       if (!Files.exists(targetPath) || Files.getLastModifiedTime(targetPath).compareTo(Files.getLastModifiedTime(path)) < 0) {
@@ -223,10 +247,13 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                         val compileResult = jsCompiler.compileFile(path, targetPath)
                         val t1 = System.currentTimeMillis()
                         if (compileResult.isLeft) {
-                          log.error("Error compiling:\n" + compileResult.left.get)
+                          log.error("Error compiling " + path + ":")
+                          System.err.println(compileResult.left.get)
                           return false
                         }
-                        log.info("Compiled " + localPath + " in " + (t1 - t0) + " ms")
+                        val localPathJs = new FileExtTransform(jsCompiler.targetFileExt).transform(localPath)
+                        val compiledInfo: String = reverseRemapEntryPoints.get(localPathJs).fold(localPath)(localPath + " => " + _)
+                        log.info("Compiled " + compiledInfo + " in " + (t1 - t0) + " ms")
                       }
                     }
                     true
@@ -243,6 +270,11 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
           case _ => autoCompile(sourceDir, localPath, tail)
         }
     }
+  }
+
+  private def makeClosureFile(isPureJsFile: Boolean, sourceDir: Path, localPathStr: String, bodyPath: Path, sourceModified: Long): ClosureFile = {
+    if (!isPureJsFile) autoCompile(sourceDir, localPathStr)
+    parseClosureFile(SourceFile.builder().withOriginalPath(localPathStr).buildFromFile(bodyPath.toString), sourceModified, bodyPath)
   }
 
   private def readAndPatchBaseJs(): String = {
@@ -275,46 +307,74 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
       maxModified = Math.max(maxModified, new DepsParser().parse)
       changed = true
     }
+    var maxLazyTargetModified = 0L
 
     def inDir(sourceDir: Path, dir: Path) {
       require(Files.isDirectory(dir), "Not a directory: " + dir)
       resource.managed(Files.newDirectoryStream(dir)).foreach(_.foreach {sourcePath =>
         if (Files.isDirectory(sourcePath)) inDir(sourceDir, sourcePath)
-        else if (allowedExtensions.exists(e => sourcePath.toString.endsWith(e))) {
-          val localPathStr = getLocalSourcePath(sourceDir, sourcePath.toString)
-          val targetPath = canonicalTargetDir.resolve(new FileExtTransform("js").transform(localPathStr))
-          val isPureJsFile = sourcePath.toString.endsWith(".js")
-          var changeFile = false
-          if (!fileMap.contains(sourcePath.toString)) {
-            // Если добавлен новый файл, или это первичная инициализация класса
-            changeFile = true
-          } else {
-            if (isPureJsFile) {
-              if (lastModified(sourcePath) > fileMap(sourcePath.toString).lastModified) {
-                // Еcли обновился js файл, и его не нужно конвертировать
-                changeFile = true
-              }
+        else {
+          val sourcePathStr = sourcePath.toString
+          if (allowedExtensions.exists(e => sourcePathStr.endsWith(e))) {
+            val localPathStr = getLocalSourcePath(sourceDir, sourcePathStr)
+            val localPathJsStr = new FileExtTransform("js").transform(localPathStr)
+            val remappedPathJs = reverseRemapEntryPoints.getOrElse(localPathJsStr, localPathJsStr)
+            val targetPath = canonicalTargetDir.resolve(remappedPathJs)
+            val isPureJsFile = sourcePathStr.endsWith(".js")
+            var changeFile = false
+            if (!fileMap.contains(sourcePathStr) && !lazyFileMap.contains(sourcePathStr)) {
+              // Если добавлен новый файл, или это первичная инициализация класса
+              changeFile = true
             } else {
-              if (!Files.exists(targetPath) || Files.getLastModifiedTime(sourcePath).compareTo(Files.getLastModifiedTime(targetPath)) > 0) {
-                // Если обновился файл, который нужно сконвертировать (coffeescript, jade)
-                changeFile = true
+              if (isPureJsFile) {
+                if (lastModified(sourcePath) > fileMap(sourcePathStr).lastModified) {
+                  // Еcли обновился js файл, и его не нужно конвертировать
+                  changeFile = true
+                }
+              } else {
+                if (!Files.exists(targetPath) || Files.getLastModifiedTime(sourcePath).compareTo(Files.getLastModifiedTime(targetPath)) > 0) {
+                  // Если обновился файл, который нужно сконвертировать (coffeescript, jade)
+                  changeFile = true
+                }
               }
             }
-          }
-          if (changeFile) {
-            // Файл изменён. Обновить данные о нём
-            val bodyPath: Path = if (isPureJsFile) sourcePath else targetPath
-            if (!isPureJsFile) autoCompile(sourceDir, localPathStr)
-            val modified: Long = lastModified(bodyPath)
-            if (modified > maxModified) maxModified = modified
-            val closureFile = parseClosureFile(SourceFile.builder().withOriginalPath(localPathStr).buildFromFile(bodyPath.toString), modified, bodyPath)
-            fileMap.update(sourcePath.toString, closureFile)
-            changed = true
+            if (changeFile) {
+              // Файл изменён. Обновить данные о нём
+              val isLazyFile: Boolean = {
+                val fileName = sourcePath.getFileName.toString
+                lazyDotExts.exists(fileName.endsWith)
+              }
+              val bodyPath: Path = if (isPureJsFile) sourcePath else targetPath
+              val sourceModified: Long = lastModified(sourcePath)
+              if (sourceModified > maxModified) maxModified = sourceModified
+
+              val mapKey = sourceDir.resolve(localPathJsStr).toString
+              if (!isLazyFile) {
+                val closureFile: ClosureFile = makeClosureFile(isPureJsFile, sourceDir, localPathStr, bodyPath, sourceModified)
+                fileMap.update(mapKey, closureFile)
+              } else {
+                if (Files.exists(targetPath)) {
+                  val targetModified = lastModified(targetPath)
+                  if (targetModified > maxLazyTargetModified) maxLazyTargetModified = targetModified
+                }
+                lazyFileMap.update(mapKey, LazyClosureFile(sourceDir, localPathStr, targetPath, sourceModified))
+                fileMap.remove(mapKey)
+              }
+
+              changed = true
+            }
           }
         }
       })
     }
     canonicalSourceDirs.foreach(dir => inDir(dir, dir))
+    // Удалить все закешированные записи lazyFileMap из fileMap, если они были сгенерированы до последнего изменения.
+    if (maxLazyTargetModified < maxModified) {
+      for ((key, lazyFile) <- lazyFileMap) {
+        fileMap.remove(key)
+        Files.deleteIfExists(lazyFile.targetPath)
+      }
+    }
 
     if (changed) classMap = makeClassMap()
     changed
@@ -373,20 +433,44 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
           ignoreJsWithDeps(classMap.get(n).getOrElse(sys.error("Dependency not found " + n + " in " + closureFile)))
         }
       }
-      canonicalSourceDirs.foreach {sourceDir =>
-        val sourcePath: Path = sourceDir.resolve(servePath)
-        fileMap.get(sourcePath.toString).foreach(addFile)
-      }
+      val remappedPath: String = remapEntryPoints.getOrElse(servePath, servePath)
+      tryEntryPoint(remappedPath).foreach(addFile)
       if (isRest) +"\n" + restModuleAppend
     }.toString
 
-    lastResultLength = result.length
+    if (totalCount > 0) {
+      lastResultLength = result.length
 
-    //    val t2 = System.currentTimeMillis()
-    //println("Update time: " + (t1 - t0) + "ms, glue time: " + (t2 - t1) + "ms")
+      //    val t2 = System.currentTimeMillis()
+      //println("Update time: " + (t1 - t0) + "ms, glue time: " + (t2 - t1) + "ms")
 
-    val etag = lastResultLength + "-" + totalCount
-    makeResult(etag, lastModified)(result.getBytes)
+      val etag = lastResultLength + "-" + totalCount
+      makeResult(etag, lastModified)(result.getBytes)
+    } else {
+      Results.NotFoundRaw("File not found")
+    }
+  }
+
+  /**
+    * Попробовать найти точку входа по всем исходным js каталогам.
+    * Также, если файл точки входа не является чистым js, то здесь мы его сначала соберём, а
+    * потом вернём [[ClosureFile]] для него.
+    * @param servePath Путь к файлу относительно [[jsSourceDirs]]
+    * @return Скомпилированный [[ClosureFile]] (если такой найдётся)
+    */
+  private def tryEntryPoint(servePath: String): Option[ClosureFile] = {
+    canonicalSourceDirs.foreach {sourceDir =>
+      val sourcePath: Path = sourceDir.resolve(servePath)
+      val key = sourcePath.toString
+      fileMap.get(key).orElse {
+        lazyFileMap.get(key).map {f =>
+          val compiledClosureFile = f.make()
+          fileMap.update(key, compiledClosureFile)
+          compiledClosureFile
+        }
+      }.foreach(f => return Some(f))
+    }
+    None
   }
 
   /**
@@ -396,7 +480,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     * будет на продакшне.
     */
   def serveClosureCompiled(servePath: String)(implicit req: RequestHeader): PlainResult = synchronized {
-    if (!servePath.endsWith(".js") || servePath.contains("/")) Results.NotFoundRaw
+    if (!servePath.endsWith(".js") || servePath.contains("/")) Results.NotFoundRaw("File not found")
     else {
       val fullModule = StringUtils.removeEnd(servePath, ".js")
       val (module: String, isRest: Boolean) =
@@ -433,13 +517,17 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     * Запустить компиляцию одного модуля Google closure compiler'ом
     */
   private def compileClosureModule(module: String): Seq[Path] = {
-    val sourceDir: Path = canonicalSourceDirs.find(d => Files.exists(d.resolve(module + ".js")))
-      .getOrElse(sys.error("File for module " + module + " does not exist. Using sourceDirs: " + canonicalSourceDirs))
-    val sourcePath: Path = sourceDir.resolve(module + ".js")
-    val sourceRestPath: Path = sourceDir.resolve(module + "_rest.js")
+    val moduleJs = module + ".js"
+    val remappedModuleJs = remapEntryPoints.getOrElse(moduleJs, moduleJs)
+    val mainClosureFile: ClosureFile = tryEntryPoint(remappedModuleJs)
+      .getOrElse(sys.error("File for module \"" + module + "\" does not exist. Using sourceDirs: " + canonicalSourceDirs))
+    val restClosureFile = tryEntryPoint(moduleJs + "_rest")
 
-    val mainDeps: Iterable[SourceFile] = getDepsFor(sourcePath.toString)
-    val restDeps: Iterable[SourceFile] = if (Files.exists(sourceRestPath)) getDepsFor(sourceRestPath.toString) else Nil
+    val mainDeps: Iterable[SourceFile] = getDepsFor(mainClosureFile)
+    val restDeps: Iterable[SourceFile] = restClosureFile match {
+      case Some(cf) => getDepsFor(cf)
+      case None => Nil
+    }
     closureCompiler.compileModule(module, mainDeps, restDeps)
   }
 
@@ -466,9 +554,9 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     }
   }
 
-  private def getDepsFor(jsFilePath: String): Iterable[SourceFile] = {
+  private def getDepsFor(closureFile: ClosureFile): Iterable[SourceFile] = {
     val agg = new JsDepsAggregator
-    fileMap.get(jsFilePath).foreach(agg.addFile)
+    agg.addFile(closureFile)
     agg.includedSources
   }
 

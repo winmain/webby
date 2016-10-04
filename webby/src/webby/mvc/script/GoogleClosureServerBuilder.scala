@@ -2,9 +2,9 @@ package webby.mvc.script
 import java.nio.file.Path
 
 import com.google.javascript.jscomp.SourceFile
-import compiler.{ExternalCoffeeScriptCompiler, ExternalJadeClosureCompiler, ScriptCompiler}
 import webby.api.App
 import webby.mvc.StdPaths
+import webby.mvc.script.compiler.{ExternalCoffeeScriptCompiler, ExternalJadeClosureCompiler, ScriptCompiler}
 
 /**
   * Билдер для [[GoogleClosureServer]].
@@ -18,6 +18,7 @@ class GoogleClosureServerBuilder {
   var _jsSourceDirs: Seq[Path] = Nil
   def jsSourceDirs(v: Seq[Path]) = {_jsSourceDirs = v; this}
   def jsSourceDir(add: Path) = {_jsSourceDirs +:= add; this}
+  def addJsSourceDirs(v: Seq[Path]) = {_jsSourceDirs ++= v; this}
   def simpleSourceDir = jsSourceDirs(Seq(StdPaths.get.jsAssetType.assetsPath))
   def commonSourceDirsWithProfile(profile: String) = jsSourceDirs(Vector(StdPaths.get.jsAssetType.assetsPath, StdPaths.get.assetsProfile(profile)))
 
@@ -38,6 +39,9 @@ class GoogleClosureServerBuilder {
 
   var _targetGccDir: Path = _
   def targetGccDir(v: Path) = {_targetGccDir = v; this}
+
+  var _remapEntryPoints: Map[String, String] = Map.empty
+  def remapEntryPoints(v: Map[String, String]) = {_remapEntryPoints = v; this}
 
   // ------------------------------- Common uses -------------------------------
 
@@ -63,7 +67,8 @@ class GoogleClosureServerBuilder {
       prepends = _prepends,
       externs = _externs,
       targetDir = withDefault(_targetDir, StdPaths.get.jsAssetType.targetAssetsPath),
-      targetGccDir = withDefault(_targetGccDir, StdPaths.get.jsGccAssetType.targetAssetsPath)
+      targetGccDir = withDefault(_targetGccDir, StdPaths.get.jsGccAssetType.targetAssetsPath),
+      remapEntryPoints = _remapEntryPoints
     )
   }
 }

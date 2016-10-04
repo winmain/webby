@@ -1,6 +1,7 @@
 package webby.mvc.script.compiler
 import java.io.OutputStream
 import java.nio.file.{Files, Path}
+import javax.annotation.Nullable
 
 import com.google.common.base.Charsets
 import webby.commons.io.IOUtils
@@ -23,12 +24,14 @@ abstract class ScriptCompiler {
     }
   }
 
-  protected def runCommonProcess(command: Seq[String], input: String): Either[String, String] = {
+  protected def runCommonProcess(command: Seq[String], @Nullable input: String = null): Either[String, String] = {
     val proc: Process = Runtime.getRuntime.exec(command.toArray)
 
-    val os: OutputStream = proc.getOutputStream
-    os.write(input.getBytes)
-    os.close()
+    if (input != null) {
+      val os: OutputStream = proc.getOutputStream
+      os.write(input.getBytes)
+      os.close()
+    }
     val result: String = IOUtils.readString(proc.getInputStream)
     val errors: String = IOUtils.readString(proc.getErrorStream)
     proc.waitFor()
@@ -41,4 +44,12 @@ abstract class ScriptCompiler {
   val sourceMapDotExt: Option[String] = sourceMapFileExt.map("." + _)
 
   def npmScriptPath = "script/npm/node_modules/.bin"
+
+  /**
+    * Этот компилятор собирает только точки входа, и только тогда, когда они явно нужны?
+    * Без этого флага, [[webby.mvc.script.GoogleClosureServer]] запускает компиляторы для всех
+    * файлов с расширением [[sourceFileExt]]. А с этим флагом, компилируются только те файлы,
+    * которые явно запрашиваются юзером. Обычно, это точки входа.
+    */
+  def lazyCompiler = false
 }

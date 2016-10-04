@@ -23,10 +23,11 @@ object SeparateWatcher extends Watcher {
 }
 
 /**
-  * Наблюдатель, который подписывается на все события изменения файлов в заданном каталоге.
+  * Наблюдатель, который подписывается на все события изменения файлов в заданных каталогах.
   * Если хотябы один из файлов меняется, то следует пересобрать все файлы.
   */
-class WideWatcher(watchDir: Path) extends Watcher {
+class WideWatcher(watchDirs: Seq[Path]) extends Watcher {
+  def this(watchDir: Path) = this(Seq(watchDir))
 
   import java.nio.file.StandardWatchEventKinds._
 
@@ -39,10 +40,10 @@ class WideWatcher(watchDir: Path) extends Watcher {
       })
       time
     }
-    maxModifyTime(watchDir)
+    watchDirs.map(maxModifyTime).max
   }
 
-  private val watcher: WatchService = watchDir.getFileSystem.newWatchService()
+  private val watcher: WatchService = watchDirs.head.getFileSystem.newWatchService()
 
   private def regDir(dirPath: Path) {
     dirPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
@@ -51,7 +52,7 @@ class WideWatcher(watchDir: Path) extends Watcher {
         regDir(subPath)
     })
   }
-  regDir(watchDir)
+  watchDirs.foreach(regDir)
 
   /**
     * Узнать, нужно ли перекомпилировать файл, потому что он изменился (либо изменились рядом лежащие файлы).

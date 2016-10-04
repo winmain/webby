@@ -79,7 +79,7 @@ class ScriptServer(val watchDir: Path,
     }
 
   def serveFile(path: Path, contentType: String)(implicit req: RequestHeader): PlainResult = {
-    if (!Files.exists(path)) NotFoundRaw
+    if (!Files.exists(path)) NotFoundRaw("File not found")
     else {
       // Если не найден файл для конвертации, но есть уже готовый файл, то мы просто отдаём готовый файл.
       val lastModified = Files.getLastModifiedTime(path).toMillis
@@ -120,7 +120,7 @@ object ScriptServer {
     (path: String) => SimpleAction {_ => PageLog.noLog(); serveFile(basePath.resolve(path))}
 
 
-  private[script] def maybeGzippedResult(resultBytes: Array[Byte])(implicit req: RequestHeader): PlainResult = {
+  def maybeGzippedResult(resultBytes: Array[Byte])(implicit req: RequestHeader): PlainResult = {
     if (req.headers.get(ACCEPT_ENCODING).exists(_.contains("gzip"))) {
       PlainResult(HttpResponseStatus.OK, {
         val bos = new ByteArrayOutputStream()
