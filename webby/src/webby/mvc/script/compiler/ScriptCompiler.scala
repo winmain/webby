@@ -24,8 +24,10 @@ abstract class ScriptCompiler {
     }
   }
 
-  protected def runCommonProcess(command: Seq[String], @Nullable input: String = null): Either[String, String] = {
-    val proc: Process = Runtime.getRuntime.exec(command.toArray)
+  protected def runCommonProcess(command: Seq[String],
+                                 @Nullable input: String = null,
+                                 env: Seq[String] = Nil): Either[String, String] = {
+    val proc: Process = Runtime.getRuntime.exec(command.toArray, if (env.isEmpty) null else env.toArray)
 
     if (input != null) {
       val os: OutputStream = proc.getOutputStream
