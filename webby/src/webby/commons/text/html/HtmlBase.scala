@@ -118,8 +118,10 @@ abstract sealed class HtmlBase(val buf: HtmlBuffer) extends Appendable {self =>
   def metaContentType(rawContentType: String): StdMetaTag = metaHttpEquiv("Content-type", rawContentType)
 
   def link: CommonTag = short("link")
-  def linkStylesheet(url: Url): CommonTag = link.attr("rel", "stylesheet").attr("href", url.quotedUrl)
-  def linkStylesheet(media: String, url: Url): CommonTag = link.attr("rel", "stylesheet").attr("media", media).attr("href", url.quotedUrl)
+  def linkStylesheet(rawUrl: String): CommonTag = link.attr("rel", "stylesheet").attr("href", rawUrl)
+  def linkStylesheet(media: String, rawUrl: String): CommonTag = linkStylesheet(rawUrl).attr("media", media)
+  def linkStylesheet(url: Url): CommonTag = linkStylesheet(url.quotedUrl)
+  def linkStylesheet(media: String, url: Url): CommonTag = linkStylesheet(media, url.quotedUrl)
   def linkShortcutIcon(url: Url): CommonTag = link.attr("rel", "shortcut icon").attr("href", url.quotedUrl)
 
 
