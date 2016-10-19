@@ -4,16 +4,25 @@ import java.time.LocalDateTime
 import com.google.common.net.HttpHeaders._
 import io.netty.handler.codec.http
 import io.netty.handler.codec.http.HttpResponseStatus
-import webby.commons.time.StdDates
 import webby.commons.system.log.PageLog
+import webby.commons.time.StdDates
 
 import scala.collection.mutable
 import scala.concurrent._
 
 /**
+  * Able to return [[Result]].
+  */
+trait Resultable {
+  def toResult: Result
+}
+
+/**
   * Any Action result.
   */
-sealed trait Result extends WithHeaders[Result]
+sealed trait Result extends WithHeaders[Result] with Resultable {
+  override def toResult: Result = this
+}
 
 sealed trait WithHeaders[+A <: Result] {
   /**
