@@ -43,6 +43,10 @@ class GoogleClosureServerBuilder {
   var _remapEntryPoints: Map[String, String] = Map.empty
   def remapEntryPoints(v: Map[String, String]) = {_remapEntryPoints = v; this}
 
+  var _errorRenderer: ScriptErrorRenderer = _
+  def errorRenderer(v: ScriptErrorRenderer) = {_errorRenderer = v; this}
+  def jsErrorRenderer = errorRenderer(new JsScriptErrorRenderer)
+
   // ------------------------------- Common uses -------------------------------
 
   def useCoffeeScript = preCompiler(ExternalCoffeeScriptCompiler(goog = true))
@@ -68,7 +72,8 @@ class GoogleClosureServerBuilder {
       externs = _externs,
       targetDir = withDefault(_targetDir, StdPaths.get.jsAssetType.targetAssetsPath),
       targetGccDir = withDefault(_targetGccDir, StdPaths.get.jsGccAssetType.targetAssetsPath),
-      remapEntryPoints = _remapEntryPoints
+      remapEntryPoints = _remapEntryPoints,
+      errorRenderer = withDefault(_errorRenderer, new DefaultScriptErrorRenderer)
     )
   }
 }

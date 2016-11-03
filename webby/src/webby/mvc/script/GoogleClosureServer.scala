@@ -61,7 +61,8 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                           externs: Seq[SourceFile],
                           targetDir: Path,
                           targetGccDir: Path,
-                          remapEntryPoints: Map[String, String] = Map.empty) {
+                          remapEntryPoints: Map[String, String] = Map.empty,
+                          errorRenderer: ScriptErrorRenderer = new DefaultScriptErrorRenderer) {
 
   val log = webby.api.Logger(getClass)
 
@@ -240,6 +241,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                   throw ResultException(Results.BadRequest("File not in sourceDir"))
                 } else {
                   val targetPath = TargetFileTransform(sourceDir, canonicalTargetDir, jsCompiler.targetFileExt).transformToPath(filePath, reverseRemapEntryPoints)
+                  var compileErrors: String = null
                   def checkRecompile(): Boolean = {
                     synchronized {
                       if (!Files.exists(targetPath) || Files.getLastModifiedTime(targetPath).compareTo(Files.getLastModifiedTime(path)) < 0) {
@@ -247,8 +249,8 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                         val compileResult = jsCompiler.compileFile(path, targetPath)
                         val t1 = System.currentTimeMillis()
                         if (compileResult.isLeft) {
-                          log.error("Error compiling " + path + ":")
-                          System.err.println(compileResult.left.get)
+                          compileErrors = compileResult.left.get
+                          errorRenderer.renderToConsole(log, path, compileErrors)
                           return false
                         }
                         val localPathJs = new FileExtTransform(jsCompiler.targetFileExt).transform(localPath)
@@ -262,7 +264,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                   if (checkRecompile()) {
                     targetPath
                   } else {
-                    throw ResultException(Results.InternalServerError("Compilation error"))
+                    throw ResultException(errorRenderer.renderToClient(path, compileErrors))
                   }
                 }
               case _ => autoCompile(sourceDir, localPath, tail)
