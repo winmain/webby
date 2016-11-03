@@ -28,8 +28,8 @@ if (!window.renderJsError) window.renderJsError = function(error) {
   console.error(error);
 
   var div = document.createElement('pre');
-  div.style = "position: fixed; z-index: 999999; max-width: 80%; background: #CA0E0E; color: #fff; font: 12px monospace; padding: 5px; box-shadow: 0 2px 10px 0 rgba(0,0,0,.5); line-height:150%"
-  div.innerHTML = error.replace(/-+$/, '');
+  div.style = "position: fixed; z-index: 999999; max-width: 80%; max-height: 100%; overflow: auto; background: #CA0E0E; color: #fff; font: 12px monospace; padding: 5px; box-shadow: 0 2px 10px 0 rgba(0,0,0,.5); line-height:150%"
+  div.innerHTML = error.replace(/-+$/, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   document.body.appendChild(div);
 }
 
