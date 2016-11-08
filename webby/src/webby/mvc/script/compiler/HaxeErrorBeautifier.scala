@@ -14,6 +14,17 @@ class HaxeErrorBeautifier {
       var lastKey: ErrorKey = null
       var lastMessages: Seq[String] = Nil
       lines.foreach {
+        case ErrorCharacterR(filePathStr, rowStr, colStr, message) =>
+          val col = colStr.toInt
+          val key = ErrorKeyCols(filePathStr, rowStr.toInt, col, col + 1)
+          if (key == lastKey) {
+            lastMessages :+= message
+          } else {
+            if (lastKey != null) printError(lastKey, lastMessages)
+            lastKey = key
+            lastMessages = Seq(message)
+          }
+
         case ErrorCharactersR(filePathStr, rowStr, col1Str, col2Str, message) =>
           val key = ErrorKeyCols(filePathStr, rowStr.toInt, col1Str.toInt, col2Str.toInt)
           if (key == lastKey) {
@@ -66,6 +77,7 @@ class HaxeErrorBeautifier {
     }.str
   }
 
+  private val ErrorCharacterR = "^([^:]+):(\\d+): character (\\d+) : (.*)".r
   private val ErrorCharactersR = "^([^:]+):(\\d+): characters (\\d+)-(\\d+) : (.*)".r
   private val ErrorLinesR = "^([^:]+):(\\d+): lines (\\d+)-(\\d+) : (.*)".r
 
