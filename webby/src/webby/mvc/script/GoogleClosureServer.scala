@@ -523,7 +523,11 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     val remappedModuleJs = remapEntryPoints.getOrElse(moduleJs, moduleJs)
     val mainClosureFile: ClosureFile = tryEntryPoint(remappedModuleJs)
       .getOrElse(sys.error("File for module \"" + module + "\" does not exist. Using sourceDirs: " + canonicalSourceDirs))
-    val restClosureFile = tryEntryPoint(moduleJs + "_rest")
+
+    val restModule = module + "_rest"
+    val restModuleJs = restModule + ".js"
+    val remappedRestModuleJs = remapEntryPoints.getOrElse(restModuleJs, restModuleJs)
+    val restClosureFile = tryEntryPoint(remappedRestModuleJs)
 
     val mainDeps: Iterable[SourceFile] = getDepsFor(mainClosureFile)
     val restDeps: Iterable[SourceFile] = restClosureFile match {
