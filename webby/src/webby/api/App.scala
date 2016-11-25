@@ -117,7 +117,6 @@ object App {
   private def stopPluginWrapper(p: Plugin, action: Plugin => Any, infoMessage: String, onErrorMessage: String): Unit = {
     _app.profile match {
       case Profile.Test => // no log message
-      case Profile.Dev => Logger.webby.debug(infoMessage + ": " + p.getClass)
       case _ => Logger.webby.info(infoMessage + ": " + p.getClass)
     }
 

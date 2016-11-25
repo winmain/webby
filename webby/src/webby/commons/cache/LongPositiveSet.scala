@@ -5,6 +5,8 @@ import javax.annotation.concurrent.NotThreadSafe
 import com.carrotsearch.hppc.LongHashSet
 import com.carrotsearch.hppc.procedures.LongProcedure
 
+import scala.collection.mutable
+
 /**
   * Набор (set), основанный на [[LongHashSet]], поддерживающий ротацию для внутренней очистки от старых
   * данных (старыми считаются записи, которые были прочитаны или записаны до последней ротации).
@@ -67,6 +69,28 @@ class LongPositiveSet(expectedElementCount: Int) {
       }
     })
     set = copy
+  }
+
+  def ensureCapacity(expectedElements: Int): Unit = set.ensureCapacity(expectedElements)
+
+  /**
+    * Добавить все значения из коллекции `coll`, не проверяя их.
+    * Используется для сериализации.
+    */
+  def rawAddAll(coll: Seq[Long]): Unit = {
+    ensureCapacity(coll.length)
+    coll.foreach(set.add)
+  }
+
+  /**
+    * Добавить все внутренние значения в указанную коллекцию.
+    * Используется для сериализации.
+    */
+  def rawAddAllToCollection(coll: mutable.ArrayBuffer[Long]): Unit = {
+    coll.sizeHint(coll.size + set.size())
+    set.forEach(new LongProcedure {
+      override def apply(value: Long): Unit = coll += value
+    })
   }
 
   // ------------------------------- Private & protected methods -------------------------------
