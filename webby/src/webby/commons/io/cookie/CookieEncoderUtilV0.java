@@ -41,13 +41,9 @@ final class CookieEncoderUtilV0 {
         try {
             for (int i = 0; i < val.length(); i ++) {
                 char c = val.charAt(i);
-                switch (c) {
-                case '\t': case ' ': case '"': case '(':  case ')': case ',':
-                case '/':  case ':': case ';': case '<':  case '=': case '>':
-                case '?':  case '@': case '[': case '\\': case ']':
-                case '{':  case '}':
-                        addUnquoted(sb, name, URLEncoder.encode(val, "utf-8"));
-                        return;
+                if (c < 0x20 || c >= 0x7f) {
+                    addUnquoted(sb, name, URLEncoder.encode(val, "utf-8"));
+                    return;
                 }
             }
         } catch (UnsupportedEncodingException e) {
