@@ -17,6 +17,15 @@ object SimpleAction {
   def apply(block: RequestHeader => Result) = new Action {
     override def apply(rh: RequestHeader, body: Array[Byte]): Result = block(rh)
   }
+
+  def withBodyParser[A](bodyParser: BodyParser[A])(block: (RequestHeader, A) => Result) = new Action {
+    override def apply(rh: RequestHeader, body: Array[Byte]): Result = {
+      bodyParser(rh, body) match {
+        case Left(r) => r
+        case Right(a) => block(rh, a)
+      }
+    }
+  }
 }
 
 object ActionTools {

@@ -15,9 +15,11 @@ import webby.api.{App, WebbyException}
   *   deps += "commons-codec" % "commons-codec" % "1.10"
   * }}}
   */
+@deprecated("Use CryptoSigner", "0.3.0")
 object Crypto {
 
-  private def secret: Option[String] = App.maybeApp.flatMap(_.configuration.getString("application.secret"))
+  private lazy val secret: Option[String] = App.maybeApp.flatMap(_.configuration.getString("application.secret"))
+  private lazy val secretBytes: Option[Array[Byte]] = secret.map(_.getBytes(Charsets.UTF_8))
 
   /**
     * Signs the given String with HMAC-SHA1 using the given key.
@@ -32,9 +34,8 @@ object Crypto {
     * Signs the given String with HMAC-SHA1 using the application’s secret key.
     */
   def sign(message: String): String = {
-    secret.map(secret => sign(message, secret.getBytes("utf-8"))).getOrElse {
-      throw new WebbyException("Configuration error", "Missing application.secret")
-    }
+    val sb = secretBytes.getOrElse(throw new WebbyException("Configuration error", "Missing application.secret"))
+    sign(message, sb)
   }
 
   /**
@@ -103,6 +104,6 @@ object Crypto {
 
   def signHmacLong(token: Long): String = {
     val tokenStr = java.lang.Long.toString(token, 36)
-    Crypto.sign(tokenStr) + tokenStr
+    sign(tokenStr) + tokenStr
   }
 }
