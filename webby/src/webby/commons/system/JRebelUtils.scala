@@ -1,6 +1,6 @@
 package webby.commons.system
 
-import java.lang.reflect.Constructor
+import java.lang.reflect.{Constructor, Modifier}
 
 import org.apache.commons.lang3.StringUtils
 import org.zeroturnaround.javarebel.{ClassEventListener, ReloaderFactory}
@@ -54,17 +54,19 @@ object JRebelUtils {
     */
   def reloadObjectFields(): Unit = {
     reloadListeners += {cls =>
-      val constructors: Array[Constructor[_]] = cls.getDeclaredConstructors
-      if (constructors.length>0) {
-        val constructor = constructors(0)
-        if (constructor.getParameterCount == 0) {
-          constructor.setAccessible(true)
-          try {
-            constructor.newInstance()
-          } catch {
-            case e: Exception => log.error("Error creating instance of " + cls.getName, e)
+      if (!Modifier.isAbstract(cls.getModifiers)) {
+        val constructors: Array[Constructor[_]] = cls.getDeclaredConstructors
+        if (constructors.length > 0) {
+          val constructor = constructors(0)
+          if (constructor.getParameterCount == 0) {
+            constructor.setAccessible(true)
+            try {
+              constructor.newInstance()
+            } catch {
+              case e: Exception => log.error("Error creating instance of " + cls.getName, e)
+            }
+            constructor.setAccessible(false)
           }
-          constructor.setAccessible(false)
         }
       }
     }
