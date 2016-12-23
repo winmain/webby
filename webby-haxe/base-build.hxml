@@ -1,0 +1,3 @@
+-cp macro
+-cp src
+-js out/lib.js

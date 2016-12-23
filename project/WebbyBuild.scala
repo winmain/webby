@@ -1,28 +1,24 @@
 import bintray.BintrayKeys._
-import sbt.Keys._
-import sbt._
+import sbt.Keys.{baseDirectory, ivyLoggingLevel, packageBin, scalaSource, sources, startYear, _}
+import sbt.{UpdateLogging, _}
+import haxeidea.HaxeLib._
 
 object WebbyBuild extends Build {
   val buildScalaVersion = "2.11.8"
 
-  val commonSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
+  val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
     organization := "com.github.citrum.webby",
-    version := "0.3.0",
-
-    scalaVersion := buildScalaVersion,
+    version := "0.4.0-SNAPSHOT",
 
     incOptions := incOptions.value.withNameHashing(nameHashing = true),
     resolvers ++= Seq(
       "zeroturnaround repository" at "https://repos.zeroturnaround.com/nexus/content/repositories/zt-public/", // The zeroturnaround.com repository
       Resolver.bintrayRepo("citrum", "maven") // Temporary repo for querio
     ),
+
     sources in doc in Compile := List(), // Выключить генерацию JavaDoc, ScalaDoc
-    scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
-    javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
-    javacOptions in doc := Seq("-source", "1.8"),
-    ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)), // forcing scala version
-    ivyLoggingLevel := UpdateLogging.DownloadOnly,
     mainClass in Compile := None,
+    ivyLoggingLevel := UpdateLogging.DownloadOnly,
 
     // Deploy settings
     startYear := Some(2016),
@@ -30,6 +26,15 @@ object WebbyBuild extends Build {
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     bintrayVcsUrl := Some("https://github.com/citrum/webby"),
     bintrayOrganization := Some("citrum")
+  )
+
+  val commonSettings = baseSettings ++ Seq(
+    scalaVersion := buildScalaVersion,
+
+    scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
+    javacOptions in doc := Seq("-source", "1.8"),
+    ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)) // forcing scala version
   )
 
   // Минимальный набор зависимостей
@@ -72,7 +77,7 @@ object WebbyBuild extends Build {
 
   // ------------------------------ elastic-orm project ------------------------------
 
-  lazy val elasticOrm: Project  = Project(
+  lazy val elasticOrm: Project = Project(
     "elastic-orm",
     file("elastic-orm"),
     settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
@@ -80,6 +85,21 @@ object WebbyBuild extends Build {
       libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.2.0" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
       libraryDependencies += querio
     )).dependsOn(webby)
+
+  // ------------------------------ webby-haxe project ------------------------------
+
+  lazy val webbyHaxeBuild: Project = Project(
+    "webby-haxe-build",
+    file("webby-haxe/build"),
+    settings = baseSettings ++ haxeLibSettings ++ Seq(
+      name := "webby-haxe",
+      artifactPath <<= baseDirectory(_ / "webby-haxe.jar"),
+
+      sourceDirectories in Compile := Seq(baseDirectory.value / "../src", baseDirectory.value / "../macro")
+
+      // TODO: add haxe build task before deploy
+    )
+  )
 
   // ------------------------------ webby project ------------------------------
 
@@ -139,7 +159,7 @@ object WebbyBuild extends Build {
   lazy val root = Project(
     "webby-root",
     file("."),
-    aggregate = Seq(webby, elasticOrm),
+    aggregate = Seq(webby, elasticOrm, webbyHaxeBuild),
     settings = Seq(
       // Disable packaging & publishing artifact
       Keys.`package` := file(""),

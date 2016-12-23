@@ -6,3 +6,6 @@
 /routes/target
 /script-compiler/target
 /webby/target
+/webby-haxe/build.hxml
+/webby-haxe/build
+/webby-haxe/out
