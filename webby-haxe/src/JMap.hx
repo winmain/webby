@@ -1,5 +1,3 @@
-package js.lib;
-
 @:native("Object")
 extern class JMap<K, V> {
 

@@ -6,7 +6,6 @@ import js.html.Element;
 import js.html.Event;
 import js.html.FormElement;
 import js.lib.ArrayUtils;
-import js.lib.JMap;
 
 class Form extends EventTarget {
   // ------------------------------- Events -------------------------------
