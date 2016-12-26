@@ -13,7 +13,6 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-    all_branches: true
 env:
   global:
   - secure: KS0pYQuvokhdukSXFZQS0KGyYeJ0J+D+VyJfOY7DGtm5iZcqAAgSq4bG+BbWG+8f9xe1365N01/5j7rgfkvDeCBV9fKEpiI5vKlfKNdwXlqWvTB91BgD4Q9ddZNMhJgDJD1tYxuF03S6laXtE0yDGd7f/9Tr/ZvqmeIfImFDj8I2JMmXoF6gWJxFKBe/ggneHrFuuDL9yj22ZCQmTwOkRLD5GA+OQii9mIb3oVGWqm09R9WhwlgdU1KgLYU0U+R3lJDVr7hjgCE+CiboN+AnojSBo7i5pseat4vxxICsrU8c1AprMgjW/2KQKemQviyxHwzXc5uYTrO2ZL/CvkNGKodtBIsFI5fQ+iLjVgVTycRJzfvwjHkHWsy6VnFOOjSvwqYH4xc/DUbQpnFLGIOTzpaXuKAyUQP7ggDn3V7DFhBDK4Sb2jLs2RgvXmUnDvGIeJUYFsHX95d/cl0ELQ8r+Z55u45KUCvbT9deyJ/wLBqfSeYlN5FE4CO5V3TcRFmpwzpCloiOmvwrso7ae6SuNfeLWjxWjrFh1OtteKoGjv/e9upi9sahEFfPnac+3Ci3Yw/Lm+q1J7FsXJniUddZreM1U1EaPbRiU+h77g7GcRh0efzUqmNPz9mDNE+sjfXwU9dF8ahlBlhp1eDKCi99/bVtc7xT7zTUY/Do+FGgQbg=
