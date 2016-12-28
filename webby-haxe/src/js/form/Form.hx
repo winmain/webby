@@ -80,6 +80,7 @@ class Form extends EventTarget {
     for (fieldProps in props.fields) {
       initField(fieldClasses, fieldProps);
     }
+    dispatchEvent(FieldsReadyEvent);
 //    @dispatchEvent({type: @fieldsReadyEvent})
 //
 //    @rules = []

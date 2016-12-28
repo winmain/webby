@@ -9,7 +9,7 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpResponseStatus._
 import webby.api.http.ContentTypes
 import webby.commons.io.{StdJs, Url, UrlEncoder}
-import webby.commons.text.html.StdHtmlView
+import webby.html.StdHtmlView
 
 /**
   * Generates default `SimpleResult` from a content type, headers and content.

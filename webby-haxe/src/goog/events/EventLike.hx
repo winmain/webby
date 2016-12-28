@@ -11,4 +11,4 @@ import haxe.extern.EitherType;
  * @typedef {string|Object|goog.events.Event|goog.events.EventId}
  */
 @:jsRequire('goog.events.EventLike')
-typedef EventLike = EitherType<String, EitherType<Event, EventId<Dynamic>>>;
+typedef EventLike = EitherType<String, EitherType<Dynamic, EitherType<Event, EventId<Dynamic>>>>;

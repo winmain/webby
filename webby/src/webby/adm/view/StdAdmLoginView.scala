@@ -1,6 +1,6 @@
 package webby.adm.view
 import webby.adm.AdmTrait
-import webby.commons.text.html.StdHtmlView
+import webby.html.StdHtmlView
 
 class StdAdmLoginView(adm: AdmTrait, errorMessage: Option[String], login: Option[String])
   extends StdHtmlView {
