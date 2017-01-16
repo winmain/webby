@@ -11,6 +11,8 @@ import webby.html.{StdHtmlView, StdInputCheckedTag, StdInputTag, StdLabelTag}
   *                          при клике на label чекбокса, всегда будешь попадать на самый первый чекбокс
   *                          самой первой формы.
   */
+// TODO: makeUniqueInputId не работает. Потому что серверная форма читает элементы из поста по id, а клиентская отправляет их по name.
+// TODO: к тому же, не факт, что всё это правильное решение (где-то id, где-то name). Надо всё пересмотреть
 class CheckField(override val name: String, makeUniqueInputId: Boolean = false) extends ValueField[Boolean] {
   override val id: String =
     if (makeUniqueInputId) name + "-" + CheckField.nextUniqueIdCounter.toString
