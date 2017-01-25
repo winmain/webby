@@ -1,5 +1,6 @@
 package js.form;
 
+import goog.array.GoogArray;
 import goog.events.EventTarget;
 import js.form.field.Field;
 import js.html.Element;
@@ -15,12 +16,6 @@ class Form extends EventTarget {
   public static inline var AfterFirstFillEvent = 'after-first-fill';
   public static inline var BeforeSubmitEvent = 'before-submit';
 
-  // ------------------------------- Css classes -------------------------------
-
-  public inline static var FormBlockClass = 'form-block';
-  public inline static var FormErrorsClass = 'form-errors';
-  public inline static var BlockErrorClass = 'block-error';
-
   // ------------------------------- Class -------------------------------
 
   // Массив ошибок самой формы (это ошибки именно формы, а не её полей)
@@ -28,7 +23,8 @@ class Form extends EventTarget {
 
   public var tag(default, null): Tag;
   public var props(default, null): FormProps;
-  public var subId(default, null): Int;
+  public var style(default, null): FormStyle;
+  public var subId(default, null): Null<Int>;
   public var parentField(default, null): Null<Field>;
   public var parentForm(default, null): Null<Form>;
 
@@ -42,15 +38,21 @@ class Form extends EventTarget {
 
   public var blocks(default, null): Array<FormBlock>;
   public var fields(default, null): JMap<String, Field>;
+  public var rules(default, null): Array<String>;
 
-  public function new(tag: Tag, props: FormProps, subId: Int, ?parentField: Null<Field>) {
+  public function new(tag: Tag, props: FormProps, ?subId: Null<Int>, ?parentField: Null<Field>) {
     super();
     this.tag = tag;
     this.props = props;
+    style = G.or(props.style, function() return new FormStyle());
     this.subId = subId;
     this.parentField = parentField;
     parentForm = parentField != null ? parentField.form : null;
   }
+
+  @:keep
+  @:expose('Form.create')
+  static public function create(tag: Tag, props: FormProps): Form return new Form(tag, props);
 
   @:keep
   @:expose('Form.init')
@@ -66,24 +68,27 @@ class Form extends EventTarget {
     controller = props.controller != null ? props.controller(this) : null;
 
     formErrorsTag = getFormErrorsTag();
-    if (formErrorsTag == null) throw new Error("formErrorsTag not found");
+    if (formErrorsTag == null) throw new Error("." + style.formErrorsClass + " not found");
     errorBlock = new FormErrorBlock(parentForm != null ? parentForm.errorBlock : null, tag, formErrorsTag);
-    if (tag.hasCls(FormBlockClass)) {
+    if (tag.hasCls(style.formBlockClass)) {
       blocks = [new FormBlock(this, tag)]; // Сама форма является блоком, поэтому блок тут один
     } else {
-      blocks = [for (subTag in tag.fnd('.' + FormBlockClass)) new FormBlock(this, subTag)];
+      blocks = [for (subTag in tag.fnd('.' + style.formBlockClass)) new FormBlock(this, subTag)];
     }
 
     // this['fields'] нужен для доступа к полям формы для внешних скриптов
     (this:External).set('fields', fields = JMap.create());
-    var fieldClasses = fieldClasses();
     for (fieldProps in props.fields) {
-      initField(fieldClasses, fieldProps);
+      initField(fieldProps);
     }
     dispatchEvent(FieldsReadyEvent);
-//    @dispatchEvent({type: @fieldsReadyEvent})
-//
-//    @rules = []
+
+    rules = [];
+    if (props.rules != null) {
+      for (ruleProp in props.rules) {
+//        var rule = new Rule
+      }
+    }
 //    for ruleProp in (@props['rules'] || [])
 //      rule = new rr.form.rule.Rule(@, ruleProp)
 //      rule.addListeners()
@@ -115,7 +120,7 @@ class Form extends EventTarget {
     deregisterForm(this);
   }
 
-  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + FormErrorsClass);
+  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + style.formErrorsClass);
 
 
   /*
@@ -123,10 +128,11 @@ class Form extends EventTarget {
   fieldClasses - значение из Form.fieldClasses()
   fieldProps - свойства поля из props.fields
    */
-  private function initField(fieldClasses: JMap<String, Class<Field>>, fieldProps: FieldProps) {
-    var cls = fieldClasses.get(fieldProps.jsField);
-    if (cls == null) throw new Error('Field class "${fieldProps.jsField}" not found');
-    var field: Field = Type.createInstance(cls, [this, fieldProps]);
+  private function initField(fieldProps: FieldProps) {
+    var fieldReg = fieldRegistry.get(fieldProps.jsField);
+    if (fieldReg == null) throw new Error('Field "${fieldProps.jsField}" not registered');
+
+    var field: Field = fieldReg.constructor(this, fieldProps);
     field.init(fieldProps);
     fields.set(field.name, field);
   }
@@ -304,17 +310,29 @@ class Form extends EventTarget {
 
   // ------------------------------- Static methods -------------------------------
 
+  private static var fieldRegistry: JMap<String, FormRegField> = JMap.create();
+
+  public static function regField(cls: Class<Field>, ?name: String, ?constructor: Null<Form -> FieldProps -> Field>) {
+    if (name == null) {
+      name = untyped cls.REG;
+    }
+    if (name == null) throw new Error('Field class with empty REG: ${cls}');
+    var oldReg = fieldRegistry.get(name);
+    if (oldReg != null) {
+      if (oldReg.cls == cls) return; // this field is already registered
+      throw new Error('Collision field registry name "${name}"');
+    }
+    if (constructor == null) {
+      constructor = function(a, b) return Type.createInstance(cls, [a, b]);
+    }
+    fieldRegistry.set(name, new FormRegField(cls, constructor));
+  }
+
   /*
   Сопоставление типа поля с его классом
   (функция здесь нужна потому, что google closure не успевает проинициализировать нужные классы на момент создания объекта)
    */
-  public static function fieldClasses(): JMap<String, Class<Field>> return cast ({
-    'text': js.form.field.TextField
-  }: Dynamic<Class<Field>>);
-//  'formList': rr.form.field.FormListField
-//  'text': rr.form.field.TextField
 //  'check': rr.form.field.CheckField
-//  'int': rr.form.field.IntField
 //  'date': rr.form.field.DateField
 //  'monthYear': rr.form.field.MonthYearField
 //  'radioGroup': rr.form.field.RadioGroupField
@@ -360,14 +378,29 @@ class Form extends EventTarget {
  */
 @:build(macros.ExternalFieldsMacro.build())
 class FormProps {
+  public var style: Null<FormStyle>;
   public var controller: Null<Form -> Dynamic>;
   public var fields: Array<FieldProps>;
-//  public var rules;
+  public var rules: Array<External>;
 //  public var values;
 //  public var initialFilled;
 //  public var onUnloadConfirm;
 //  public var hidden;
 //  public var submitAfterInit;
+}
+
+
+/*
+Регистрация типа поля в форме
+ */
+class FormRegField {
+  public var cls(default, null): Class<Field>;
+  public var constructor(default, null): Form -> FieldProps -> Field;
+
+  public function new(cls: Class<Field>, constructor: Form -> FieldProps -> Field) {
+    this.cls = cls;
+    this.constructor = constructor;
+  }
 }
 
 
@@ -391,22 +424,22 @@ class FormBlock {
   /*
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
    */
-  function createErrorTag(): Tag return Tag.label.cls(Form.BlockErrorClass).hide().addTo(tag);
+  function createErrorTag(): Tag return Tag.label.cls(form.style.blockErrorClass).hide().addTo(tag);
 }
 
 /*
 Блок с ошибками как для блока формы .form-block, так и для самой формы .form-errors
  */
 class FormErrorBlock {
-  private var parent: Null<FormErrorBlock>;
-  private var parentTag: Tag;
-  private var errorTag: Tag;
+  private var parent(default, null): Null<FormErrorBlock>;
+  private var parentTag(default, null): Tag;
+  private var errorTag(default, null): Tag;
 
-  private var errors = [];
-  private var selfErrors = [];
-  private var target: Null<Field> = null;
+  private var errors(default, null): Array<Dynamic> = []; // Can be: Field, FormErrorBlock
+  private var selfErrors(default, null): Array<String> = [];
+  private var target(default, null): Null<Field> = null;
 
-  private inline static var HoverClass = 'hover';
+  private inline static var HoverClass = 'hover'; // TODO: вынести в FormStyle
 
   public function new(parent: Null<FormErrorBlock>, parentTag: Tag, errorTag: Tag) {
     this.parent = parent;
@@ -439,22 +472,27 @@ class FormErrorBlock {
     if (parent != null) parent.clearError(this);
   }
 
-//  setError: (item) ->
-//    if item not in @errors
-//      @errors.push(item)
-//      @updateErrorEl()
-//      @parent?.setError(@)
-//
-  public function clearError(item:FormErrorBlock) {
-//    if goog.array.remove(@errors, item)
-//      if !@errors.length
-//        @parent?.clearError(@)
-//      @updateErrorEl()
+  public function setError(item: Dynamic) {
+    if (!GoogArray.contains(errors, item)) {
+      errors.push(item);
+      updateErrorTag();
+      if (parent != null) parent.setError(this);
+    }
   }
-//
-//  setSelfErrors: (errors) ->
-//    @selfErrors = errors
-//    @updateErrorEl()
+
+  public function clearError(item: Dynamic) {
+    if (GoogArray.remove(errors, item)) {
+      if (ArrayUtils.isEmpty(errors) && parent != null) {
+        parent.clearError(item);
+      }
+      updateErrorTag();
+    }
+  }
+
+  public function setSelfErrors(v: Array<String>) {
+    selfErrors = v;
+    updateErrorTag();
+  }
 
   public function updateErrorTag() {
 //    hasErrors = @errors.length > 0

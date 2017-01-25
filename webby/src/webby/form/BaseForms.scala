@@ -1,6 +1,8 @@
 package webby.form
 import querio.{Transaction, _}
+import webby.commons.io.StdJs
 import webby.commons.text.Plural
+import webby.html.{CommonTag, JsCodeAppender, StdFormTag, StdHtmlView}
 
 abstract class BaseForms {self =>
   def db: DbTrait
@@ -16,6 +18,21 @@ abstract class BaseForms {self =>
     override type B = self.type
     override def base: B = self
   }
+
+  def js = StdJs.get
+
+  // ------------------------------- Html helpers -------------------------------
+
+  def formCls = "form"
+
+  def formCreateInitJsCode(form: Form, id: String): String = "Form.create(Tag.find('#" + id + "'), " + js.toJson(form.jsProps) + ").init()"
+
+  def formTag(scripts: JsCodeAppender, form: Form, id: String, method: String)(implicit view: StdHtmlView): StdFormTag = {
+    scripts.addCode(formCreateInitJsCode(form, id))
+    view.form.cls(formCls).id(id).method(method)
+  }
+
+  def sectionBlock(implicit view: StdHtmlView): CommonTag = view.section.cls("form-block")
 }
 
 

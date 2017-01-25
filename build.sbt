@@ -42,7 +42,6 @@ val commonDependencies = {
   deps += "org.apache.commons" % "commons-lang3" % "3.4"
   deps += "com.google.guava" % "guava" % "19.0"
   deps += "com.google.code.findbugs" % "jsr305" % "3.0.1" // @Nonnull, @Nullable annotation support
-  deps += "net.sourceforge.jregex" % "jregex" % "1.2_01" // Быстрый regexp, поддерживающий синтаксис perl5.6 и incomplete matching
   deps += "com.jsuereth" %% "scala-arm" % "1.4" // Automatic resource management, autoclose files
   deps += "commons-io" % "commons-io" % "2.5" // Содержит полезные классы типа FileUtils
 

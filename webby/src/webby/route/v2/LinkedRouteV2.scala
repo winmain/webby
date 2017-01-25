@@ -1,9 +1,9 @@
 package webby.route.v2
 
 import java.lang.reflect.{InvocationTargetException, Method}
+import java.util.regex.{Matcher, Pattern}
 
 import io.netty.handler.codec.http.HttpMethod
-import jregex.{Matcher, Pattern}
 import webby.api.mvc.Handler
 import webby.route.{DomainProvider, Var}
 

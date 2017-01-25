@@ -3,19 +3,28 @@ package js.form.field;
 import goog.events.EventTarget;
 import js.form.Form;
 
+@:autoBuild(macros.KeepConstructorMacro.build())
 class Field extends EventTarget {
+  // ------------------------------- Events -------------------------------
+
+  public static inline var SetValueEvent = 'set-value';
+  public static inline var ChangeEvent = 'change';
+
+  // ------------------------------- Class -------------------------------
 
   public var form(default, null): Form;
   private var props: FieldProps;
 
-  public var error(default, null) = null;
-  public var emptyError(default, null) = false;
-  public var vis(default, null) = true;
+  /* Error message or null if no error */
+  public var error(default, null): Null<String> = null;
+  public var emptyError(default, null): Bool = false;
+  /* Field visible? */
+  public var vis(default, null): Bool = true;
 
   public var field(default, null): String;
   public var name(default, null): String;
   public var id(default, null): String;
-  public var required(default, null): Bool;
+  public var required: Bool;
 
   public var tag(default, null): Tag;
   public var box(default, null): Tag;
@@ -31,10 +40,11 @@ class Field extends EventTarget {
     name = G.or(props.name, function() return props.id);
     id = form.subId != null ? '${props.id}-${form.subId}' : props.id;
     required = props.required || false;
+    tag = getTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
+    if (tag == null) throw new Error('Field node #${id} not found');
 //    @$el = @initEl().prop('field', @)
-//    @$box = @initBoxEl()
-//    @$box.addClass('field')
-//    @updateRequired()
+    box = getBoxTag().cls(form.style.fieldBoxClass);
+    updateRequired();
 //    @$error = @createErrorEl()
 //    @initElEvents()
 //    @block = @findFormBlock()
@@ -60,26 +70,37 @@ class Field extends EventTarget {
 //  Если же требуется предварительная конвертация значения перед установкой, тогда этот метод можно переопределить (например, конвертировать дату в текст).
 //  @export
 //  ###
-//  setValue: (value) ->
-//    oldValue = @value()
-//    @setValueEl(value)
-//    # for test only # console.log(@name + '.setValue: ' + value)
-//    @dispatchEvent({type: @setValueEvent, value: value})
-//    if JSON.stringify(@value()) != JSON.stringify(oldValue)
-//      @onChange()
-//      @dispatchEvent({type: @changeEvent, setValue: true})
-//
-//  setValueEl: (value) ->
-//    @$el.val(value || null)
-//
-//  value: -> @$el.val()
-//
-//  isEmpty: -> !@value()
-//
-//  updateRequired: -> @$box.toggleClass('required', !!@required)
-//
-//  initEl: -> $('#' + @id, @form.$el)
-//
+  public function setValue(v: Null<Dynamic>) {
+    var oldValue = value();
+    setValueEl(v);
+    // for test only // trace(name + '.setValue: ' + v);
+    dispatchEvent({
+      type: SetValueEvent,
+      value: v
+    });
+    if (JSON.stringify(value()) != JSON.stringify(oldValue)) {
+      onChange();
+      dispatchEvent({
+        type: ChangeEvent,
+        setValue: true
+      });
+    }
+  }
+
+  public function setValueEl(value: Null<Dynamic>) {
+    tag.setVal(value);
+  }
+
+  public function value(): Dynamic return tag.val();
+
+  public function isEmpty(): Bool return !value();
+
+  public function updateRequired() {
+    box.setCls(form.style.fieldBoxRequiredClass, required);
+  }
+
+  public function getTag(): Tag return form.tag.fnd('#' + id);
+
 //  # Найти и вернуть rr.form.FormBlock, в который вложено это поле; либо null, если такого не существует.
 //  findFormBlock: ->
 //    blockEl = @$el.parents('.form-block')[0]
@@ -92,9 +113,11 @@ class Field extends EventTarget {
     tag.el.focus();
   }
 
-//  show: (vis, withParent) ->
-//    @vis = !!vis
-//    (if withParent then @$box.parent() else @$box).toggle(!!vis)
+  public function show(v: Bool, withParent: Bool = false) {
+    vis = v;
+    var t: Tag = withParent ? box.parent() : box;
+    t.setCls(form.style.hiddenClass, !v);
+  }
 //
 //  # Вызывается сразу после показа формы, независимо от видимости самого элемента
 //  onFormShown: -> @updateErrorEl()
@@ -139,29 +162,32 @@ class Field extends EventTarget {
 //  ###
 //  reInitAfterSubmit: -> false
 //
-//  # --------------- Error & event handling methods ---------------
-//
-//  ###
-//  Вернуть элемент, задающий "коробку" всего поля.
-//  Под коробкой показывается сообщение об ошибке.
-//  ###
-//  initBoxEl: -> @$el
-//
-//  ###
-//  Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
-//  ###
-//  createErrorEl: ->
-//    $('<label class="field-error"/>').prop('for', @id).hide().insertAfter(@$box)
-//
-//  resetError: ->
-//    @emptyError = false
-//    @error = null
-//    @updateErrorEl()
-//    @block?.error.clearError(@)
-//
-//  onChange: ->
-//    @resetError()
-//
+
+  // ------------------------------- Error & event handling methods -------------------------------
+
+  /*
+  Вернуть элемент, задающий "коробку" всего поля.
+  Под коробкой показывается сообщение об ошибке.
+   */
+  public function getBoxTag(): Tag return tag;
+
+  /*
+  Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
+   */
+  public function createErrorTag(): Tag return
+    Tag.labelFor(id).cls(form.style.fieldErrorClass).cls(form.style.hiddenClass).addAfter(box);
+
+  public function resetError() {
+    emptyError = false;
+    error = null;
+    updateErrorTag();
+    if (block != null) block.error.clearError(this);
+  }
+
+  public function onChange() {
+    resetError();
+  }
+
 //  onFocus: ->
 //    @block?.error.clearError(@)
 //
@@ -181,16 +207,19 @@ class Field extends EventTarget {
 //    @updateErrorEl()
 //    @block?.error.setError(@)
 //
-//  updateErrorEl: ->
-//    @$box.toggleClass('error', !!(@error || @emptyError)).toggleClass('with-msg', !!@error)
-//    if @error
-//      @$error.html(@error).show()
-//      @positionErrorEl()
-//    else
-//      @$error.hide()
-//
-//  positionErrorEl: ->
-//    @$error.css('left', @$box[0].offsetLeft)
+  public function updateErrorTag() {
+    box.setCls(form.style.fieldBoxErrorClass, error != null || emptyError).setCls(form.style.fieldBoxWithMsgClass, error != null);
+    if (error != null) {
+      errorTag.setHtml(error).clsOff(form.style.hiddenClass);
+      positionErrorTag();
+    } else {
+      errorTag.cls(form.style.hiddenClass);
+    }
+  }
+
+  public function positionErrorTag() {
+    errorTag.el.style.left = G.toString(box.el.offsetLeft);
+  }
 }
 
 @:build(macros.ExternalFieldsMacro.build())

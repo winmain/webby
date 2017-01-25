@@ -6,25 +6,26 @@ import javax.annotation.Nullable
 
 import com.fasterxml.jackson.annotation.{JsonInclude, JsonRawValue}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
-import webby.form.field.{Field, FormFields, FormListField, FormListFieldWithDb}
-import webby.form.jsrule.{FormJsRules, JsRule}
 import webby.api.mvc.{PlainResult, ResultException, Results}
 import webby.commons.io.StdJs
+import webby.form.field.{Field, FormFields, FormListField, FormListFieldWithDb}
+import webby.form.jsrule.{FormJsRules, JsRule}
+import webby.html.{CommonTag, StdFormTag, StdHtmlView, WebbyPage}
 
 import scala.collection.mutable
 import scala.util.control.ControlThrowable
 
 /**
- * Trait для описания форм
- */
+  * Trait для описания форм
+  */
 trait Form extends FormFields with FormJsRules {self =>
   type B <: BaseForms
   protected def base: B
 
   /**
-   * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.
-   * Если подформа новая, то ключ должен быть равен 0.
-   */
+    * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.
+    * Если подформа новая, то ключ должен быть равен 0.
+    */
   var key: Int = 0
 
   def isNew: Boolean = key == 0
@@ -50,45 +51,45 @@ trait Form extends FormFields with FormJsRules {self =>
   var submitAfterInit = false
 
   /**
-   * Действия, выполняемые после успешного прохождения post'а и валидации формы, но до applyValues().
-   */
+    * Действия, выполняемые после успешного прохождения post'а и валидации формы, но до applyValues().
+    */
   val afterValidPost: mutable.Buffer[() => FormResult] = mutable.Buffer.empty
 
   /**
-   * Список ограничений и проверок формы
-   */
+    * Список ограничений и проверок формы
+    */
   val constraints = mutable.Buffer[Form => FormResult]()
 
   def addConstraint(c: Form => FormResult): Unit = constraints += c
-  def addConstraint(c: => FormResult): Unit = constraints += { _ => c}
+  def addConstraint(c: => FormResult): Unit = constraints += {_ => c}
   def addErrorIf(errorCondition: => Boolean, onConditionFailed: => FormErrors): Unit =
-    constraints += { _ => if (errorCondition) onConditionFailed else FormSuccess}
+    constraints += {_ => if (errorCondition) onConditionFailed else FormSuccess}
   def addValidIf(validCondition: => Boolean, onConditionFailed: => FormErrors): Unit =
-    constraints += { _ => if (validCondition) FormSuccess else onConditionFailed}
+    constraints += {_ => if (validCondition) FormSuccess else onConditionFailed}
 
   /** Список полей формы (поля подформ здесь не указываются) */
   val fields = mutable.Buffer.empty[Field[_]]
   /** Список полей-подформ. Все эти поля также входят в список fields. */
   val formFieldsWithDb = mutable.Buffer.empty[FormListFieldWithDb[_, _, _]]
-  override protected def addField[F <: Field[_]](field: F): F = { fields += field; field }
+  override protected def addField[F <: Field[_]](field: F): F = {fields += field; field}
   override protected def addFormFieldWithDb[F <: FormListFieldWithDb[_, _, _]](field: F): F
-  = { fields += field; formFieldsWithDb += field; field }
+  = {fields += field; formFieldsWithDb += field; field}
 
   /**
-   * Набор полей для вычисления данных формы. Данные вычисляются как только пройдут
-   * все проверки полей и constraints формы во время поста.
-   * Результат вычисленных данных записывается в переменную data.
-   * Т.е., это проверки полей + вычисление и хранение полученных значений. В случае ошибки метод
-   * error() бросает ErrorStopException и вычисление прерывается.
-   * Пример использования:
-   * {{{
-   *  class Data extends BaseData {
-   *    val sum = myField.getOpt.map(_ + 10).getOrElse(error(myField.error("Значение не указано"))))
-   *  }
-   *  override def makeData = new Data
-   *  // Результат будет вычислен и сохранён в переменной data
-   * }}}
-   */
+    * Набор полей для вычисления данных формы. Данные вычисляются как только пройдут
+    * все проверки полей и constraints формы во время поста.
+    * Результат вычисленных данных записывается в переменную data.
+    * Т.е., это проверки полей + вычисление и хранение полученных значений. В случае ошибки метод
+    * error() бросает ErrorStopException и вычисление прерывается.
+    * Пример использования:
+    * {{{
+    *  class Data extends BaseData {
+    *    val sum = myField.getOpt.map(_ + 10).getOrElse(error(myField.error("Значение не указано"))))
+    *  }
+    *  override def makeData = new Data
+    *  // Результат будет вычислен и сохранён в переменной data
+    * }}}
+    */
   type Compute <: BaseCompute
   class BaseCompute {
     protected def error(err: FormErrors): Nothing = throw new ErrorStopException(err)
@@ -193,9 +194,9 @@ trait Form extends FormFields with FormJsRules {self =>
   }
 
   /**
-   * Вернуть поле по пути, указанному в js.
-   * Примеры пути: "fio"; {"phones": "phone"}
-   */
+    * Вернуть поле по пути, указанному в js.
+    * Примеры пути: "fio"; {"phones": "phone"}
+    */
   def resolveField(tree: JsonNode): Option[Field[_]] = {
     if (tree == null) None
     else if (tree.isObject) {
@@ -217,22 +218,22 @@ trait Form extends FormFields with FormJsRules {self =>
   }
 
   /**
-   * Форма считается изменённой, если у неё изменилось хотябы одно поле.
-   */
+    * Форма считается изменённой, если у неё изменилось хотябы одно поле.
+    */
   def changed: Boolean = fields.exists(_.changed)
 
   /**
-   * Подготовиться к приёму POST данных: сбросить флаги changed у всех полей.
-   */
+    * Подготовиться к приёму POST данных: сбросить флаги changed у всех полей.
+    */
   def prepareBeforePost(): Unit = fields.foreach(_.prepareBeforePost())
 
   /**
-   * Применить или зафиксировать значение поля. Это действие вызывается после поста и валидации, и перед сохранением формы.
-   * Пример действия - для полей UploadField старые файлы удаляются, а новые переносятся из временных в постоянные.
-   * Также, это действие вызывается и после удаления формы для всех её полей (с установленным флагом formRemoved)
-   *
-   * @param formRemoved Флаг устанавливается, если этот метод был вызван для формы, которая удалена. Очень полезно при очистке полей за собой.
-   */
+    * Применить или зафиксировать значение поля. Это действие вызывается после поста и валидации, и перед сохранением формы.
+    * Пример действия - для полей UploadField старые файлы удаляются, а новые переносятся из временных в постоянные.
+    * Также, это действие вызывается и после удаления формы для всех её полей (с установленным флагом formRemoved)
+    *
+    * @param formRemoved Флаг устанавливается, если этот метод был вызван для формы, которая удалена. Очень полезно при очистке полей за собой.
+    */
   def applyValues(formRemoved: Boolean): FormResult = {
     var result: FormResult = FormSuccess
     for (field <- fields) result ++= field.applyValues(formRemoved)
@@ -259,9 +260,9 @@ trait Form extends FormFields with FormJsRules {self =>
     val fields: Iterable[_] = self.fields.withFilter(!_.ignored).map(_.jsProps)
 
     /**
-     * Значения для главной формы нужны, чтобы проинициализировать её при редактировании.
-     * Значения для подформы (в структуре jsProps) нужны, для первичной инициализации полей в подформе при её создании.
-     */
+      * Значения для главной формы нужны, чтобы проинициализировать её при редактировании.
+      * Значения для подформы (в структуре jsProps) нужны, для первичной инициализации полей в подформе при её создании.
+      */
     val values: mutable.OpenHashMap[String, AnyRef] = self.jsValues
 
     @JsonRawValue val controller: String = self.jsController
@@ -277,9 +278,9 @@ trait Form extends FormFields with FormJsRules {self =>
   }
 
   /**
-   * Js-контроллер форм, обеспечивающий динамику формы. Он должен находиться в package rr.form.controller
-   * Пример: rr.form.controller.ResForm
-   */
+    * Js-контроллер форм, обеспечивающий динамику формы. Он должен находиться в package rr.form.controller
+    * Пример: rr.form.controller.ResForm
+    */
   def jsController: String = null
 
   def jsProps: Form#BaseJsProps = new BaseJsProps
@@ -300,14 +301,8 @@ trait Form extends FormFields with FormJsRules {self =>
 
   // ------------------------------- Html helpers -------------------------------
 
-//  def formTag(scripts: Scripts, id: String, method: String)(implicit view: HtmlView): StdFormTag = {
-//    scripts.addCode("Rest(this, function(){new rr.form.Form($('#" + id + "'), " + Js.toJson(jsProps) + ").init()})")
-//    view.form.cls("form").id(id).method(method)
-//  }
-//  def formTag(id: String = "form", method: String = "post")(implicit view: HtmlView, page: PageTrait): StdFormTag =
-//    formTag(scripts = page.scripts, id = id, method = method)
-//
-//  def h2(implicit view: HtmlView): CommonTag = view.h2.cls("form")
-//  def h2First(implicit view: HtmlView): CommonTag = view.h2.cls("form first")
-//  def sectionBlock(implicit view: HtmlView): CommonTag = view.section.cls("form-block")
+  def formTag(id: String = "form", method: String = "post")(implicit view: StdHtmlView, page: WebbyPage): StdFormTag =
+    base.formTag(page.scripts, this, id, method)
+
+  def sectionBlock(implicit view: StdHtmlView): CommonTag = base.sectionBlock
 }

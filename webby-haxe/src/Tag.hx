@@ -13,6 +13,8 @@ class Tag {
   public static function tag(tag: String): Tag return new Tag(G.document.createElement(tag));
   public inline static function wrap(el: Element): Tag return new Tag(el);
 
+  @:keep
+  @:expose('Tag.find')
   public static function find(selectors: String): Null<Tag> return find2(G.document, selectors);
 
   public static function findAll(selectors: String): Array<Tag> return findAll2(G.document, selectors);
@@ -185,9 +187,19 @@ class Tag {
     return this;
   }
 
+  public function addAfter(tag: EitherType<Tag, Node>): Tag {
+    var node: Node = (untyped tag.el) ? (tag: Tag).el : (tag: Node);
+    node.parentNode.insertBefore(el, node.nextSibling);
+    return this;
+  }
+
   public function attr(key: String, ?value: Dynamic): Tag {
-    // value == null, если он не был указан. Это значит, что атрибут устанавливается как булевый флаг
-    el.setAttribute(key, value == null ? key : value);
+    if (Goog.isBoolean(value)) {
+      if (untyped value) el.setAttribute(key, '1');
+      else el.removeAttribute(key);
+    } else {
+      el.setAttribute(key, value);
+    }
     return this;
   }
 

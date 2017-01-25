@@ -5,6 +5,8 @@ import js.form.field.Field.FieldProps;
 // goog.require 'jquery.textarea_autosize' # Только для textarea
 
 class TextField extends Field {
+  static public var REG = 'text';
+
   public var minLength: Null<Int>;
   public var maxLength: Null<Int>;
 

@@ -1,7 +1,7 @@
 package webby.commons.text
 import java.io.{File, PrintWriter}
+import java.util.regex.{Matcher, Pattern}
 
-import jregex.{Matcher, Pattern, REFlags}
 import org.apache.commons.lang3.{StringEscapeUtils, StringUtils => SU}
 import webby.commons.io.UrlEncoder
 import webby.commons.time.StdDateFmt
@@ -800,23 +800,22 @@ object StringWrapper {
 
     // ------------------------------ Regexp Patterns ------------------------------
 
-    def pat = new Pattern(s)
-    def pat(flags: Int) = new Pattern(s, flags)
+    def pat = Pattern.compile(s)
+    def pat(flags: Int) = Pattern.compile(s, flags)
 
-    def pattern = new PatternWrapper(new Pattern(s))
-    def pattern(flags: Int) = new PatternWrapper(new Pattern(s, flags))
-    def patternS = new PatternWrapper(new Pattern(s, REFlags.DOTALL))
-    def patternI = new PatternWrapper(new Pattern(s, REFlags.IGNORE_CASE))
-    def patternIS = new PatternWrapper(new Pattern(s, REFlags.IGNORE_CASE | REFlags.DOTALL))
-    def patternIU = new PatternWrapper(new Pattern(s, REFlags.IGNORE_CASE | REFlags.UNICODE))
-    def patternISU = new PatternWrapper(new Pattern(s, REFlags.IGNORE_CASE | REFlags.DOTALL | REFlags.UNICODE))
+    def pattern = new PatternWrapper(Pattern.compile(s))
+    def pattern(flags: Int) = new PatternWrapper(Pattern.compile(s, flags))
+    def patternS = new PatternWrapper(Pattern.compile(s, Pattern.DOTALL))
+    def patternI = new PatternWrapper(Pattern.compile(s, Pattern.CASE_INSENSITIVE))
+    def patternIS = new PatternWrapper(Pattern.compile(s, Pattern.CASE_INSENSITIVE | Pattern.DOTALL))
+    def patternIU = new PatternWrapper(Pattern.compile(s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE))
+    def patternISU = new PatternWrapper(Pattern.compile(s, Pattern.CASE_INSENSITIVE | Pattern.DOTALL | Pattern.UNICODE_CASE))
 
     def matcher(pattern: Pattern): Matcher = pattern.matcher(s)
     def matcher(pw: PatternWrapper): Matcher = pw.matcher(s)
     def matches(pattern: Pattern): Boolean = pattern.matches(s)
     def matches(pw: PatternWrapper): Boolean = pw.matches(s)
     def mapMatch(pw: PatternWrapper): Option[Matcher] = pw.mapMatch(s)
-    def mapStartsWith(pw: PatternWrapper): Option[Matcher] = pw.mapStartsWith(s)
     def mapFind(pw: PatternWrapper): Option[Matcher] = pw.mapFind(s)
 
     // ------------------------------ Other ------------------------------

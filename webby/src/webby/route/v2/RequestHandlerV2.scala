@@ -1,7 +1,8 @@
 package webby.route.v2
 
+import java.util.regex.Matcher
+
 import io.netty.handler.codec.http.HttpMethod
-import jregex.Matcher
 import webby.api.mvc.{Handler, RequestHeader}
 import webby.route.{BasePathSplitter, DomainProvider}
 

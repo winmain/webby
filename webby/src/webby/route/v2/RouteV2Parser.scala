@@ -1,8 +1,9 @@
 package webby.route.v2
 
 import java.lang.reflect.{Method, Modifier}
+import java.util.regex.Pattern
 
-import jregex._
+import com.google.common.base.CharMatcher
 import webby.api.mvc.Handler
 import webby.route._
 
@@ -54,7 +55,7 @@ object RouteV2Parser {
         val firstPart = pi.next()
         basePathSplitter.split(firstPart, learning = true, hasVar = route.args.nonEmpty)
       }
-      sb append sanitizeReplacer.replace(firstPartEnding)
+      sb append sanitize(firstPartEnding)
       var i = 0
       while (pi.hasNext) {
         val (part, pattern) = splitRegexpPart(pi.next())
@@ -69,7 +70,7 @@ object RouteV2Parser {
         sb append '('
         sb append vr.pattern
         sb append ')'
-        sb append sanitizeReplacer.replace(part)
+        sb append sanitize(part)
         i += 1
       }
       val path: String = sb.toString
@@ -81,7 +82,7 @@ object RouteV2Parser {
           domainProvider = rp.domainProvider,
           method = method,
           basePath = basePath,
-          pattern = new Pattern(path),
+          pattern = Pattern.compile(path),
           routeLinksForDomainData = rp.routeHandlersForDomainData.asInstanceOf[(Any) => RouteHandlers],
           vars = varArray.toVector,
           varIndices = varIndices.toVector,
@@ -124,12 +125,22 @@ object RouteV2Parser {
     }
   }
 
-  val sanitizeReplacer: Replacer = new Pattern("[.?$^*()+\\[\\]]").replacer(new Substitution {
-    def appendSubstitution(m: MatchResult, dest: TextBuffer) {
-      dest append '\\'
-      dest append m.group(0)
+  def sanitize(s: String): String = {
+    val sb = new java.lang.StringBuilder(s.length + 4)
+    var i = 0
+    var continue = true
+    while (continue && i < s.length) {
+      sanitizeMatcher.indexIn(s, i) match {
+        case -1 => continue = false
+        case idx =>
+          sb.append(s, i, idx).append('\\').append(s.charAt(idx))
+          i = idx + 1
+      }
     }
-  })
+    sb.append(s, i, s.length)
+    sb.toString
+  }
+  private val sanitizeMatcher = CharMatcher.anyOf(".?$^*()+[]")
 
   ////////////////////
   //  def tt(rl: RouteLinks) {
