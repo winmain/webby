@@ -7,7 +7,7 @@ Form condition base class
  */
 @:autoBuild(macros.KeepConstructorMacro.build())
 class FormCondition {
-  public function getFields(): Array<Field> return [];
+  public function getFieldNames(): Array<String> return [];
 
   public function check(form: Form): Bool return null;
 

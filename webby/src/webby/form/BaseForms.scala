@@ -23,7 +23,7 @@ abstract class BaseForms {self =>
 
   // ------------------------------- Html helpers -------------------------------
 
-  def formCls = "form"
+  def formCls = "form hidden"
 
   def formCreateInitJsCode(form: Form, id: String): String = "Form.create(Tag.find('#" + id + "'), " + js.toJson(form.jsProps) + ").init()"
 

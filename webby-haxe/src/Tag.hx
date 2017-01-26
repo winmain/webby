@@ -203,13 +203,21 @@ class Tag {
     return this;
   }
 
+  public function getAttr(key: String): String return el.getAttribute(key);
+
   public function id(v: String): Tag {
     el.id = v;
     return this;
   }
 
+  public function getId(): String return el.id;
+
   public function cls(v: String): Tag {
-    el.className += (untyped el.className ? ' ' : '') + v;
+    if (v.indexOf(' ') == -1) {
+      el.classList.add(v);
+    } else {
+      for (clazz in v.split(' ')) el.classList.add(clazz);
+    }
     return this;
   }
 

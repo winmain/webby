@@ -1,12 +1,19 @@
 package js.form;
 
+import js.html.XMLHttpRequestResponseType as XMLHttpRequestResponseType;
 import goog.array.GoogArray;
 import goog.events.EventTarget;
+import haxe.extern.EitherType;
 import js.form.field.Field;
+import js.form.field.FormListField;
+import js.form.rule.FormRule;
 import js.html.Element;
 import js.html.Event;
 import js.html.FormElement;
-import js.lib.ArrayUtils;
+import js.html.XMLHttpRequest;
+import js.lib.XhrUtils;
+
+using js.lib.ArrayUtils;
 
 class Form extends EventTarget {
   // ------------------------------- Events -------------------------------
@@ -19,11 +26,11 @@ class Form extends EventTarget {
   // ------------------------------- Class -------------------------------
 
   // Массив ошибок самой формы (это ошибки именно формы, а не её полей)
-  public var selfErrors(default, null) = [];
+  public var selfErrors(default, null): Array<String> = [];
 
   public var tag(default, null): Tag;
   public var props(default, null): FormProps;
-  public var style(default, null): FormStyle;
+  public var config(default, null): FormConfig;
   public var subId(default, null): Null<Int>;
   public var parentField(default, null): Null<Field>;
   public var parentForm(default, null): Null<Form>;
@@ -38,16 +45,25 @@ class Form extends EventTarget {
 
   public var blocks(default, null): Array<FormBlock>;
   public var fields(default, null): JMap<String, Field>;
-  public var rules(default, null): Array<String>;
+  public var rules(default, null): Array<FormRule>;
+
+  public var key(default, null): Int;
+  public var originalValue(default, null): External;
+  public var initialFilled(default, null): Bool;
+  public var finished(default, null): Bool;
+  public var onPostSuccessFn(default, null): Null<External -> Void>;
 
   public function new(tag: Tag, props: FormProps, ?subId: Null<Int>, ?parentField: Null<Field>) {
     super();
     this.tag = tag;
     this.props = props;
-    style = G.or(props.style, function() return new FormStyle());
     this.subId = subId;
     this.parentField = parentField;
     parentForm = parentField != null ? parentField.form : null;
+    config = props.config;
+    if (config == null) {
+      config = if (parentForm != null) parentForm.config else G.or(defaultConfig, function() return new FormConfig());
+    }
   }
 
   @:keep
@@ -68,12 +84,12 @@ class Form extends EventTarget {
     controller = props.controller != null ? props.controller(this) : null;
 
     formErrorsTag = getFormErrorsTag();
-    if (formErrorsTag == null) throw new Error("." + style.formErrorsClass + " not found");
-    errorBlock = new FormErrorBlock(parentForm != null ? parentForm.errorBlock : null, tag, formErrorsTag);
-    if (tag.hasCls(style.formBlockClass)) {
+    if (formErrorsTag == null) throw new Error("." + config.formErrorsClass + " not found");
+    errorBlock = new FormErrorBlock(config, parentForm != null ? parentForm.errorBlock : null, tag, formErrorsTag);
+    if (tag.hasCls(config.formBlockClass)) {
       blocks = [new FormBlock(this, tag)]; // Сама форма является блоком, поэтому блок тут один
     } else {
-      blocks = [for (subTag in tag.fnd('.' + style.formBlockClass)) new FormBlock(this, subTag)];
+      blocks = [for (subTag in tag.fnd('.' + config.formBlockClass)) new FormBlock(this, subTag)];
     }
 
     // this['fields'] нужен для доступа к полям формы для внешних скриптов
@@ -86,41 +102,49 @@ class Form extends EventTarget {
     rules = [];
     if (props.rules != null) {
       for (ruleProp in props.rules) {
-//        var rule = new Rule
+        var rule = new FormRule(this, ruleProp);
+        rule.addListeners();
+        rules.push(rule);
       }
     }
-//    for ruleProp in (@props['rules'] || [])
-//      rule = new rr.form.rule.Rule(@, ruleProp)
-//      rule.addListeners()
-//      @rules.push(rule)
-//
-//    @fill(@props['values'] || {})
-//    @dispatchEvent({type: @afterFirstFillEvent})
-//    if @props['initialFilled']
-//      @initialFilled = true
-//
-//    if !@parentForm
-//      if @props['onUnloadConfirm']
-//        $(window).on 'beforeunload', ->
-//          if !self.finished && self.hasChanges()
-//            'У вас есть несохранённые изменения'
-//      # По-дефолту основная форма скрыта (чтобы не показывать поля до инициализации). Поэтому, здесь мы её и показываем.
-//      if !@props['hidden']
-//        @$el.show()
-//        @onFormShown()
-//        # Вызвать ресайз окна, потому что появление формы скорее всего вызовет появление скролла.
-//        # Если этого не делать, то возникнет горизонтальный скролл.
-//        rr.windowSize.onResize()
-//
-//      if @props['submitAfterInit']
-//        @submit()
+
+    fill(G.or(props.values, function() return {}));
+    dispatchEvent(AfterFirstFillEvent);
+    if (props.initialFilled) {
+      initialFilled = true;
+    }
+
+    if (parentForm == null) {
+      // For topmost form only
+
+      if (props.onUnloadConfirm) {
+        G.window.addEventListener('beforeunload', beforeUnloadHandler);
+      }
+      // По-дефолту основная форма скрыта (чтобы не показывать поля до инициализации). Поэтому, здесь мы её и показываем.
+      if (!props.hidden) {
+        tag.clsOff(config.hiddenClass);
+        onFormShown();
+        // Вызвать ресайз окна, потому что появление формы скорее всего вызовет появление скролла.
+        // Если этого не делать, то возникнет горизонтальный скролл.
+        config.onResizeAfterFormShown();
+      }
+
+      if (props.submitAfterInit) {
+        submit();
+      }
+    }
+  }
+
+  private function beforeUnloadHandler(): String {
+    return if (!finished && hasChanges()) config.onUnloadConfirmText; else null;
   }
 
   public override function disposeInternal() {
+    if (props.onUnloadConfirm) G.window.removeEventListener('beforeunload', beforeUnloadHandler);
     deregisterForm(this);
   }
 
-  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + style.formErrorsClass);
+  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + config.formErrorsClass);
 
 
   /*
@@ -137,176 +161,227 @@ class Form extends EventTarget {
     fields.set(field.name, field);
   }
 
-//  ###
-//  Переинициализация одного или нескольких полей по критериям фильтра.
-//  propFilterFn на вход получает fieldProps, на выходе должен вернуть boolean - запускать или нет
-//  переинициализацию поля.
-//
-//  @export
-//  ###
-//  reInitFields: (propFilterFn) ->
-//    fieldClasses = rr.form.Form.fieldClasses()
-//    for fieldProps in @props['fields']
-//      if propFilterFn(fieldProps)
-//        @initField(fieldClasses, fieldProps)
-//
-//  ### @export ###
-//  fill: (valueMap) ->
-//    rule.allowFocusChange(false) for rule in @rules
-//    @key = valueMap['_key']
-//    for name, field of @fields
-//      field.setValue(valueMap[name])
-//    @dispatchEvent({type: @fillEvent})
-//    rule2.allowFocusChange(true) for rule2 in @rules
-//    @originalValue = @value()
-//    @initialFilled = false
-//    @triggerRules()
-//
-//  ###
-//  Вызвать trigger у всех правил формы.
-//  ###
-//  triggerRules: ->
-//    for rule in @rules
-//      rule.triggerNoFocus()
-//
-//  ###
-//  Показать/скрыть опциональные поля, размещённые в блоке class="optional-fields".
-//  Ссылка на раскрытие полей должна иметь class="show-optional".
-//  Актуально только для подформ.
-//  ###
-//  showOptionalFields: (show) ->
-//    $showOpt = @$el.find('.show-optional')
-//    $optFields = @$el.find('.optional-fields')
-//    showFields = ->
-//      $showOpt.hide()
-//      $optFields.show()
-//      false
-//    if show then showFields()
-//    else
-//      $optFields.hide()
-//      $showOpt.click(showFields)
-//
-//  formAction: -> @$el.attr('action')
-//
-//  ###
-//  Вернуть форму наивысшей иерархии
-//  ###
-//  topForm: -> @parentForm or @
-//
-//  fieldPath: (subPath) ->
-//    if @parentField
-//      path = {}
-//      path[@parentField.name] = subPath
-//      @parentForm.fieldPath(path)
-//    else
-//      subPath
+  /*
+  Reinitialization one or more field filtered by `propFielterFn`.
+   */
+  @:keep
+  @:expose('Form.reInitFields')
+  public function reInitFields(propFilterFn: FieldProps -> Bool) {
+    for (fieldProps in props.fields) {
+      if (propFilterFn(fieldProps)) {
+        initField(fieldProps);
+      }
+    }
+  }
+
+  @:keep
+  @:expose('Form.fill')
+  public function fill(valueMap: External) {
+    for (rule in rules) {
+      rule.allowFocusChange(false);
+    }
+    key = valueMap['_key'];
+    for (name in fields.keys()) {
+      var field = fields.get(name);
+      field.setValue(valueMap[name]);
+    }
+    dispatchEvent(FillEvent);
+    for (rule in rules) {
+      rule.allowFocusChange(true);
+    }
+
+    originalValue = value();
+    initialFilled = false;
+    triggerRules();
+  }
+
+  /*
+  Call `trigger` on all form rules.
+   */
+  public function triggerRules() {
+    for (rule in rules) {
+      rule.triggerNoFocus();
+    }
+  }
+
+  /*
+  Показать/скрыть опциональные поля, размещённые в блоке class="optional-fields".
+  Ссылка на раскрытие полей должна иметь class="show-optional".
+  Актуально только для подформ.
+  */
+  public function showOptionalFields(show: Bool) {
+    var showOptTags = tag.fndAll('.' + config.showOptionalClass);
+    var optFieldsTags = tag.fndAll('.' + config.optionalFieldsClass);
+    function showTags(tags: Array<Tag>, show: Bool) {
+      for (tag in tags) tag.setCls(config.hiddenClass, !show);
+    }
+    function showFields(): Dynamic {
+      showTags(showOptTags, false);
+      showTags(optFieldsTags, true);
+      return false;
+    }
+    if (show) showFields();
+    else {
+      showTags(optFieldsTags, false);
+      // TODO: странное решение - навешивать onClick только при show==false, и делать это каждый раз при вызове showOptionalFields
+      for (tag in showOptTags) {
+        tag.onClick(showFields);
+      }
+    }
+  }
+
+  public function formAction(): String return tag.getAttr('action');
+
+  /*
+  Returns top-most form. Can return self for top-most form.
+  */
+  public function topForm(): Form return G.or(parentForm, function() return this);
+
+  public function fieldPath(subPath: External): External {
+    if (parentField != null) {
+      var path: External = {};
+      path[parentField.name] = subPath;
+      return parentForm.fieldPath(path);
+    } else {
+      return subPath;
+    }
+  }
 
   @:keep
   @:expose('Form.submit')
   public function submit() {
-//  ### @export ###
-//  submit: ->
-//    self = @
-//    if @finished then return
-//    @dispatchEvent({type: @beforeSubmitEvent})
-//    # TODO: довольно кривая конструкция определения кнопки. Но фокус на кнопку надо ставить, т.к. если он останется на инпуте, то ошибка под этим инпутом сразу же исчезает.
-//    buttons = @$el.find('button[type=submit]')
-//    buttonLocker = rr.util.ButtonLocker.lock(buttons)
-//    buttons.focus()
-//    loaderGif = rr.util.LoaderGif.forButton(buttons)
-//    $.jsonPost(@formAction(), {'post': if @isInitialEmpty() then null else @value()}, ((result) ->
-//      # --- Успешный submit. Т.е., запрос прошёл, но форма может иметь ошибки. ---
-//      loaderGif.remove()
-//      buttonLocker.unlock() # Разлочить кнопки
-//      self.resetErrors()
-//      if result['success'] then self.onPostSuccess(result)
-//      else self.onPostErrors(result)
-//    ), ((xhr, text, err) ->
-//      # --- Произошла при отправке запроса ---
-//      loaderGif.remove()
-//      buttonLocker.unlock() # Разлочить кнопки
-//      if xhr.status == 500
-//        rr.window.Message.show({cls: 'error-message', text: 'Внутренняя ошибка сервера. Не волнуйтесь, мы уже работаем над этим.'})
-//      else
-//        footer = $(rr.window.Message.makeFooter('Повторить', 'btn-orange'))
-//        footer.find('button').click(-> self.submit())
-//        rr.window.Message.show(
-//          cls: 'error-message'
-//          text: 'Произошла ошибка соединения с сервером.<p class="tech">' + xhr.status + ': ' + err + '</p>'
-//          footer: footer
-//        )
-//    ))
+    if (finished) return;
+    dispatchEvent(BeforeSubmitEvent);
+    // TODO: довольно кривая конструкция определения кнопки. Но фокус на кнопку надо ставить, т.к. если он останется на инпуте, то ошибка под этим инпутом сразу же исчезает.
+    var buttons: Array<Tag> = config.findSubmitButtons(this);
+    // TODO: var buttonLocker = rr.util.ButtonLocker.lock(buttons)
+    if (buttons.nonEmpty()) buttons[0].el.focus();
+    // TODO: loaderGif = rr.util.LoaderGif.forButton(buttons)
+
+    var postData: External = {'post': isInitialEmpty() ? null : value()};
+
+    var xhr = new XMLHttpRequest();
+    XhrUtils.bind(
+      xhr,
+      function() { // onSuccess
+        // --- Успешный submit. Т.е., запрос прошёл, но форма может иметь ошибки. ---
+        var result: External = xhr.response;
+        //if (untyped handler) handler(xhr.response);
+        // TODO: loaderGif.remove()
+        // TODO: buttonLocker.unlock() # Разлочить кнопки
+        resetErrors();
+        if (result['success']) onPostSuccess(result);
+        else onPostErrors(result);
+      },
+      function() { // onFail
+        // --- Произошла при отправке запроса ---
+        // TODO: loaderGif.remove()
+        // TODO: buttonLocker.unlock() # Разлочить кнопки
+        config.onErrorSubmit(xhr);
+      });
+    xhr.open('POST', formAction(), true);
+    xhr.responseType = XMLHttpRequestResponseType.JSON;
+    xhr.send(JSON.stringify(postData));
   }
 
-//  ### @export ###
-//  value: ->
-//    data = {'_key': @key}
-//    for _, field of @fields
-//      data[field.name] = field.value()
-//    data
-//
-//  hasChanges: -> JSON.stringify(@originalValue) != JSON.stringify(@value())
-//
-//  ###
-//  Эта форма изначально пустая? Эта проверка нужна, чтобы определить свежесозданную подформу,
-//  которую юзер не заполнял. Но она, в то же время, может быть заполнена изначальными значениями, которые не всегда пусты.
-//  Также, эта проверка хорошо работает для главной формы, чтобы определить, делал ли юзер какие-либо изменения над полями
-//  (просто вызов метода hasChanges() не работает для формы, которая была заполнена методом fill()).
-//  ###
-//  isInitialEmpty: -> @initialFilled && !@hasChanges()
-//
-//  resetErrors: ->
-//    for _, field of @fields
-//      field.resetError()
-//    @selfErrors = []
-//    @errorBlock.resetErrors()
-//
-//  setSelfErrors: (selfErrors) ->
-//    @selfErrors = selfErrors
-//    @errorBlock.setSelfErrors(selfErrors)
-//
-//  onPostErrors: (post) ->
-//    # Сортировать полученные ошибки по полям, как они заданы в форме
-//    errors = post['errors'] || {}
-//    required = post['required'] || []
-//    subs = {}
-//    if post['sub']
-//      for sub in post['sub']
-//        name = sub['name']
-//        if name not of subs then subs[name] = []
-//        subs[name].push(sub)
-//      for _, subList of subs
-//        subList.sort((a, b) -> a.index - b.index)
-//    for name, field of @fields
-//      if name of errors then field.setError(errors[name])
-//      if name in required then field.setEmptyError()
-//      if name of subs
-//        for sub in subs[name]
-//          field.forms[sub['index']].onPostErrors(sub)
-//    @setSelfErrors(post['selfErrors'] || [])
-//
-//  onPostSuccess: (post) ->
-//    @finished = !(post['clearFinished'] || (post['message'] && post['message']['clearFinished']))
-//    if @onPostSuccessFn then @onPostSuccessFn(post)
-//    else rr.util.Actions.onResult(post, [])
-//
-//    # Переинициализировать некоторые поля
-//    fieldClasses = rr.form.Form.fieldClasses()
-//    for _, field of @fields
-//      if field.reInitAfterSubmit()
-//        @initField(fieldClasses, field.props)
-//
-//
-//  setOnPostSuccess: (fn) -> @onPostSuccessFn = fn
-//
-//  # Вызывается сразу после показа формы, независимо от видимости самой формы
-//  onFormShown: ->
-//    for _, field of @fields
-//      field.onFormShown()
-//
-//    # Установить фокус на заданное поле, если в форму передан параметр focusField
-//    if @props['focusField'] then @fields[@props['focusField']].focus()
-//
+  @:keep
+  @:expose('Form.value')
+  public function value(): External {
+    var data: External = {'_key': key};
+    for (field_ in fields) {
+      var field: Field = field_;
+      data.set(field.name, field.value());
+    }
+    return data;
+  }
+
+  public function hasChanges(): Bool return JSON.stringify(originalValue) != JSON.stringify(value());
+
+  /*
+  Эта форма изначально пустая? Эта проверка нужна, чтобы определить свежесозданную подформу,
+  которую юзер не заполнял. Но она, в то же время, может быть заполнена изначальными значениями, которые не всегда пусты.
+  Также, эта проверка хорошо работает для главной формы, чтобы определить, делал ли юзер какие-либо изменения над полями
+  (просто вызов метода hasChanges() не работает для формы, которая была заполнена методом fill()).
+  */
+  public function isInitialEmpty(): Bool return initialFilled && !hasChanges();
+
+  public function resetErrors() {
+    for (field_ in fields) {
+      var field: Field = field_;
+      field.resetError();
+    }
+    selfErrors = [];
+    errorBlock.resetErrors();
+  }
+
+  public function setSelfErrors(selfErrors: Array<String>) {
+    this.selfErrors = selfErrors;
+    errorBlock.setSelfErrors(selfErrors);
+  }
+
+  function onPostErrors(post: FormErrors) {
+    // Сортировать полученные ошибки по полям, как они заданы в форме
+    var errors: JMap<String, String> = G.or(post.errors, function() return JMap.create());
+    var required: Array<String> = G.or(post.required, function() return []);
+    var subs: JMap<String, Array<FormErrors>> = JMap.create();
+    if (post.sub != null) {
+      for (sub_ in post.sub) {
+        var sub: FormErrors = sub_;
+        var name = sub.name;
+        if (!subs.contains(name)) subs.set(name, []);
+        subs.get(name).push(sub);
+      }
+      for (subList_ in subs) {
+        var subList: Array<FormErrors> = subList_;
+        subList.sort(function(a: FormErrors, b: FormErrors) return a.index - b.index);
+      }
+    }
+    for (name in fields.keys()) {
+      var field: Field = fields.get(name);
+      if (errors.contains(name)) field.setError(errors.get(name));
+      if (required.contains(name)) field.setEmptyError();
+
+      var subArray: Array<FormErrors> = subs.get(name);
+      if (subArray != null) {
+        for (sub in subArray) {
+          var formListField: FormListField = cast field;
+          formListField.forms[sub.index].onPostErrors(sub);
+        }
+      }
+    }
+    setSelfErrors(G.or(post.selfErrors, function() return []));
+  }
+
+  function onPostSuccess(post: FormSuccess) {
+    finished = !post.clearFinished;
+    if (onPostSuccessFn != null) onPostSuccessFn(post);
+    else config.onFormSuccess(post);
+
+    // Переинициализировать некоторые поля
+    for (field_ in fields) {
+      var field: Field = field_;
+      if (field.reInitAfterSubmit())
+        initField(field.props);
+    }
+  }
+
+  public function setOnPostSuccess(fn: Null<External -> Void>) {
+    onPostSuccessFn = fn;
+  }
+
+  /*
+  Вызывается сразу после показа формы, независимо от видимости самой формы
+   */
+  function onFormShown() {
+    for (field_ in fields) {
+      var field: Field = field_;
+      field.onFormShown();
+    }
+    // Установить фокус на заданное поле, если в форму передан параметр focusField
+    if (props.focusField != null) {
+      fields.get(props.focusField).focus();
+    }
+  }
 
   // ------------------------------- Static methods -------------------------------
 
@@ -328,10 +403,17 @@ class Form extends EventTarget {
     fieldRegistry.set(name, new FormRegField(cls, constructor));
   }
 
+  private static var defaultConfig: Null<FormConfig>;
+
+  public static function setDefaultConfig(config: FormConfig) {
+    defaultConfig = config;
+  }
+
   /*
   Сопоставление типа поля с его классом
   (функция здесь нужна потому, что google closure не успевает проинициализировать нужные классы на момент создания объекта)
    */
+  // TODO: очистить список ниже по мере реализации перечисленных типов полей
 //  'check': rr.form.field.CheckField
 //  'date': rr.form.field.DateField
 //  'monthYear': rr.form.field.MonthYearField
@@ -353,7 +435,7 @@ class Form extends EventTarget {
   private static var registeredForms: Array<Form> = [];
 
   private static function registerForm(form: Form) {
-    ArrayUtils.pushUnique(registeredForms, form);
+    registeredForms.pushUnique(form);
   }
 
   private static function deregisterForm(form: Form) {
@@ -378,15 +460,77 @@ class Form extends EventTarget {
  */
 @:build(macros.ExternalFieldsMacro.build())
 class FormProps {
-  public var style: Null<FormStyle>;
-  public var controller: Null<Form -> Dynamic>;
+  // Field definitions
   public var fields: Array<FieldProps>;
-  public var rules: Array<External>;
-//  public var values;
-//  public var initialFilled;
-//  public var onUnloadConfirm;
-//  public var hidden;
-//  public var submitAfterInit;
+
+  // --- Optional fields ---
+
+  // Form rules (see FormRule class)
+  public var rules: Null<Array<External>>;
+
+  // Form config describing css classes, texts, and some external behavoir.
+  public var config: Null<FormConfig>;
+
+  // Custom form controller. Calls in very beginning of initialization.
+  public var controller: Null<Form -> Dynamic>;
+
+  // Form initial values
+  public var values: Null<External>;
+
+  // TODO:
+  public var initialFilled: Null<Bool>;
+
+  // Add `beforeunload` window listener which prevents closing a tab
+  // if the form changed.
+  public var onUnloadConfirm: Null<Bool>;
+
+  // Form remains hidden after initialization.
+  // In this case `submitAfterInit` and `focusField` properties will be ignored.
+  public var hidden: Null<Bool>;
+
+  // Do form submit after init and shown
+  // Will do nothing if `hidden` flag is set.
+  public var submitAfterInit: Null<Bool>;
+
+  // Set focus on this field after form init and shown.
+  // Will do nothing if `hidden` flag is set.
+  public var focusField: Null<String>;
+}
+
+/*
+Form errors structure
+ */
+@:build(macros.ExternalFieldsMacro.build())
+class FormErrors {
+  // Имя подформы (только для ошибок в подформах)
+  public var name: Null<String>;
+
+  // Индекс подформы в списке (только для ошибок в подформах)
+  public var index: Null<Int>;
+
+  // Ошибки полей этой формы/подформы
+  public var errors: Null<JMap<String, String>>;
+
+  // Список пустых полей, обязательных для заполнения
+  public var required: Null<Array<String>>;
+
+  // Ошибки самой формы (сюда не входят ошибки полей)
+  public var selfErrors: Null<Array<String>>;
+
+  // Ошибки в подформах. Каждая запись в sub должна иметь установленные поля name, index.
+  public var sub: Null<Array<FormErrors>>;
+}
+
+/*
+Form success structure
+ */
+@:build(macros.ExternalFieldsMacro.build())
+class FormSuccess {
+  // Always true
+  public var success: Bool;
+
+  // Clear `Form.finished` flag on success
+  public var clearFinished: Null<Bool>;
 }
 
 
@@ -417,62 +561,57 @@ class FormBlock {
     this.form = form;
     this.tag = tag;
 //    @$el.data('block', @)
-    error = new FormErrorBlock(form.errorBlock, tag, createErrorTag());
+    error = new FormErrorBlock(form.config, form.errorBlock, tag, createErrorTag());
     error.resetErrors();
   }
 
   /*
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
    */
-  function createErrorTag(): Tag return Tag.label.cls(form.style.blockErrorClass).hide().addTo(tag);
+  function createErrorTag(): Tag return Tag.label.cls(form.config.blockErrorClass).cls(form.config.hiddenClass).addTo(tag);
 }
 
 /*
 Блок с ошибками как для блока формы .form-block, так и для самой формы .form-errors
  */
 class FormErrorBlock {
-  private var parent(default, null): Null<FormErrorBlock>;
-  private var parentTag(default, null): Tag;
-  private var errorTag(default, null): Tag;
+  private var config: FormConfig;
+  private var parent: Null<FormErrorBlock>;
+  private var parentTag: Tag;
+  private var errorTag: Null<Tag>;
 
-  private var errors(default, null): Array<Dynamic> = []; // Can be: Field, FormErrorBlock
-  private var selfErrors(default, null): Array<String> = [];
-  private var target(default, null): Null<Field> = null;
+  private var errors: Array<EitherType<Field, FormErrorBlock>> = [];
+  private var selfErrors: Array<String> = [];
+  private var target: Null<Field> = null;
 
-  private inline static var HoverClass = 'hover'; // TODO: вынести в FormStyle
-
-  public function new(parent: Null<FormErrorBlock>, parentTag: Tag, errorTag: Tag) {
+  public function new(config: FormConfig, parent: Null<FormErrorBlock>, parentTag: Tag, errorTag: Null<Tag>) {
+    this.config = config;
     this.parent = parent;
     this.parentTag = parentTag;
     this.errorTag = errorTag;
     // Это действие нужно, чтобы срабатывал "фокус" на поля без инпутов (пример: RadioGroupField)
 
     errorTag
-    .on('mouseover', function() {if (target != null) target.box.cls(HoverClass); })
-    .on('mouseout', function() {if (target != null) target.box.clsOff(HoverClass); })
+    .on('mouseover', function() {if (target != null) target.box.cls(config.hoverClass); })
+    .on('mouseout', function() {if (target != null) target.box.clsOff(config.hoverClass); })
     .onClick(function() {
       if (target != null) {
-        target.box.clsOff(HoverClass);
+        target.box.clsOff(config.hoverClass);
         target.focus();
       }
     });
-//    .click(->
-//      if self.target
-//        self.target.$box.removeClass('hover')
-//        self.target.focus()
-//    )
-//    @target = null
+    target = null;
   }
 
   public function resetErrors() {
     errors = [];
     selfErrors = [];
-    errorTag.setHtml('');
+    if (errorTag != null) errorTag.setHtml('').cls(config.hiddenClass);
     updateErrorTag();
     if (parent != null) parent.clearError(this);
   }
 
-  public function setError(item: Dynamic) {
+  public function setError(item: EitherType<Field, FormErrorBlock>) {
     if (!GoogArray.contains(errors, item)) {
       errors.push(item);
       updateErrorTag();
@@ -480,9 +619,9 @@ class FormErrorBlock {
     }
   }
 
-  public function clearError(item: Dynamic) {
+  public function clearError(item: EitherType<Field, FormErrorBlock>) {
     if (GoogArray.remove(errors, item)) {
-      if (ArrayUtils.isEmpty(errors) && parent != null) {
+      if (errors.isEmpty() && parent != null) {
         parent.clearError(item);
       }
       updateErrorTag();
@@ -495,28 +634,38 @@ class FormErrorBlock {
   }
 
   public function updateErrorTag() {
-//    hasErrors = @errors.length > 0
-//    if @selfErrors.length > 0
-//      text = @selfErrors.join('<br>')
-//      if @$error.length
-//        if @$error.html() != text then @$error.html(text).css('display', 'block').delay(3000).fadeOut(1000)
-//      else # В некоторых формах бывает так, что нет блока с ошибками, а саму ошибку показать надо.
-//        rr.window.Message.show({cls: 'error-message', text: text})
-//    else
-//      if hasErrors then @$error.html('Некоторые поля заполнены неправильно')
-//      @$error.css('display', if hasErrors then 'block' else 'none')
-//    if hasErrors then @target = @getFirstError()
-//    @$parent.toggleClass('with-error', hasErrors)
-//    @parent?.updateErrorEl()
+    var hasErrors: Bool = errors.length > 0;
+    if (selfErrors.length > 0) {
+      var text: String = selfErrors.join('<br>');
+      if (errorTag != null) {
+        if (errorTag.html() != text) errorTag.setHtml(text).clsOff(config.hiddenClass); // TODO: сделать скрытие блока через 3 секунды через FormConfig; .css('display', 'block').delay(3000).fadeOut(1000)
+      } else { // В некоторых формах бывает так, что нет блока с ошибками, а саму ошибку показать надо.
+        config.showFormErrorDialog(text);
+      }
+    } else if (errorTag != null) {
+      if (hasErrors) errorTag.setHtml(config.someFieldsHasErrorText);
+      errorTag.setCls(config.hiddenClass, !hasErrors);
+    }
+    if (hasErrors) target = getFirstError();
+    parentTag.setCls(config.withErrorClass, hasErrors);
+    if (parent != null) parent.updateErrorTag();
   }
 
-//  getFirstError: ->
-//    err = @errors[0]
-//    if err instanceof rr.form.FormErrorBlock
-//      err.getFirstError()
-//    else if err instanceof rr.form.field.FormListField # Если ошибка на самой подформе, то выбрать первое поле в ней
-//      for _, first of err.forms[0].fields  # TODO: здесь может быть так, что нет ни одной подформы, и будет ошибка
-//        return first
-//    else
-//      err
+  public function getFirstError(): Null<Field> {
+    var err = errors[0];
+
+    var formErrorBlock: FormErrorBlock = Std.instance(err, FormErrorBlock);
+    if (formErrorBlock != null) return formErrorBlock.getFirstError();
+
+    var formListField: FormListField = Std.instance(err, FormListField);
+    if (formListField != null) { // Если ошибка на самой подформе, то выбрать первое поле в ней
+      var forms = formListField.forms;
+      if (forms.length == 0) return formListField;
+      else {
+        return G.or(forms[0].fields.iterator().next(), function() return formListField);
+      }
+    }
+
+    return cast err;
+  }
 }

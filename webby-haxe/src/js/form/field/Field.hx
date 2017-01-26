@@ -13,7 +13,7 @@ class Field extends EventTarget {
   // ------------------------------- Class -------------------------------
 
   public var form(default, null): Form;
-  private var props: FieldProps;
+  public var props(default, null): FieldProps;
 
   /* Error message or null if no error */
   public var error(default, null): Null<String> = null;
@@ -43,10 +43,10 @@ class Field extends EventTarget {
     tag = getTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
     if (tag == null) throw new Error('Field node #${id} not found');
 //    @$el = @initEl().prop('field', @)
-    box = getBoxTag().cls(form.style.fieldBoxClass);
+    box = getBoxTag().cls(form.config.fieldBoxClass);
     updateRequired();
-//    @$error = @createErrorEl()
-//    @initElEvents()
+    errorTag = createErrorTag();
+    initElEvents();
 //    @block = @findFormBlock()
 //    if !props['enterKeySubmit'] && @suppressEnterKey()
 //      @$el.keypress (e) ->
@@ -96,7 +96,7 @@ class Field extends EventTarget {
   public function isEmpty(): Bool return !value();
 
   public function updateRequired() {
-    box.setCls(form.style.fieldBoxRequiredClass, required);
+    box.setCls(form.config.fieldBoxRequiredClass, required);
   }
 
   public function getTag(): Tag return form.tag.fnd('#' + id);
@@ -116,17 +116,21 @@ class Field extends EventTarget {
   public function show(v: Bool, withParent: Bool = false) {
     vis = v;
     var t: Tag = withParent ? box.parent() : box;
-    t.setCls(form.style.hiddenClass, !v);
+    t.setCls(form.config.hiddenClass, !v);
   }
-//
-//  # Вызывается сразу после показа формы, независимо от видимости самого элемента
-//  onFormShown: -> @updateErrorEl()
-//
+
+  /*
+  Вызывается сразу после показа формы, независимо от видимости самого элемента
+   */
+  public function onFormShown() {
+    updateErrorTag();
+  }
+
   public function enable(en: Bool) {
     tag.attr('disabled', !en);
   }
 
-//  initElEvents: ->
+  public function initElEvents() {
 //    self = @
 //    @$el.bind('change keyup', (e) ->
 //      if e.type == 'keyup' && ((e.which == 13 && !/[\n\r]/.test(self.$el.val())) || (e.which >= 33 && e.which <= 40))
@@ -138,7 +142,8 @@ class Field extends EventTarget {
 //      self.dispatchEvent({type: self.changeEvent, parent: e})
 //    )
 //    .bind('focus', -> self.onFocus())
-//
+  }
+
 //  fieldPath: -> @form.fieldPath(@name)
 //
 //  ###
@@ -156,12 +161,12 @@ class Field extends EventTarget {
 //  ###
 //  suppressEnterKey: -> @$el.length && @$el[0].tagName == 'INPUT'
 //
-//  ###
-//  Это поле нужно реинициализировать каждый раз после сабмита формы?
-//  (этот метод перегружается в наследниках)
-//  ###
-//  reInitAfterSubmit: -> false
-//
+  /*
+  Do this field needed to be reinitialized every time after form submit?
+  (this method can be overloaded in descendants)
+   */
+  public function reInitAfterSubmit(): Bool return false;
+
 
   // ------------------------------- Error & event handling methods -------------------------------
 
@@ -175,7 +180,7 @@ class Field extends EventTarget {
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
    */
   public function createErrorTag(): Tag return
-    Tag.labelFor(id).cls(form.style.fieldErrorClass).cls(form.style.hiddenClass).addAfter(box);
+    Tag.labelFor(id).cls(form.config.fieldErrorClass).cls(form.config.hiddenClass).addAfter(box);
 
   public function resetError() {
     emptyError = false;
@@ -190,30 +195,33 @@ class Field extends EventTarget {
 
 //  onFocus: ->
 //    @block?.error.clearError(@)
-//
-//  setError: (@error) ->
-//    @updateErrorEl()
-//    @block?.error.setError(@)
-//
+
+  public function setError(v: Null<String>) {
+    error = v;
+    updateErrorTag();
+    if (block != null) block.error.setError(this);
+  }
+
 //  ###
 //  Специальная вариация setError(), вызываемая яваскриптом во время заполнения блока.
 //  Основная цель - не показывать ошибку под блоком.
 //  ###
 //  setJsError: (@error) ->
 //    @updateErrorEl()
-//
-//  setEmptyError: ->
-//    @emptyError = true
-//    @updateErrorEl()
-//    @block?.error.setError(@)
-//
+
+  public function setEmptyError() {
+    emptyError = true;
+    updateErrorTag();
+    if (block != null) block.error.setError(this);
+  }
+
   public function updateErrorTag() {
-    box.setCls(form.style.fieldBoxErrorClass, error != null || emptyError).setCls(form.style.fieldBoxWithMsgClass, error != null);
+    box.setCls(form.config.fieldBoxErrorClass, error != null || emptyError).setCls(form.config.fieldBoxWithMsgClass, error != null);
     if (error != null) {
-      errorTag.setHtml(error).clsOff(form.style.hiddenClass);
+      errorTag.setHtml(error).clsOff(form.config.hiddenClass);
       positionErrorTag();
     } else {
-      errorTag.cls(form.style.hiddenClass);
+      errorTag.cls(form.config.hiddenClass);
     }
   }
 

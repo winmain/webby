@@ -6,6 +6,7 @@ abstract External(Dynamic) from Dynamic to Dynamic {
     this = v;
   }
 
+  @:arrayAccess
   inline public function get(field: String): External {
     return untyped __js__('{0}[{1}]', this, field);
   }
@@ -27,6 +28,7 @@ abstract External(Dynamic) from Dynamic to Dynamic {
   inline public function getArray(field: String): Array<External> return get(field);
 
 
+  @:arrayAccess
   inline public function set(field: String, value: Dynamic) {
     untyped __js__('{0}[{1}] = {2}', this, field, value);
   }

@@ -1,5 +1,7 @@
 package js.form.rule;
 
+import js.form.field.Field;
+
 class FormRule {
   public var form(default, null): Form;
   public var cond(default, null): FormCondition;
@@ -12,9 +14,36 @@ class FormRule {
     actions = [for (actionProps in props.actions) FormAction.createAction(actionProps)];
   }
 
-  // TODO: добавить методы
+  public function addListeners() {
+    for (fieldName in cond.getFieldNames()) {
+      var field = form.fields.get(fieldName);
+      if (field == null) throw new Error('No field named "${fieldName}" for condition');
+      field.listen(Field.ChangeEvent, trigger);
+    }
+  }
 
-  // ------------------------------- Internal static methods -------------------------------
+  /*
+  Перепроверить условие и выполнить все действия. Вызывается из Condition
+  */
+  function trigger() {
+    var turnOn = cond.check(form);
+    for (action in actions) {
+      action.execute(form, turnOn, allowFocus);
+    }
+  }
+
+  public function triggerNoFocus() {
+    allowFocus = false;
+    trigger();
+    allowFocus = true;
+  }
+
+  // TODO: переименовать в setAllowFocus
+  public function allowFocusChange(allowFocus: Bool) {
+    this.allowFocus = allowFocus;
+  }
+
+// ------------------------------- Internal static methods -------------------------------
 
   @:allow(js.form.rule.FormCondition.regCond)
   @:allow(js.form.rule.FormAction.regAction)
@@ -38,34 +67,6 @@ class FormRule {
   }
 }
 
-/*
-class rr.form.rule.Rule
-  constructor: (@form, props) ->
-    @cond = rr.form.rule.Condition.createCond(props['cond'])
-    @actions = (rr.form.rule.Action.createAction(action) for action in props['actions'])
-    @allowFocus = false
-
-  addListeners: ->
-    self = @
-    for fieldName in @cond.getFields()
-      field = @form.fields[fieldName]
-      field.listen(field.changeEvent, -> self.trigger())
-
-  ###
-    Перепроверить условие и выполнить все действия. Вызывается из Condition
-  ###
-  trigger: ->
-    turnOn = @cond.check(@form)
-    action.execute(@form, turnOn, @allowFocus) for action in @actions
-
-  triggerNoFocus: ->
-    @allowFocus = false
-    @trigger()
-    @allowFocus = true
-
-  allowFocusChange: (@allowFocus) ->
-
- */
 
 @:build(macros.ExternalFieldsMacro.build())
 class FormRuleProps {
