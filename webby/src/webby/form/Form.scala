@@ -265,6 +265,7 @@ trait Form extends FormFields with FormJsRules {self =>
       */
     val values: mutable.OpenHashMap[String, AnyRef] = self.jsValues
 
+    @JsonRawValue val config: String = self.jsConfig
     @JsonRawValue val controller: String = self.jsController
     val rules: Iterable[JsRule] = self.clientRules
 
@@ -276,6 +277,13 @@ trait Form extends FormFields with FormJsRules {self =>
 
     private def trueOrNull(bool: Boolean): java.lang.Boolean = if (bool) java.lang.Boolean.TRUE else null
   }
+
+  /**
+    * Instance of js `FormConfig` class.
+    * If not defined, default config will be used (can be overridden by Form.setDefaultConfig).
+    * Raw js code.
+    */
+  def jsConfig: String = null
 
   /**
     * Js-контроллер форм, обеспечивающий динамику формы. Он должен находиться в package rr.form.controller

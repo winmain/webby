@@ -465,8 +465,8 @@ class FormProps {
 
   // --- Optional fields ---
 
-  // Form rules (see FormRule class)
-  public var rules: Null<Array<External>>;
+  // Form initial values
+  public var values: Null<External>;
 
   // Form config describing css classes, texts, and some external behavoir.
   public var config: Null<FormConfig>;
@@ -474,11 +474,8 @@ class FormProps {
   // Custom form controller. Calls in very beginning of initialization.
   public var controller: Null<Form -> Dynamic>;
 
-  // Form initial values
-  public var values: Null<External>;
-
-  // TODO:
-  public var initialFilled: Null<Bool>;
+  // Form rules (see FormRule class)
+  public var rules: Null<Array<External>>;
 
   // Add `beforeunload` window listener which prevents closing a tab
   // if the form changed.
@@ -488,13 +485,16 @@ class FormProps {
   // In this case `submitAfterInit` and `focusField` properties will be ignored.
   public var hidden: Null<Bool>;
 
-  // Do form submit after init and shown
-  // Will do nothing if `hidden` flag is set.
-  public var submitAfterInit: Null<Bool>;
+  // TODO:
+  public var initialFilled: Null<Bool>;
 
   // Set focus on this field after form init and shown.
   // Will do nothing if `hidden` flag is set.
   public var focusField: Null<String>;
+
+  // Do form submit after init and shown
+  // Will do nothing if `hidden` flag is set.
+  public var submitAfterInit: Null<Bool>;
 }
 
 /*
