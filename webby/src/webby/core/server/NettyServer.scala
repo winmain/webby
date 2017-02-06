@@ -223,23 +223,28 @@ object NettyServer {
     try {
       // Manage RUNNING_PID file
       val pid = StringUtils.split(java.lang.management.ManagementFactory.getRuntimeMXBean.getName, '@')(0)
-      val pidPath = Option(System.getProperty("pidfile.path")).fold(appPath.resolve("RUNNING_PID"))(Paths.get(_))
+      val maybePidPath: Option[Path] = Option(System.getProperty("pidfile.path")).map(Paths.get(_))
+
+      val httpPort: Int = System.getProperty("http.port") match {
+        case null => Logger.warn("No -Dhttp.port parameter defined. Using default 9000 port"); 9000
+        case str => Integer.parseInt(str)
+      }
+      val httpAddress: String = Option(System.getProperty("http.address")).getOrElse("0.0.0.0")
 
       // The Logger is not initialized yet, we print the Process ID on STDOUT
       println("App server process ID is " + pid)
 
-      if (pidPath.toString != "/dev/null" && Files.exists(pidPath)) {
-        println("This application is already running (Or delete " + pidPath.toAbsolutePath + " file).")
+      if (maybePidPath.exists(pidPath => Files.exists(pidPath))) {
+        println("This application is already running (Or delete " + maybePidPath.get.toAbsolutePath + " file).")
         System.exit(-1)
       }
 
       val server = new ProdNettyServer(
         new StaticAppProvider(appPath, profile),
-        Option(System.getProperty("http.port")).fold(9000)(Integer.parseInt),
-        Option(System.getProperty("http.address")).getOrElse("0.0.0.0")
-      )
+        port = httpPort,
+        address = httpAddress)
 
-      if (pidPath.toString != "/dev/null") {
+      maybePidPath.foreach {pidPath =>
         Files.write(pidPath, pid.getBytes)
         Runtime.getRuntime.addShutdownHook(new Thread {
           override def run() {
