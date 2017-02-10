@@ -7,7 +7,7 @@ object WebbyBuild extends Build {
 
   val commonSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
     organization := "com.github.citrum.webby",
-    version := "0.3.2",
+    version := "0.3.3",
 
     scalaVersion := buildScalaVersion,
 
@@ -49,7 +49,7 @@ object WebbyBuild extends Build {
 
     deps.result()
   }
-  val querio = "com.github.citrum.querio" %% "querio" % "0.6.4.1" // querio orm
+  val querio = "com.github.citrum.querio" %% "querio" % "0.6.6" // querio orm
 
   /**
     * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
