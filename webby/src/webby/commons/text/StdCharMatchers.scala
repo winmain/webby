@@ -24,7 +24,7 @@ object StdCharMatchers {
     override def matches(c: Char): Boolean = c == '.' || c == '-' || c == '\''
   }
 
-  val rusLettersDigits = rusLetters.or(CharMatcher.DIGIT)
+  val rusLettersDigits = rusLetters.or(CharMatcher.digit())
 
   object passwordSymbols extends CharMatcher {
     override def matches(c: Char): Boolean = c match {
@@ -33,7 +33,7 @@ object StdCharMatchers {
       case _ => false
     }
   }
-  val passwordMatcher = engLetters.or(CharMatcher.DIGIT).or(passwordSymbols)
+  val passwordMatcher = engLetters.or(CharMatcher.digit()).or(passwordSymbols)
 
   /** Все минусы, тире, дефисы и прочие чёрточки */
   object allDashes extends CharMatcher {

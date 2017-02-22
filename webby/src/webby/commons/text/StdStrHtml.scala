@@ -25,12 +25,12 @@ trait StdStrHtml {
   /**
     * Заменяет все символы whitespace пробелами.
     */
-  def cleanWhitespace(str: String): String = CharMatcher.WHITESPACE.replaceFrom(str, ' ')
+  def cleanWhitespace(str: String): String = CharMatcher.whitespace().replaceFrom(str, ' ')
 
   /**
     * Удаляет все символы whitespace в начале и в конце строки.
     */
-  def trimWhitespace(str: String): String = CharMatcher.WHITESPACE.trimFrom(str)
+  def trimWhitespace(str: String): String = CharMatcher.whitespace().trimFrom(str)
 
   /**
     * Добавляет тег <br/> ко всем переносам строк (\n).

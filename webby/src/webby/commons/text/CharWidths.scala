@@ -15,7 +15,7 @@ class CharWidths(val firstCode: Char, val lastCode: Char, val widths: Array[Int]
   */
 class CharWidthUnion(val whiteSpaceWidth: Int, val defaultWidth: Int, val charWidths: Seq[CharWidths]) {
   def getWidth(char: Char): Int = {
-    if (CharMatcher.WHITESPACE.matches(char)) whiteSpaceWidth
+    if (CharMatcher.whitespace().matches(char)) whiteSpaceWidth
     else charWidths.find(_.contains(char)).map(_.getWidth(char)).getOrElse(defaultWidth)
   }
 
@@ -39,7 +39,7 @@ class CharWidthUnion(val whiteSpaceWidth: Int, val defaultWidth: Int, val charWi
       val ch = str.charAt(i)
       if (ch == '\n') {
         return Some(i + 1)
-      } else if (CharMatcher.BREAKING_WHITESPACE.matches(ch)) {
+      } else if (CharMatcher.breakingWhitespace().matches(ch)) {
         if (!inWhiteSpace) {
           // Слово закончилось - переходим к пробелам
           lastBreak = i

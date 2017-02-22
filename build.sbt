@@ -2,7 +2,7 @@ import sbt.Keys.{baseDirectory, ivyLoggingLevel, packageBin, scalaSource, source
 import sbt.{UpdateLogging, _}
 import haxeidea.HaxeLib._
 
-val buildScalaVersion = "2.11.8"
+val defaultScalaVersion = "2.11.8"
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
@@ -27,9 +27,9 @@ val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
 )
 
 val commonSettings = baseSettings ++ Seq(
-  scalaVersion := buildScalaVersion,
+  scalaVersion := defaultScalaVersion,
 
-  scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
+  scalacOptions ++= Seq(/*"-target:jvm-1.8", */"-unchecked", "-deprecation", "-feature", "-language:existentials"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
   javacOptions in doc := Seq("-source", "1.8"),
   ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)) // forcing scala version
@@ -38,16 +38,15 @@ val commonSettings = baseSettings ++ Seq(
 // Минимальный набор зависимостей
 val commonDependencies = {
   val deps = Seq.newBuilder[ModuleID]
-  deps += "ch.qos.logback" % "logback-classic" % "1.1.7" // Логирование
-  deps += "org.apache.commons" % "commons-lang3" % "3.4"
-  deps += "com.google.guava" % "guava" % "19.0"
+  deps += "ch.qos.logback" % "logback-classic" % "1.2.1" // Логирование
+  deps += "org.apache.commons" % "commons-lang3" % "3.5"
+  deps += "com.google.guava" % "guava" % "21.0"
   deps += "com.google.code.findbugs" % "jsr305" % "3.0.1" // @Nonnull, @Nullable annotation support
-  deps += "com.jsuereth" %% "scala-arm" % "1.4" // Automatic resource management, autoclose files
   deps += "commons-io" % "commons-io" % "2.5" // Содержит полезные классы типа FileUtils
 
   // Tests
-  deps += "org.scalatest" %% "scalatest" % "3.0.0-M15" % "test"
-  deps += "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
+  deps += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  deps += "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test"
 
   deps.result()
 }
@@ -116,7 +115,7 @@ lazy val webby: Project = Project(
       deps += "com.typesafe" % "config" % "1.3.0"
 
       // Важно! Нельзя повышать версию модуля jackson-module-scala на ветку 2.5, 2.6, 2.7.
-      // Это приводит к смене поведения при сериализации. Например, lib.form.jsrule.JsRule
+      // Это приводит к смене поведения при сериализации. Например, webby.form.jsrule.JsRule
       // перестаёт сериализовывать свойства cond, actions несмотря на аннотации @JsonProperty.
       // Если же не ставить @JsonAutoDetect(getterVisibility = NONE), то сериализация работает, хотя
       // появляются лишние поля.
@@ -127,9 +126,9 @@ lazy val webby: Project = Project(
 
       // Optional dependencies
       deps += querio % "optional" // Querio ORM
-      deps += "com.typesafe.akka" %% "akka-actor" % "2.4.8" % "optional" // Used in webby.api.libs.concurrent.Akka
-      deps += "com.typesafe.akka" %% "akka-slf4j" % "2.4.8" % "optional"
-      deps += "org.scala-stm" %% "scala-stm" % "0.7" % "optional" // Used in webby.api.libs.concurrent.Promise
+      deps += "com.typesafe.akka" %% "akka-actor" % "2.4.17" % "optional" // Used in webby.api.libs.concurrent.Akka
+      deps += "com.typesafe.akka" %% "akka-slf4j" % "2.4.17" % "optional"
+      deps += "org.scala-stm" %% "scala-stm" % "0.8" % "optional" // Used in webby.api.libs.concurrent.Promise
       deps += "com.zaxxer" % "HikariCP" % "2.4.7" % "optional" // Database connector, used in webby.api.db.HikariCPPlugin
       deps += "org.jsoup" % "jsoup" % "1.6.3" % "optional" // Html parsing, used in webby.commons.text.StdStrHtmlJsoup
       deps += "org.zeroturnaround" % "jr-sdk" % "6.4.6" % "optional" // JRebel SDK (class reloader), used in webby.commons.system.JRebelUtils

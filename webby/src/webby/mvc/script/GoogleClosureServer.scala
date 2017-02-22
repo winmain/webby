@@ -10,6 +10,7 @@ import com.google.javascript.jscomp.SourceFile
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.commons.lang3.StringUtils
 import webby.api.mvc.{PlainResult, RequestHeader, ResultException, Results}
+import webby.commons.io.Using
 import webby.commons.text.SB
 import webby.commons.text.StringWrapper.wrapper
 import webby.commons.time.StdDates
@@ -175,7 +176,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     }
   }
 
-  private val closureClassNameMatcher = CharMatcher.JAVA_LETTER_OR_DIGIT.or(CharMatcher.anyOf("._"))
+  private val closureClassNameMatcher = CharMatcher.javaLetterOrDigit().or(CharMatcher.anyOf("._"))
 
   private def parseClosureFile(source: SourceFile, lastModified: Long, compiledJsPath: Path) = {
     val googProvide = "goog.provide("
@@ -313,7 +314,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
 
     def inDir(sourceDir: Path, dir: Path) {
       require(Files.isDirectory(dir), "Not a directory: " + dir)
-      resource.managed(Files.newDirectoryStream(dir)).foreach(_.foreach {sourcePath =>
+      Using(Files.newDirectoryStream(dir))(_.foreach {sourcePath =>
         if (Files.isDirectory(sourcePath)) inDir(sourceDir, sourcePath)
         else {
           val sourcePathStr = sourcePath.toString
