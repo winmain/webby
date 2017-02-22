@@ -2,12 +2,12 @@ package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.StdStrHtml
 import webby.html.{StdHtmlView, StdInputTag, StdTextareaTag}
-import webby.form.{Invalid, Valid, ValidationResult}
+import webby.form.{Form, Invalid, Valid, ValidationResult}
 
 /**
  * Текстовое поле
  */
-class TextField(val id: String) extends ValueField[String] with PlaceholderField[String] {self =>
+class TextField(val form: Form, val id: String) extends ValueField[String] with PlaceholderField[String] {self =>
   var minLength: Option[Int] = None
   var maxLength: Option[Int] = Some(255)
   var trimSpaces: Boolean = true

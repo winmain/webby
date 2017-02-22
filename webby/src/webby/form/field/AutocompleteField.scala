@@ -1,12 +1,14 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
+import webby.form.Form
 import webby.html.{StdHtmlView, StdInputTag}
 
 /**
  * Обычный автокомплит, состоящий из одного поля типа input type=text.
  * Возможно выбрать только вариант из списка. Свободный ввод запрещён.
  */
-class AutocompleteField[T](val id: String,
+class AutocompleteField[T](val form: Form,
+                           val id: String,
                            var jsSourceFunction: String,
                            var jsSourceArg: Any = null,
                            var toJs: T => Int,

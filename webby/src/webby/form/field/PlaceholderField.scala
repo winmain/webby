@@ -8,7 +8,7 @@ trait PlaceholderField[T] extends Field[T] {
 
   // ------------------------------- Builder & validations -------------------------------
 
-  def placeholder(ph: String): this.type = { placeholder = ph; this }
+  def placeholder(ph: String): this.type = {placeholder = ph; this}
 
   // ------------------------------- Html helpers -------------------------------
 

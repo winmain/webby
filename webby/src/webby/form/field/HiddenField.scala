@@ -1,11 +1,12 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
+import webby.form.Form
 import webby.html.{StdHtmlView, StdInputTag}
 
 /**
   * Скрытое строковое поле
   */
-class HiddenField(val id: String) extends ValueField[String] {
+class HiddenField(val form: Form, val id: String) extends ValueField[String] {
   override def jsField: String = "hidden"
   override def parseJsValue(node: JsonNode): Either[String, String] = parseJsString(node)(Right(_))
   override def nullValue: String = null
@@ -18,7 +19,7 @@ class HiddenField(val id: String) extends ValueField[String] {
 /**
   * Скрытое целочисленное поле
   */
-class HiddenIntField(id: String) extends BaseIntField(id) {
+class HiddenIntField(form: Form, id: String) extends BaseIntField(form, id) {
   override def jsField: String = "hidden"
 
   // ------------------------------- Html helpers -------------------------------
@@ -30,7 +31,7 @@ class HiddenIntField(id: String) extends BaseIntField(id) {
 /**
   * Скрытое целочисленное поле
   */
-class HiddenBooleanField(val id: String) extends ValueField[Boolean] {
+class HiddenBooleanField(val form: Form, val id: String) extends ValueField[Boolean] {
   override def jsField: String = "hidden"
   override def parseJsValue(node: JsonNode): Either[String, Boolean] = parseJsString(node) {v =>
     try Integer.parseInt(v) match {

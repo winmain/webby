@@ -12,9 +12,9 @@ trait ValueField[T] extends Field[T] {
   def parseJsValue(node: JsonNode): Either[String, T]
 
   /**
-   * Обёртка для чтения строкового js-значения.
-   * Здесь идут дополнительные проверки на null, пустую строку. Метод body() получает строку, пропущенную через trim().
-   */
+    * Обёртка для чтения строкового js-значения.
+    * Здесь идут дополнительные проверки на null, пустую строку. Метод body() получает строку, пропущенную через trim().
+    */
   protected def parseJsString(node: JsonNode)(body: String => Either[String, T]): Either[String, T] = {
     var v = node.asText()
     if (v == null) Right(nullValue)
@@ -26,9 +26,9 @@ trait ValueField[T] extends Field[T] {
   }
 
   /**
-   * Обёртка для чтения целого js-значения.
-   * * Здесь идут дополнительные проверки на null, пустую строку.
-   */
+    * Обёртка для чтения целого js-значения.
+    * * Здесь идут дополнительные проверки на null, пустую строку.
+    */
   protected def parseJsInt(node: JsonNode)(body: Int => Either[String, T]): Either[String, T] = {
     if (node.isNull || node.asText().isEmpty) Right(nullValue)
     else body(node.asInt())

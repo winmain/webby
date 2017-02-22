@@ -8,16 +8,14 @@ import com.google.javascript.jscomp._
 /**
   * Запускатор Google Closure Compiler в качестве простого минификатора скриптов.
   * Advanced optimizations здесь не включаются, поэтому к конвертируемому коду нет строгих требований.
-  * Также, кроме минификации конвертирует ECMASCRIPT6 => ECMASCRIPT5, но делает это добавлением
-  * нескольких килобайт кода в полученный js, поэтому лучше избегать ECMASCRIPT6.
   *
   * Requires sbt dependency
   * {{{
-  *   deps += "com.google.javascript" % "closure-compiler" % "v20160619"
+  *   deps += "com.google.javascript" % "closure-compiler" % "v20170124"
   * }}}
   */
 object GoogleClosureSimpleCompiler {
-  def minify(code: String): Either[Array[JSError], String] = {
+  def minify(code: String, langIn: CompilerOptions.LanguageMode, langOut: CompilerOptions.LanguageMode): Either[Array[JSError], String] = {
     val compiler: Compiler = new Compiler(System.err)
     val options = new CompilerOptions
 
@@ -25,8 +23,8 @@ object GoogleClosureSimpleCompiler {
 
     options.setOutputCharset(StandardCharsets.UTF_8)
     options.setTrustedStrings(true)
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6_STRICT)
-    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5)
+    options.setLanguageIn(langIn)
+    options.setLanguageOut(langOut)
 
     compiler.initOptions(options)
 
@@ -35,4 +33,7 @@ object GoogleClosureSimpleCompiler {
     if (result.success) Right(compiler.toSource)
     else Left(result.errors)
   }
+
+  def minifyEs5(code: String): Either[Array[JSError], String] =
+    minify(code, CompilerOptions.LanguageMode.ECMASCRIPT5, CompilerOptions.LanguageMode.ECMASCRIPT5)
 }

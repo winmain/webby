@@ -51,7 +51,7 @@ val commonDependencies = {
 
   deps.result()
 }
-val querio = "com.github.citrum.querio" %% "querio" % "0.6.4.1" // querio orm
+val querio = "com.github.citrum.querio" %% "querio" % "0.6.7" // querio orm
 
 /**
   * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
@@ -143,7 +143,7 @@ lazy val webby: Project = Project(
       deps += "net.sf.ehcache" % "ehcache-core" % "2.6.11" % "optional" // Cache, used in webby.commons.cache.CachePlugin
       deps += "com.esotericsoftware.kryo" % "kryo" % "2.24.0" % "optional" // For serializing objects in cache, used in webby.commons.cache.KryoNamedCache
       deps += "com.carrotsearch" % "hppc" % "0.7.1" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
-      deps += "com.google.javascript" % "closure-compiler" % "v20160619" % "optional" // Google Closure Compiler
+      deps += "com.google.javascript" % "closure-compiler" % "v20170124" % "optional" // Google Closure Compiler
       deps += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" % "optional" // Google Closure Library
       deps += "org.glassfish.external" % "opendmk_jmxremote_optional_jar" % "1.0-b01-ea" % "optional" // JMXMP - better replacement for RMI
       deps.result()

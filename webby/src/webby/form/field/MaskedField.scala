@@ -1,11 +1,12 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
+import webby.form.Form
 import webby.html.{StdHtmlView, StdInputTag}
 
 /**
   * @author Oleg Arshinsky
   */
-class MaskedField(val id: String, val mask: String) extends ValueField[String] with PlaceholderField[String] { self =>
+class MaskedField(val form: Form, val id: String, val mask: String) extends ValueField[String] with PlaceholderField[String] {self =>
 
   // ------------------------------- Reading data & js properties -------------------------------
   override def parseJsValue(node: JsonNode): Either[String, String] = parseJsString(node) {v =>

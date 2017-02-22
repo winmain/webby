@@ -6,7 +6,7 @@ import webby.form.field.{Field, FormListField}
 
 import scala.collection.mutable
 
-trait FormJsRules {
+trait StdFormJsRules {
   def addRule0(@Nullable clientRule: JsRule, @Nullable serverRule: JsRule): Unit
   def addRule(ruleMaker: JsRuleBuilder.type => JsWhenBuilder): Unit = {
     val maker: JsWhenBuilder = ruleMaker(JsRuleBuilder)

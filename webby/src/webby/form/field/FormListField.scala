@@ -10,7 +10,7 @@ import webby.html.{CommonTag, HtmlBase, StdHtmlView}
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 
-class FormListField[F <: Form](val id: String, var factory: () => F, var recordPlural: Plural)
+class FormListField[F <: Form](val form: Form, val id: String, var factory: () => F, var recordPlural: Plural)
   extends Field[Vector[F]] {self =>
 
   var defaultItems: Int = 0

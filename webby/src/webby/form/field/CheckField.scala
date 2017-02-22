@@ -1,5 +1,6 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
+import webby.form.Form
 import webby.html.{StdHtmlView, StdInputCheckedTag, StdInputTag, StdLabelTag}
 
 /**
@@ -13,7 +14,7 @@ import webby.html.{StdHtmlView, StdInputCheckedTag, StdInputTag, StdLabelTag}
   */
 // TODO: makeUniqueInputId не работает. Потому что серверная форма читает элементы из поста по id, а клиентская отправляет их по name.
 // TODO: к тому же, не факт, что всё это правильное решение (где-то id, где-то name). Надо всё пересмотреть
-class CheckField(override val name: String, makeUniqueInputId: Boolean = false) extends ValueField[Boolean] {
+class CheckField(val form: Form, override val name: String, makeUniqueInputId: Boolean = false) extends ValueField[Boolean] {
   override val id: String =
     if (makeUniqueInputId) name + "-" + CheckField.nextUniqueIdCounter.toString
     else name

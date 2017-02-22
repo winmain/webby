@@ -1,11 +1,11 @@
 package webby.form.field
 import querio._
 import webby.commons.text.Plural
-import webby.form.{BaseForms, ChangedItemType, FormWithDb}
+import webby.form.{ChangedItemType, Form, FormWithDb}
 
 
 abstract class FormListFieldWithDb[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-(id: String, factory: () => F, recordPlural: Plural) extends FormListField[F](id, factory, recordPlural) {
+(form: Form, id: String, factory: () => F, recordPlural: Plural) extends FormListField[F](form, id, factory, recordPlural) {
 
   // Сохранённые записи всех подформ.
   var savedRecords: Vector[MTR] = Vector.empty
@@ -30,16 +30,16 @@ abstract class FormListFieldWithDb[F <: FormWithDb[TR, MTR], TR <: TableRecord, 
   * @tparam MTR Изменяемая запись в таблице БД
   */
 class FormListFieldWithDbLinked[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR], FIELD <: Table[TR, MTR]#Field[Int, _]]
-(base: BaseForms, id: String, fact: () => F, val parentField: FIELD, setter: (FIELD, MTR, Int) => Any, recordPlural: Plural)
-  extends FormListFieldWithDb[F, TR, MTR](id, fact, recordPlural) {
+(form: Form, id: String, fact: () => F, val parentField: FIELD, setter: (FIELD, MTR, Int) => Any, recordPlural: Plural)
+  extends FormListFieldWithDb[F, TR, MTR](form, id, fact, recordPlural) {
 
   override def load(parentId: Int)(implicit conn: Conn) {
     val builder = Vector.newBuilder[F]
-    for (record <- base.db.sql(_ selectFrom parentField.table where parentField == parentId fetch())) {
-      val form = factory()
-      form.checkDbConnectors()
-      form.load(record)
-      builder += form
+    for (record <- form.base.db.sql(_ selectFrom parentField.table where parentField == parentId fetch())) {
+      val subForm = factory()
+      subForm.checkDbConnectors()
+      subForm.load(record)
+      builder += subForm
     }
     setValue(builder.result())
   }
@@ -51,7 +51,7 @@ class FormListFieldWithDbLinked[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR
         form.beforeSaveRecord += {r => setter(parentField, r, parentId)}
         form.innerSave(changedItem)
       }
-    for (removeId <- removeOldForms.keys) base.db.delete(parentField.table, removeId)
+    for (removeId <- removeOldForms.keys) form.base.db.delete(parentField.table, removeId)
   }
 }
 
@@ -65,14 +65,14 @@ class FormListFieldWithDbLinked[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR
   * @tparam F Форма
   */
 class FormListFieldWithDbStandalone[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-(base: BaseForms, id: String, fact: () => F, recordPlural: Plural)
-  extends FormListFieldWithDb[F, TR, MTR](id, fact, recordPlural) {
+(form: Form, id: String, fact: () => F, recordPlural: Plural)
+  extends FormListFieldWithDb[F, TR, MTR](form, id, fact, recordPlural) {
 
   override def load(parentId: Int)(implicit conn: Conn): Unit = setNull
 
   def loadById(id: Int)(implicit conn: Conn): Unit = {
     val form = factory()
-    base.db.findById(form.table, id) match {
+    form.base.db.findById(form.table, id) match {
       case Some(record) =>
         form.checkDbConnectors()
         form.load(record)

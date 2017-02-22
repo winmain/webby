@@ -1,10 +1,14 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.validator.UrlValidator
-import webby.form.{Invalid, Valid, ValidationResult}
+import webby.form.{Form, Invalid, Valid, ValidationResult}
 import webby.html.{StdHtmlView, StdInputTag}
 
-class UrlField(val id: String, allowedDomains: Vector[String] = Vector.empty) extends ValueField[String] with PlaceholderField[String] { self =>
+class UrlField(val form: Form,
+               val id: String,
+               allowedDomains: Vector[String] = Vector.empty)
+  extends ValueField[String] with PlaceholderField[String] {self =>
+  
   var allowedSchemes: Array[String] = Array("http", "https")
   var defaultScheme: String = "http"
 

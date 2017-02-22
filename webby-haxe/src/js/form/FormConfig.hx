@@ -12,13 +12,14 @@ class FormConfig {
 
   public var formBlockClass = 'form-block';
   public var formErrorsClass = 'form-errors';
-  public var blockErrorClass = 'block-error';
+  public var formBlockErrorClass = 'form-block-error';
 
-  public var fieldBoxClass = 'field';
-  public var fieldBoxRequiredClass = 'required';
+  public var fieldBoxClass = 'field-box';
+  public var fieldBoxRequiredClass = 'field-box--required';
+  public var fieldBoxErrorClass = 'field-box--error';
+  public var fieldBoxWithMsgClass = 'field-box--with-msg';
+
   public var fieldErrorClass = 'field-error';
-  public var fieldBoxErrorClass = 'error';
-  public var fieldBoxWithMsgClass = 'with-msg';
 
   public var showOptionalClass = 'show-optional';
   public var optionalFieldsClass = 'optional-fields';

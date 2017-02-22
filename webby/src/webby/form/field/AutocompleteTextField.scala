@@ -1,12 +1,14 @@
 package webby.form.field
+import webby.form.Form
 import webby.html.{StdHtmlView, StdInputTag}
 
 /**
  * Текстовое поле, аналогичное TextField, но с поддержкой необязательного автокомплита.
  */
-class AutocompleteTextField(id: String,
+class AutocompleteTextField(form: Form,
+                            id: String,
                             var jsSourceFunction: String,
-                            var jsSourceArg: Any = null) extends TextField(id) {self =>
+                            var jsSourceArg: Any = null) extends TextField(form, id) {self =>
 
   // ------------------------------- Reading data & js properties -------------------------------
   class AutocompleteJsProps extends JsProps {

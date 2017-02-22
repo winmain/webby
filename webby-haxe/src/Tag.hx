@@ -150,6 +150,18 @@ class Tag {
     this.el = el;
   }
 
+  // ------------------------------- Getters -------------------------------
+
+  public function hasCls(v: String): Bool return el.classList.contains(v);
+
+  public function html(): String return el.innerHTML;
+
+  public function iterator(): Iterator<Tag> return new TagIterator(el.children);
+
+  public function getAttr(key: String): String return el.getAttribute(key);
+
+  public function getId(): String return el.id;
+
   // ------------------------------- Element manipulation -------------------------------
 
   /*
@@ -203,14 +215,10 @@ class Tag {
     return this;
   }
 
-  public function getAttr(key: String): String return el.getAttribute(key);
-
   public function id(v: String): Tag {
     el.id = v;
     return this;
   }
-
-  public function getId(): String return el.id;
 
   public function cls(v: String): Tag {
     if (v.indexOf(' ') == -1) {
@@ -232,14 +240,10 @@ class Tag {
     return this;
   }
 
-  public function hasCls(v: String): Bool return el.classList.contains(v);
-
   public function setHtml(html: String): Tag {
     el.innerHTML = html;
     return this;
   }
-
-  public function html(): String return el.innerHTML;
 
   public function remove(): Tag {
     el.parentElement.removeChild(el);
@@ -252,8 +256,6 @@ class Tag {
     }
     return this;
   }
-
-  public function iterator(): Iterator<Tag> return new TagIterator(el.children);
 
   // ------------------------------- Visibility -------------------------------
 

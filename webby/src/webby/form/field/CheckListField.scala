@@ -1,7 +1,7 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import querio.{MutableTableRecord, Table, TableRecord}
-import webby.form.FormWithDb
+import webby.form.{Form, FormWithDb}
 import webby.html.{CommonTag, HtmlBase, StdHtmlView}
 
 import scala.collection.JavaConversions._
@@ -10,7 +10,8 @@ import scala.collection.mutable
 /**
   * Список чекбоксов
   */
-class CheckListField[T](val id: String,
+class CheckListField[T](val form: Form,
+                        val id: String,
                         var items: Iterable[T],
                         var valueFn: T => String,
                         var titleFn: T => String,

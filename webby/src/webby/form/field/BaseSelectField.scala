@@ -1,9 +1,10 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
+import webby.form.Form
 import webby.html._
 import webby.html.elements.SelectHtml
 
-abstract class BaseSelectField[T](id: String)
+abstract class BaseSelectField[T](val form: Form, id: String)
   extends ValueField[T] {self =>
   var items: Iterable[T]
   var valueFn: T => String
@@ -33,12 +34,13 @@ abstract class BaseSelectField[T](id: String)
   * * обычного списка радио-баттонов
   * * мобильных табов навигации
   */
-class RadioGroupField[T](val id: String,
+class RadioGroupField[T](form: Form,
+                         val id: String,
                          override var items: Iterable[T],
                          override var valueFn: T => String,
                          override var titleFn: T => String,
                          override var emptyTitle: Option[String] = None)
-  extends BaseSelectField[T](id) {selfField =>
+  extends BaseSelectField[T](form, id) {selfField =>
   override def jsField: String = "radioGroup"
 
   // ------------------------------- Html helpers -------------------------------
@@ -115,12 +117,13 @@ class RadioGroupField[T](val id: String,
 /**
   * Выпадающий список элементов.
   */
-class SelectField[T](val id: String,
+class SelectField[T](form: Form,
+                     val id: String,
                      override var items: Iterable[T],
                      override var valueFn: T => String,
                      override var titleFn: T => String,
                      override var emptyTitle: Option[String] = None)
-  extends BaseSelectField[T](id) with PlaceholderField[T] {self =>
+  extends BaseSelectField[T](form, id) with PlaceholderField[T] {self =>
   override def jsField: String = "select"
 
   // ------------------------------- Reading data & js properties -------------------------------
@@ -153,7 +156,7 @@ class SelectField[T](val id: String,
   * Поэтому, полученное от клиента значение здесь не проверяется.
   * Основное отличие этого поля от какого-нибудь обычного TextField в том, что его параметр jsField = "radioGroup".
   */
-class EmptyStringRadioGroupField(val id: String) extends ValueField[String] {
+class EmptyStringRadioGroupField(val form: Form, val id: String) extends ValueField[String] {
   override def jsField: String = "radioGroup"
   override def parseJsValue(node: JsonNode): Either[String, String] = parseJsString(node)(Right(_))
   override def nullValue: String = null

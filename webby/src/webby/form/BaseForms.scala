@@ -7,23 +7,30 @@ import webby.html.{CommonTag, JsCodeAppender, StdFormTag, StdHtmlView}
 abstract class BaseForms {self =>
   def db: DbTrait
 
-  def longTextFieldMaxLength = 4000
-
   def recordPlural: Plural
   def recordRPlural: Plural
 
   def maybeChangedFieldsDao: Option[ChangedFieldsDao] = None
 
-  trait WithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] {
+  def js = StdJs.get
+
+  /** @see [[webby.form.Form.jsConfig]] */
+  def jsConfig: String = null
+
+  // ------------------------------- Form traits -------------------------------
+
+  trait Common extends Form {
     override type B = self.type
     override def base: B = self
+    override def jsConfig: String = self.jsConfig
   }
 
-  def js = StdJs.get
+  trait WithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] with Common
 
   // ------------------------------- Html helpers -------------------------------
 
   def formCls = "form hidden"
+  def formBlockCls = "form-block"
 
   def formCreateInitJsCode(form: Form, id: String): String = "Form.create(Tag.find('#" + id + "'), " + js.toJson(form.jsProps) + ").init()"
 
@@ -32,7 +39,7 @@ abstract class BaseForms {self =>
     view.form.cls(formCls).id(id).method(method)
   }
 
-  def sectionBlock(implicit view: StdHtmlView): CommonTag = view.section.cls("form-block")
+  def sectionBlock(implicit view: StdHtmlView): CommonTag = view.section.cls(formBlockCls)
 }
 
 

@@ -16,7 +16,7 @@ import scala.collection.JavaConversions._
   *
   * Requires sbt dependency
   * {{{
-  *   deps += "com.google.javascript" % "closure-compiler" % "v20160619"
+  *   deps += "com.google.javascript" % "closure-compiler" % "v20170124"
   * }}}
   */
 class GoogleClosureCompiler(externs: Seq[SourceFile],
@@ -34,7 +34,7 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
     options.setOutputCharset(Charsets.UTF_8)
     options.setTrustedStrings(true)
     options.generateExports = true
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6_STRICT)
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED)
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5)
 
     val externList: util.List[SourceFile] = AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment)

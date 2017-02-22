@@ -1,19 +1,19 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
-import webby.form.{FormWithDb, Invalid, Valid, ValidationResult}
-import webby.html.{StdHtmlView, StdInputTag}
-import webby.commons.text.StdCharMatchers
 import querio.{MutableTableRecord, Table, TableRecord}
+import webby.commons.text.StdCharMatchers
 import webby.commons.text.StringWrapper.wrapper
+import webby.form._
+import webby.html.{StdHtmlView, StdInputTag}
 
 import scala.reflect.ClassTag
 
 /**
- * Поле для ввода пароля.
- * Пароль внутри этого поля хранится в виде хеша (т.е., оригинальное значение пароля получить невозможно).
- * Методы set устанавливают хеш пароля, но не сам пароль. Для установки пароля служит метод setPassword
- */
-class PasswordField(val id: String, val hashFn: String => String) extends ValueField[String] with PlaceholderField[String] {self =>
+  * Поле для ввода пароля.
+  * Пароль внутри этого поля хранится в виде хеша (т.е., оригинальное значение пароля получить невозможно).
+  * Методы set устанавливают хеш пароля, но не сам пароль. Для установки пароля служит метод setPassword
+  */
+class PasswordField(val form: Form, val id: String, val hashFn: String => String) extends ValueField[String] with PlaceholderField[String] {self =>
   var minLength: Option[Int] = Some(3)
   var maxLength: Option[Int] = Some(50)
 
@@ -44,13 +44,13 @@ class PasswordField(val id: String, val hashFn: String => String) extends ValueF
     sys.error("Not implemented")
 
 
-  def minLength(v: Int): this.type = { minLength = Some(v); this }
-  def maxLength(v: Int): this.type = { maxLength = Some(v); this }
+  def minLength(v: Int): this.type = {minLength = Some(v); this}
+  def maxLength(v: Int): this.type = {maxLength = Some(v); this}
 
   /**
-   * Проверки, специфичные для конкретной реализации Field.
-   * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
-   */
+    * Проверки, специфичные для конкретной реализации Field.
+    * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
+    */
   override def validateFieldOnly: ValidationResult = {
     if (minLength.exists(get.length < _)) Invalid("Не менее " + minLength.get + " символов")
     else if (maxLength.exists(get.length > _)) Invalid("Не более " + maxLength.get + " символов")

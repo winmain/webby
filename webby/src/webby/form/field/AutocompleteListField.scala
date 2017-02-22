@@ -1,7 +1,7 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.Plural
-import webby.form.{Invalid, Valid, ValidationResult}
+import webby.form.{Form, Invalid, Valid, ValidationResult}
 import webby.html.{CommonTag, HtmlBase, StdHtmlView, StdInputTag}
 
 import scala.collection.JavaConversions._
@@ -11,7 +11,8 @@ import scala.collection.mutable
  * Автокомплит, позволяющий добавить несколько записей.
  * Свободный ввод запрещён, также как и для AutocompleteField.
  */
-class AutocompleteListField[T](val id: String,
+class AutocompleteListField[T](val form: Form,
+                               val id: String,
                                var jsSourceFunction: String,
                                var jsSourceArg: Any = null,
                                var toJs: T => Int,

@@ -34,7 +34,7 @@ import scala.io.Source
   *
   * Requires sbt dependency
   * {{{
-  *   deps += "com.google.javascript" % "closure-compiler" % "v20160619"
+  *   deps += "com.google.javascript" % "closure-compiler" % "v20170124"
   * }}}
   *
   * @param libSource        Исходник библиотеки google closure library. Может быть как в jar-архиве, так и простыми файлами.

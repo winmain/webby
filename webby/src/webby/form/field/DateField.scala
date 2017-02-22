@@ -5,13 +5,13 @@ import java.time.temporal.{ChronoField, TemporalAccessor}
 
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.DateFormats
-import webby.form.{Invalid, Valid, ValidationResult}
+import webby.form.{Form, Invalid, Valid, ValidationResult}
 import webby.html.{StdHtmlView, StdInputTag}
 
 /**
   * Поле даты со стандартным шаблоном dd_mm_yyyy (его можно переопределить)
   */
-class DateField(val id: String) extends ValueField[LocalDate] {self =>
+class DateField(val form: Form, val id: String) extends ValueField[LocalDate] {self =>
   var minDate: Option[LocalDate] = None
   var maxDate: Option[LocalDate] = None
 
@@ -60,7 +60,7 @@ class DateField(val id: String) extends ValueField[LocalDate] {self =>
 /**
   * Поле месяц-год с шаблоном mm_yyyy
   */
-class MonthYearField(id: String) extends DateField(id) {
+class MonthYearField(form: Form, id: String) extends DateField(form, id) {
   override def jsField: String = "monthYear"
   override def formatter: DateTimeFormatter = DateFormats.mm_yyyy_formatter
   override def parse(v: String): LocalDate = {

@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.{JsonInclude, JsonRawValue}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import webby.api.mvc.{PlainResult, ResultException, Results}
 import webby.commons.io.StdJs
-import webby.form.field.{Field, FormFields, FormListField, FormListFieldWithDb}
-import webby.form.jsrule.{FormJsRules, JsRule}
+import webby.form.field.{Field, StdFormFields, FormListField, FormListFieldWithDb}
+import webby.form.jsrule.{StdFormJsRules, JsRule}
 import webby.html.{CommonTag, StdFormTag, StdHtmlView, WebbyPage}
 
 import scala.collection.mutable
@@ -18,9 +18,9 @@ import scala.util.control.ControlThrowable
 /**
   * Trait для описания форм
   */
-trait Form extends FormFields with FormJsRules {self =>
+trait Form extends StdFormFields with StdFormJsRules {self =>
   type B <: BaseForms
-  protected def base: B
+  def base: B
 
   /**
     * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.

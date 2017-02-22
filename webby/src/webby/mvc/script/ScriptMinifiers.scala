@@ -10,7 +10,7 @@ import webby.api.Profile
   */
 object StdJsMinifier
   extends ScriptMinifier("js-min", ".js",
-    GoogleClosureSimpleCompiler.minify(_).left.map(_.map(_.toString).mkString("\n")),
+    GoogleClosureSimpleCompiler.minifyEs5(_).left.map(_.map(_.toString).mkString("\n")),
     Vector("assets/js/raw", "views")) {
 
   /**
@@ -27,7 +27,7 @@ object StdJsMinifier
   */
 object StdJsSimpleMinifierForStage extends
   ScriptMinifier("js-simple", ".js",
-    GoogleClosureSimpleCompiler.minify(_).left.map(_.map(_.toString).mkString("\n")),
+    GoogleClosureSimpleCompiler.minifyEs5(_).left.map(_.map(_.toString).mkString("\n")),
     Vector("assets/js-simple")) {
 
   override protected def baseTargetDir: String = "target/assets-release"

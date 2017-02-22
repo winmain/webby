@@ -4,13 +4,13 @@ import javax.annotation.Nullable
 import com.fasterxml.jackson.databind.JsonNode
 import com.google.common.base.CharMatcher
 import webby.commons.text.StdStrHtml
-import webby.form.{Invalid, Valid, ValidationResult}
+import webby.form.{Form, Invalid, Valid, ValidationResult}
 import webby.html.{StdHtmlView, StdInputTag}
 
 /**
   * Поле ввода фамилии имени отчества
   */
-class RusFioField(val id: String) extends ValueField[RusFio] with PlaceholderField[RusFio] {self =>
+class RusFioField(val form: Form, val id: String) extends ValueField[RusFio] with PlaceholderField[RusFio] {self =>
   /** Имя поля, в котором выбирается пол. Оно указывается, если нужно автоматически выбрать пол по отчеству */
   var sexField: String = null
 

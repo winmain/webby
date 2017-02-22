@@ -2,12 +2,12 @@ package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.collection.Pager
 import webby.html.{HtmlBase, StdHtmlView, StdInputTag}
-import webby.form.{Invalid, Valid, ValidationResult}
+import webby.form.{Form, Invalid, Valid, ValidationResult}
 
 /**
  * Базовый класс для целого числа (без minValue, maxValue)
  */
-class BaseIntField(val id: String) extends ValueField[Int] with PlaceholderField[Int] {self =>
+class BaseIntField(val form: Form, val id: String) extends ValueField[Int] with PlaceholderField[Int] {self =>
   var nullValue: Int = 0
 
   // ------------------------------- Reading data & js properties -------------------------------
@@ -39,7 +39,7 @@ class BaseIntField(val id: String) extends ValueField[Int] with PlaceholderField
 /**
  * Поле для целого числа
  */
-class IntField(id: String) extends BaseIntField(id) {self =>
+class IntField(form: Form, id: String) extends BaseIntField(form, id) {self =>
   var minValue: Option[Int] = None
   var maxValue: Option[Int] = None
 
@@ -70,7 +70,7 @@ class IntField(id: String) extends BaseIntField(id) {self =>
 /**
  * Пэйджер (понадобился для CRM)
  */
-class PagerField(var step: Int, var nearRadius: Int, val id: String = "page") extends ValueField[Int] {self =>
+class PagerField(val form: Form, var step: Int, var nearRadius: Int, val id: String = "page") extends ValueField[Int] {self =>
   override def jsField: String = "pager"
 
   override def parseJsValue(node: JsonNode): Either[String, Int] = Right(node.asInt())

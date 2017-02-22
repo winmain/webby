@@ -6,10 +6,10 @@ import javax.annotation.Nullable
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.JsonNode
-import webby.form._
-import webby.form.jsrule._
 import querio._
 import webby.api.mvc.{PlainResult, Results}
+import webby.form._
+import webby.form.jsrule._
 import webby.html.{StdHtmlView, StdLabelTag}
 
 import scala.collection.mutable
@@ -22,6 +22,7 @@ import scala.reflect.ClassTag
  * @tparam T Тип значения, которое хранится в поле
  */
 trait Field[T] {self =>
+  def form: Form
   def id: String
 
   /** Имя элемента (input name="$name") */
