@@ -134,7 +134,11 @@ class AsyncResult(rh: RequestHeader, body: => Result)(implicit val ec: Execution
     executed = true
     Future {
       PageLog.set(pageLog)
-      try ActionTools.executeWithFinalizers(body, rh, finalizers)
+      try {
+        ActionTools.executeWithFinalizers(body, rh, finalizers)
+      } catch {
+        case e: ResultException => e.getResult(rh)
+      }
       finally PageLog.remove()
     }
   }
