@@ -122,7 +122,6 @@ lazy val webby: Project = Project(
       // появляются лишние поля.
       deps += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.7" // Работа с json
       deps += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.7" exclude("com.google.guava", "guava") exclude("com.google.code.findbugs", "jsr305") // Работа с json
-//      deps += "com.fasterxml.jackson.module" % "jackson-module-jaxb-annotations" % "2.4.5" // Нужен для форка jackson-dataformat-xml
       deps += "com.intellij" % "annotations" % "12.0" // для интеграции IDEA language injection
 
       // Optional dependencies
