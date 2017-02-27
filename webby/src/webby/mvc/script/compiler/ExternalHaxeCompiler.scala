@@ -66,7 +66,7 @@ case class ExternalHaxeCompiler(sourceDirs: Seq[Path],
   override def lazyCompiler: Boolean = true
 
   private def postProcess(body: String): String = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     val mapper = StdJs.get.newMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
 
     val globalPrepend = new SB()
@@ -80,22 +80,22 @@ case class ExternalHaxeCompiler(sourceDirs: Seq[Path],
       // Обработаем и уберём все __meta__ параметры. Это аннотации к классам и методам, записанные так:
       // @globalPrepend, @googRequire
       val tree = mapper.readTree(m.group(1))
-      for (entry <- tree.get("obj").fields()) {
+      for (entry <- tree.get("obj").fields().asScala) {
         entry.getKey match {
           case "globalPrepend" =>
             // Аннотация просто вставляет код как есть в самое начало файла, до основной closure функции
             // Пример: @globalPrepend('// scriptEntryPoint')
-            entry.getValue.foreach {node => globalPrepend + node.textValue() + '\n'}
+            entry.getValue.asScala.foreach {node => globalPrepend + node.textValue() + '\n'}
 
           case "googRequire" =>
             // Вставляет goog.require() директивы
             // Пример: @googRequire('goog.net.cookies', 'goog.events')
-            entry.getValue.foreach {node => addGoogRequire(node.textValue())}
+            entry.getValue.asScala.foreach {node => addGoogRequire(node.textValue())}
 
           case "googProvide" =>
             // Вставляет goog.provide() директивы
             // Пример: @googProvide('MainEntryPoint_js')
-            entry.getValue.foreach {node => addGoogProvide(node.textValue())}
+            entry.getValue.asScala.foreach {node => addGoogProvide(node.textValue())}
 
           case unknown =>
             sys.error("Unknown annotation " + unknown + " in haxe file. Supported annotations: " +

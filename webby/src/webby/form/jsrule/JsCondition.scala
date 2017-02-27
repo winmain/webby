@@ -1,15 +1,10 @@
 package webby.form.jsrule
-import com.fasterxml.jackson.annotation.{JsonAutoDetect, JsonProperty}
+import webby.commons.io.jackson.JacksonAnnotations._
 import webby.form.field.Field
 
 import scala.collection.mutable
 
-@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
-  isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE,
-  creatorVisibility = JsonAutoDetect.Visibility.NONE,
-  fieldVisibility = JsonAutoDetect.Visibility.NONE)
-trait JsCondition {
+trait JsCondition extends JsonDisableAutodetect {
   @JsonProperty def cls: String
   def check: Boolean
 
@@ -65,7 +60,7 @@ case class FieldIn[T](f: Field[T], private val v: Iterable[T]) extends JsConditi
   override def cls: String = "fieldIn"
   override def check: Boolean = {val fValue = f.get; v.exists(fValue == _)}
   @JsonProperty def field: String = f.id
-  @JsonProperty val values: mutable.Buffer[AnyRef] = v.map(f.toJsValue(_))(scala.collection.breakOut)
+  @JsonProperty val values: mutable.Buffer[AnyRef] = v.map(f.toJsValue)(scala.collection.breakOut)
 }
 
 /**

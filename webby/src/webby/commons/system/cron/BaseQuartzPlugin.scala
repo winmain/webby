@@ -16,7 +16,7 @@ import webby.commons.io.{IOUtils, StdJs}
 import webby.commons.system.mbean.{Description, MBeans, PName}
 import webby.commons.text.StringWrapper.wrapper
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 /**
@@ -123,7 +123,7 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
       // Получить и вывести в лог все текущие задания, чтобы оперативно знать кого мы ждём
       val curJobs = scheduler.getCurrentlyExecutingJobs
       if (!curJobs.isEmpty) {
-        log.info("Currently executing jobs: " + curJobs.map {jec =>
+        log.info("Currently executing jobs: " + curJobs.asScala.map {jec =>
           val jobKey: JobKey = jec.getJobDetail.getKey
           jobKey.getGroup + ":" + jobKey.getName
         }.mkString(", "))
@@ -133,7 +133,7 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
       // Получить состояния преждевременно завершившихся заданий
       val jobStates: Map[String, JsonNode] = {
         val b = Map.newBuilder[String, JsonNode]
-        curJobs.foreach {jec =>
+        curJobs.asScala.foreach {jec =>
           jec.getResult match {
             case null => // do nothing
             case JobSaveForRestartResult(savedState) =>
@@ -289,7 +289,7 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
     }
     override def getCurrentlyExecutingJobs: java.util.List[String] = {
       val ret = new java.util.ArrayList[String]()
-      scheduler.getCurrentlyExecutingJobs.foreach {jec =>
+      scheduler.getCurrentlyExecutingJobs.asScala.foreach {jec =>
         ret.add(jec.getJobDetail.getKey + ": started " + jec.getFireTime)
       }
       ret

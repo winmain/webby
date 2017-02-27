@@ -2,7 +2,7 @@ import sbt.Keys.{baseDirectory, ivyLoggingLevel, packageBin, scalaSource, source
 import sbt.{UpdateLogging, _}
 import haxeidea.HaxeLib._
 
-val defaultScalaVersion = "2.11.8"
+val buildScalaVersion = "2.12.1"
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
@@ -27,9 +27,10 @@ val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
 )
 
 val commonSettings = baseSettings ++ Seq(
-  scalaVersion := defaultScalaVersion,
+  scalaVersion := buildScalaVersion,
+  crossScalaVersions := Seq("2.11.8", "2.12.1"),
 
-  scalacOptions ++= Seq(/*"-target:jvm-1.8", */"-unchecked", "-deprecation", "-feature", "-language:existentials"),
+  scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
   javacOptions in doc := Seq("-source", "1.8"),
   ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)) // forcing scala version
@@ -107,8 +108,8 @@ lazy val webby: Project = Project(
     libraryDependencies := {
       val deps = Seq.newBuilder[ModuleID]
       deps ++= commonDependencies
-      deps += "org.slf4j" % "jul-to-slf4j" % "1.7.21"
-      deps += "org.slf4j" % "jcl-over-slf4j" % "1.7.21"
+      deps += "org.slf4j" % "jul-to-slf4j" % "1.7.24"
+      deps += "org.slf4j" % "jcl-over-slf4j" % "1.7.24"
 
       deps += "io.netty" % "netty-all" % "4.1.2.Final"
 
@@ -119,9 +120,9 @@ lazy val webby: Project = Project(
       // перестаёт сериализовывать свойства cond, actions несмотря на аннотации @JsonProperty.
       // Если же не ставить @JsonAutoDetect(getterVisibility = NONE), то сериализация работает, хотя
       // появляются лишние поля.
-      deps += "com.fasterxml.jackson.core" % "jackson-databind" % "2.4.5" // Работа с json
-      deps += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.4.5-1" exclude("com.google.guava", "guava") exclude("com.google.code.findbugs", "jsr305") // Работа с json
-      deps += "com.fasterxml.jackson.module" % "jackson-module-jaxb-annotations" % "2.4.5" // Нужен для форка jackson-dataformat-xml
+      deps += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.7" // Работа с json
+      deps += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.7" exclude("com.google.guava", "guava") exclude("com.google.code.findbugs", "jsr305") // Работа с json
+//      deps += "com.fasterxml.jackson.module" % "jackson-module-jaxb-annotations" % "2.4.5" // Нужен для форка jackson-dataformat-xml
       deps += "com.intellij" % "annotations" % "12.0" // для интеграции IDEA language injection
 
       // Optional dependencies
@@ -142,7 +143,7 @@ lazy val webby: Project = Project(
       deps += "net.sf.ehcache" % "ehcache-core" % "2.6.11" % "optional" // Cache, used in webby.commons.cache.CachePlugin
       deps += "com.esotericsoftware.kryo" % "kryo" % "2.24.0" % "optional" // For serializing objects in cache, used in webby.commons.cache.KryoNamedCache
       deps += "com.carrotsearch" % "hppc" % "0.7.1" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
-      deps += "com.google.javascript" % "closure-compiler" % "v20170124" % "optional" // Google Closure Compiler
+      deps += "com.google.javascript" % "closure-compiler" % "v20170124" % "optional" exclude("com.google.guava", "guava") // Google Closure Compiler
       deps += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" % "optional" // Google Closure Library
       deps += "org.glassfish.external" % "opendmk_jmxremote_optional_jar" % "1.0-b01-ea" % "optional" // JMXMP - better replacement for RMI
       deps.result()

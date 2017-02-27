@@ -59,7 +59,7 @@ trait Cookies {
   * @param headerText Текст хедера с куками.
   */
 class CookiesImpl(headerText: String) extends Cookies {
-  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
 
   val cookies: Map[String, String] = {
     val b = Map.newBuilder[String, String]
@@ -68,7 +68,7 @@ class CookiesImpl(headerText: String) extends Cookies {
       catch {
         case e: IllegalArgumentException => Collections.emptySet()
       }
-    for (c <- cookieSet) {
+    for (c <- cookieSet.asScala) {
       try {
         b += ((c.name(), URLDecoder.decode(c.value(), "utf-8")))
       } catch {

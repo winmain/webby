@@ -3,7 +3,7 @@ package webby.mvc.script
 import java.nio.file.{Files, Path}
 
 import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.google.common.base.CharMatcher
 import com.google.common.net.HttpHeaders
 import com.google.javascript.jscomp.SourceFile
@@ -18,7 +18,7 @@ import webby.mvc.script.compiler.ScriptCompiler
 import webby.mvc.script.watcher.{FileExtTransform, TargetFileTransform}
 
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -134,8 +134,8 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
           case regex(params) =>
             val tree = mapper.readTree("[" + params + "]")
             val path = tree.get(0).asText()
-            val provides = tree.get(1)
-            val requires = tree.get(2)
+            val provides: Iterable[JsonNode] = tree.get(1).asScala
+            val requires: Iterable[JsonNode] = tree.get(2).asScala
             val cf = ClosureFile(libSource.forPath(path), provides = provides.map(_.asText()), requires = requires.map(_.asText()))
             fileMap.update(cf.source.getName, cf)
             val modified: Long = 1
@@ -314,7 +314,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
 
     def inDir(sourceDir: Path, dir: Path) {
       require(Files.isDirectory(dir), "Not a directory: " + dir)
-      Using(Files.newDirectoryStream(dir))(_.foreach {sourcePath =>
+      Using(Files.newDirectoryStream(dir))(_.asScala.foreach {sourcePath =>
         if (Files.isDirectory(sourcePath)) inDir(sourceDir, sourcePath)
         else {
           val sourcePathStr = sourcePath.toString

@@ -109,6 +109,13 @@ trait Field[T] {self =>
   def enterKeySubmit: this.type = { _enterKeySubmit = true; this }
 
   /**
+    * Показывать/скрывать не только само поле, но и его родительский тег section.
+    */
+  var _hideWithSection: Option[Boolean] = None
+  def hideWithSection(v: Option[Boolean]): this.type = {_hideWithSection = v; this}
+  def hideWithSection(v: Boolean = true): this.type = hideWithSection(Some(v))
+
+  /**
    * Список ограничений и проверок, накладываемых на это поле.
    */
   val constraints: mutable.Buffer[Constraint[T]] = mutable.Buffer[Constraint[T]]()
@@ -214,7 +221,7 @@ trait Field[T] {self =>
   final def toJsValue: AnyRef = toJsValue(_value)
   def setJsValueAndValidate(@Nullable node: JsonNode): FormResult
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonInclude(JsonInclude.Include.NON_ABSENT)
   class BaseJsProps {
     val id: String = self.id
     val name: String = self.name match {
@@ -225,6 +232,7 @@ trait Field[T] {self =>
     val required = boolFalse(self.required)
     val enabled = boolTrue(self.enabled)
     val enterKeySubmit = boolFalse(self._enterKeySubmit)
+    val hideWithSection = self._hideWithSection
 
     // Вспомогательные функции для записи булевой переменной с дефолтным значением.
     // Для boolFalse дефолтное значение false, поэтому если value == false, то boolFalse вернёт null.

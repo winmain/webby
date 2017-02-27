@@ -1,14 +1,10 @@
 package webby.form.jsrule
 import javax.annotation.Nullable
 
-import com.fasterxml.jackson.annotation.{JsonAutoDetect, JsonProperty}
+import webby.commons.io.jackson.JacksonAnnotations._
 
-@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
-  isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE,
-  creatorVisibility = JsonAutoDetect.Visibility.NONE,
-  fieldVisibility = JsonAutoDetect.Visibility.NONE)
-case class JsRule(@JsonProperty cond: JsCondition, @JsonProperty actions: Iterable[JsAction])
+case class JsRule(@JsonProperty cond: JsCondition,
+                  @JsonProperty actions: Iterable[JsAction]) extends JsonDisableAutodetect
 
 object JsRule {
   @Nullable def makeOrNull(cond: JsCondition, actions: Iterable[JsAction]): JsRule =

@@ -5,7 +5,7 @@ import java.util
 import net.sf.ehcache.{Cache, CacheManager, Element}
 import webby.api.App
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
@@ -87,7 +87,7 @@ class NamedCache(val name: String) {
     * <p/>
     * Note that the Element's lastAccessTime is always the time of this get.
     */
-  def getAll(keys: Iterable[String]): mutable.Map[String, AnyRef] = cache.getAll(keys).map {e =>
+  def getAll(keys: Iterable[String]): mutable.Map[String, AnyRef] = cache.getAll(keys.asJavaCollection).asScala.map {e =>
     e._1.toString -> (e._2 match {
       case null => null
       case v => v.getObjectValue
@@ -95,11 +95,11 @@ class NamedCache(val name: String) {
   }
 
   def getKeysRaw: util.List[_] = cache.getKeys
-  def getKeys: Iterator[String] = getKeysRaw.toIterator.map(_.asInstanceOf[String])
+  def getKeys: Iterator[String] = getKeysRaw.asScala.toIterator.map(_.asInstanceOf[String])
   def getKeysNoDuplicateCheckRaw: util.List[_] = cache.getKeysNoDuplicateCheck
-  def getKeysNoDuplicateCheck: Iterator[String] = getKeysNoDuplicateCheckRaw.toIterator.map(_.asInstanceOf[String])
+  def getKeysNoDuplicateCheck: Iterator[String] = getKeysNoDuplicateCheckRaw.asScala.toIterator.map(_.asInstanceOf[String])
   def getKeysWithExpiryCheckRaw: util.List[_] = cache.getKeysWithExpiryCheck
-  def getKeysWithExpiryCheck: Iterator[String] = getKeysWithExpiryCheckRaw.toIterator.map(_.asInstanceOf[String])
+  def getKeysWithExpiryCheck: Iterator[String] = getKeysWithExpiryCheckRaw.asScala.toIterator.map(_.asInstanceOf[String])
 
   def contains(key: String): Boolean = {
     // cache.isKeyInCache не используется, потому что он не всегда возвращает актуальный результат

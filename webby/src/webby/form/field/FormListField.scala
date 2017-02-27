@@ -7,7 +7,7 @@ import webby.commons.text.Plural
 import webby.form._
 import webby.html.{CommonTag, HtmlBase, StdHtmlView}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class FormListField[F <: Form](val form: Form, val id: String, var factory: () => F, var recordPlural: Plural)
@@ -76,7 +76,7 @@ class FormListField[F <: Form](val form: Form, val id: String, var factory: () =
       val processedKeys = mutable.Buffer.empty[Int]
 
       val valueBuilder = Vector.newBuilder[F]
-      for ((jsForm, index) <- node.asInstanceOf[ArrayNode].elements().zipWithIndex) {
+      for ((jsForm, index) <- node.asInstanceOf[ArrayNode].elements().asScala.zipWithIndex) {
         val key = {val k = jsForm.get("_key"); if (k == null) 0 else k.asInt(0)}
         // Попытаться найти уже готовую подформу по ключу. Если такой нет, то создать новую.
         val subForm: F =

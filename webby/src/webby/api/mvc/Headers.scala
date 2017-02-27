@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.HttpHeaders
   */
 class Headers(val http: HttpHeaders) {
 
-  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
 
   /**
     * Optionally returns the first header value associated with a key.
@@ -29,7 +29,7 @@ class Headers(val http: HttpHeaders) {
   /**
     * Retrieve all header values associated with the given key.
     */
-  def getAll(key: String): Iterable[String] = http.getAll(key)
+  def getAll(key: String): Iterable[String] = http.getAll(key).asScala
 
   override def toString = http.toString
 }

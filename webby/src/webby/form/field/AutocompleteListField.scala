@@ -4,7 +4,7 @@ import webby.commons.text.Plural
 import webby.form.{Form, Invalid, Valid, ValidationResult}
 import webby.html.{CommonTag, HtmlBase, StdHtmlView, StdInputTag}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 /**
@@ -35,7 +35,7 @@ class AutocompleteListField[T](val form: Form,
   override def nullValue: Iterable[T] = mutable.Buffer.empty[T]
   override def parseJsValue(node: JsonNode): Either[String, Iterable[T]] = {
     if (node == null) return Right(nullValue)
-    Right(node.map { nodeEl =>
+    Right(node.asScala.map { nodeEl =>
       val value = nodeEl.asInt()
       fromJs(value).getOrElse(return Left("Некорректное значение"))
     })

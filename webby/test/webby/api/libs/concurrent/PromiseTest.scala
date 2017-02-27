@@ -8,7 +8,8 @@ class PromiseTest extends WordSpec with Matchers {
   "A Promise" should {
     "recover after an exception using recover" in {
       val promise = Promise[Int]()
-      promise.redeem(6 / 0)
+      val zero = 0 // to suppress compiler warning division by zero
+      promise.redeem(6 / zero)
 
       promise.future.recover {case e: ArithmeticException => 0}
         .value1.get shouldEqual 0

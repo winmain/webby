@@ -8,7 +8,7 @@ import com.google.javascript.jscomp._
 import webby.commons.io.IOUtils
 import webby.commons.text.SB
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
   * Класс, работающий напрямую с google closure compiler.
@@ -38,7 +38,7 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5)
 
     val externList: util.List[SourceFile] = AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment)
-    externList.addAll(externs)
+    externList.addAll(externs.asJavaCollection)
 
     val jsModules = new util.ArrayList[JSModule]()
     val entryPoints = new util.ArrayList[ModuleIdentifier]()
@@ -69,7 +69,7 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
 
     if (result.errors.nonEmpty) Nil
     else {
-      jsModules.map {jsMod =>
+      jsModules.asScala.map {jsMod =>
         val source: String = compiler.toSource(jsMod)
         val totalSource: String =
           if (jsMod eq mainModule) {

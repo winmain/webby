@@ -21,7 +21,6 @@ import webby.api._
 import webby.commons.concurrent.{ThreadUtils, Threads}
 import webby.commons.system.mbean.AnnotatedStandardMBean
 import webby.core._
-import webby.core.server.netty._
 import webby.core.system.{ApplicationProvider, ReloadableAppProvider, StaticAppProvider}
 
 import scala.annotation.tailrec
@@ -129,8 +128,8 @@ abstract class NettyServer(appProvider: ApplicationProvider, port: Int, address:
     override def getAddress: String = mainAddress.toString
     override def getWorkerThreadNum: Int = workerGroup.executorCount()
     override def getPendingTaskNum: Int = {
-      import scala.collection.JavaConversions._
-      workerGroup.foldLeft(0)((sum, executor) => sum + executor.asInstanceOf[NioEventLoop].pendingTasks())
+      import scala.collection.JavaConverters._
+      workerGroup.asScala.foldLeft(0)((sum, executor) => sum + executor.asInstanceOf[NioEventLoop].pendingTasks())
     }
     override def stopServer(): Unit = stop()
 

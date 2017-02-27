@@ -34,14 +34,13 @@ object CollectionUtils {
     def iterator(): util.Iterator[jl.Integer] = new util.Iterator[jl.Integer] {
       private val it = wrapped.iterator
 
-      def hasNext: Boolean = it.hasNext
+      override def hasNext: Boolean = it.hasNext
 
-      def next(): Integer = it.next()
+      override def next(): Integer = it.next()
 
-      def remove() {
+      override def remove() {
         throw new UnsupportedOperationException
       }
-
     }
 
     def size(): Int = wrapped.size

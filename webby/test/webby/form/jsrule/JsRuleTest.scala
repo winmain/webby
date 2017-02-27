@@ -5,7 +5,7 @@ import org.scalatest.{FunSuite, Matchers}
 import webby.commons.io.StdJs
 import webby.form.StubForms
 
-class JsRuleSpec extends FunSuite with Matchers {
+class JsRuleTest extends FunSuite with Matchers {
   // Этот тест проверяет, что все поля JsRule просериализованы
   // Он будет падать для jackson версии 2.5 и выше (пока мы не придумаем как это пофиксить)
   test("test json serialization") {
@@ -18,6 +18,6 @@ class JsRuleSpec extends FunSuite with Matchers {
     mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
     val result = mapper.writeValueAsString(f.clientRules)
     result shouldEqual
-      """[{"actions":[{"focus":false,"vis":true,"withParent":false,"cls":"visible","field":"tt"}],"cond":{"cls":"fieldEmpty","field":"tt"}}]"""
+      """[{"actions":[{"focus":false,"vis":true,"cls":"visible","field":"tt"}],"cond":{"cls":"fieldEmpty","field":"tt"}}]"""
   }
 }

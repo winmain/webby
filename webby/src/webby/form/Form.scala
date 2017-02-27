@@ -255,7 +255,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
 
   // ------------------------------- Js properties -------------------------------
 
-  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonInclude(JsonInclude.Include.NON_ABSENT)
   sealed class BaseJsProps {
     val fields: Iterable[_] = self.fields.withFilter(!_.ignored).map(_.jsProps)
 

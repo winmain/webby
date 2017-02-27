@@ -13,7 +13,7 @@ import org.elasticsearch.index.query._
 import org.elasticsearch.search.{SearchHit, SearchHits}
 import querio.{DbEnum, ScalaDbEnum, ScalaDbEnumCls}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
  * Trait, реализующий этот trait должен задавать основную конфигурацию класса для индексации Elastic'ом.
@@ -166,19 +166,19 @@ trait EsTrait {
     /** Чтение значения из ElasticSearch */
     def from(j: AnyRef): Set[E] = j match {
       case null => Set.empty
-      case v: jl.Iterable[_] => v.map(e => enum.values(e.asInstanceOf[jl.Integer])).toSet
+      case v: jl.Iterable[_] => v.asScala.map(e => enum.values(e.asInstanceOf[jl.Integer])).toSet
     }
     /** Запись значения в ElasticSearch */
     def to(v: Set[E]): AnyRef =
       if (v.isEmpty) null
-      else asJavaCollection(v.map(_.index))
+      else asJavaCollectionConverter(v.map(_.index))
   })
 
   // ------------------------------- / -------------------------------
 
   protected def arrayField[T](n: String, fr: Record => Iterable[T]) = field[Iterable[T]](n, fr, new Conv[Iterable[T]] {
-    def from(j: AnyRef): Iterable[T] = if (j == null) Iterable.empty else j.asInstanceOf[jl.Iterable[T]]
-    def to(v: Iterable[T]): AnyRef = asJavaIterable(v)
+    def from(j: AnyRef): Iterable[T] = if (j == null) Iterable.empty else j.asInstanceOf[jl.Iterable[T]].asScala
+    def to(v: Iterable[T]): AnyRef = asJavaIterableConverter(v)
   })
   protected def intArrayField(n: String, fr: Record => Iterable[Int]) = arrayField[Int](n, fr)
   protected def stringArrayField(n: String, fr: Record => Iterable[String]) = arrayField[String](n, fr)
@@ -244,7 +244,7 @@ trait EsWrite extends EsBaseRecord {
   protected def objectListField[CC <: EsRecord, M <: EsSubTypeMeta[CC]]
   (name: String, fromRecord: Record => Iterable[_], meta: M): FList[CC, M] = {
     val list = fromRecord(record)
-    valueMap.put(name, asJavaCollection(list.flatMap {e =>
+    valueMap.put(name, asJavaCollectionConverter(list.flatMap {e =>
       val r = e.asInstanceOf[meta.type#Record]
       if (meta.validateRecord(r)) Seq(meta.makeWrite(r).valueMap) else Nil
     }))
@@ -288,7 +288,7 @@ trait EsRecord extends EsBaseRecord {
   (name: String, fromRecord: Record => Iterable[_], adapter: A): FList[CC, A] = {
     data.get(name) match {
       case null => Vector.empty
-      case list => list.asInstanceOf[jl.Iterable[ju.Map[String, AnyRef]]].map(el => adapter.fromMap(el))
+      case list => list.asInstanceOf[jl.Iterable[ju.Map[String, AnyRef]]].asScala.map(el => adapter.fromMap(el))
     }
   }
 
@@ -350,7 +350,7 @@ class EsField[T, Record](val name: String, val fromRecord: Record => T, conv: Co
   def boostedName(boost: Int): String = if (boost == 1) name else name + "^" + boost
 
   def termQuery(value: Any): TermQueryBuilder = new TermQueryBuilder(name, value)
-  def inQuery(values: Seq[_]): TermsQueryBuilder = new TermsQueryBuilder(name, asJavaIterable(values))
+  def inQuery(values: Seq[_]): TermsQueryBuilder = new TermsQueryBuilder(name, asJavaIterableConverter(values))
   def rangeQuery: RangeQueryBuilder = new RangeQueryBuilder(name)
   def existsQuery: ExistsQueryBuilder = new ExistsQueryBuilder(name)
 }
@@ -467,13 +467,13 @@ trait EsTypeClient[C <: EsTypeRecord] {
   def getById(id: String): Option[C] = get(id)
 
   def multiGetRaw(ids: Iterable[String]): MultiGetResponse = statByRealTime(em.multiGet(
-    _.add(em.index, em.tpe, asJavaIterable(ids))
+    _.add(em.index, em.tpe, ids.asJava)
   ))
 
   def multiGet(ids: Iterable[String]): EsResult[C] = {
     var search: MultiGetRequestBuilder = null
     val response = statByRealTime(em.multiGet {b =>
-      b.add(em.index, em.tpe, asJavaIterable(ids))
+      b.add(em.index, em.tpe, ids.asJava)
       search = b
     })
 

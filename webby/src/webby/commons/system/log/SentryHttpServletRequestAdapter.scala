@@ -10,7 +10,7 @@ import javax.servlet.{ServletInputStream, ServletResponse, _}
 import com.google.common.collect.Maps
 import webby.api.mvc.RequestHeader
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /**
   * Адаптер, чтобы [[RequestHeader]] мог прикинуться запросом сервлета [[HttpServletRequest]].
@@ -22,7 +22,7 @@ class SentryHttpServletRequestAdapter(r: RequestHeader) extends HttpServletReque
   override val getParameterMap: ju.Map[String, Array[String]] = {
     val queryMap: ju.Map[String, ju.List[String]] = r.query.asJavaMultiMap
     val result = Maps.newHashMapWithExpectedSize[String, Array[String]](queryMap.size())
-    for ((key, values) <- queryMap) {
+    for ((key, values) <- queryMap.asScala) {
       result.put(key, values.toArray(new Array[String](0)))
     }
     result

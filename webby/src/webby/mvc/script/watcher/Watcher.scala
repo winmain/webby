@@ -4,7 +4,7 @@ import java.nio.file.{Files, Path, WatchKey, WatchService}
 
 import webby.commons.io.Using
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 trait Watcher {
   /**
@@ -36,7 +36,7 @@ class WideWatcher(watchDirs: Seq[Path]) extends Watcher {
   private var lastModified: Long = {
     def maxModifyTime(dir: Path): Long = {
       var time: Long = 0
-      Using(Files.newDirectoryStream(dir))(_.foreach {path =>
+      Using(Files.newDirectoryStream(dir))(_.asScala.foreach {path =>
         val t: Long = if (Files.isDirectory(path)) maxModifyTime(path) else Files.getLastModifiedTime(path).toMillis
         if (t > time) time = t
       })
@@ -49,7 +49,7 @@ class WideWatcher(watchDirs: Seq[Path]) extends Watcher {
 
   private def regDir(dirPath: Path) {
     dirPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
-    Using(Files.newDirectoryStream(dirPath))(_.foreach {subPath =>
+    Using(Files.newDirectoryStream(dirPath))(_.asScala.foreach {subPath =>
       if (Files.isDirectory(subPath))
         regDir(subPath)
     })

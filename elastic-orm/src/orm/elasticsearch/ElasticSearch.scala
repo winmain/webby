@@ -21,7 +21,7 @@ import webby.commons.system.log.PageLog
 import webby.mvc.AppPluginHolder
 
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.Random
 
 object ElasticSearch {
@@ -153,7 +153,7 @@ object ElasticSearch {
     executeAndGet(client.prepareClearScroll().addScrollId(scrollId))
   }
   def clearScrolls(scrollIds: Seq[String]) {
-    executeAndGet(client.prepareClearScroll().setScrollIds(scrollIds))
+    executeAndGet(client.prepareClearScroll().setScrollIds(scrollIds.asJava))
   }
 
   def bulkIndex[TR <: TableRecord](items: Iterator[TR], writeFactory: TR => Option[EsTypeWrite], bulkSize: Int = 100): Either[BulkResponse, Unit] = {

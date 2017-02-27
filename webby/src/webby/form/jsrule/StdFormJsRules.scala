@@ -21,12 +21,12 @@ object JsRuleBuilder {
 class JsWhenBuilder(cond: JsCondition, actions: mutable.Buffer[JsAction] = mutable.Buffer.empty) {
   @Nullable def toJsRuleForClient: JsRule = JsRule.makeOrNull(cond, actions.filter(!_.serverOnly))
   @Nullable def toJsRuleForServer: JsRule = JsRule.makeOrNull(cond, actions.filter(!_.jsOnly))
-  def add(action: JsAction): this.type = { actions += action; this }
+  def add(action: JsAction): this.type = {actions += action; this}
   def addIf(condition: Boolean, action: JsAction): this.type = if (condition) add(action) else this
   def addIf2(condition: Boolean, trueAction: JsAction, falseAction: JsAction): this.type = if (condition) add(trueAction) else add(falseAction)
 
-  def show(field: Field[_], focus: Boolean = false, withParent: Boolean = false) = add(Visible(field, vis = true, focus = focus, withParent = withParent))
-  def hide(field: Field[_], focus: Boolean = false, withParent: Boolean = false) = add(Visible(field, vis = false, focus = focus, withParent = withParent))
+  def show(field: Field[_], focus: Boolean = false) = add(Visible(field, vis = true, focus = focus))
+  def hide(field: Field[_], focus: Boolean = false) = add(Visible(field, vis = false, focus = focus))
 
   def enable(field: Field[_], focus: Boolean = false) = add(Enable(field, enable = true, focus = focus))
   def disable(field: Field[_], focus: Boolean = false) = add(Enable(field, enable = false, focus = focus))
@@ -38,13 +38,13 @@ class JsWhenBuilder(cond: JsCondition, actions: mutable.Buffer[JsAction] = mutab
   def unIgnore(field: Field[_]) = add(Ignore(field, ignore = false))
 
   def showRequire(field: Field[_], focus: Boolean = false, withParent: Boolean = false) =
-    add(Visible(field, vis = true, focus = focus, withParent = withParent))
+    add(Visible(field, vis = true, focus = focus))
       .add(Require(field, require = true, focus = focus))
   def hideOptional(field: Field[_], focus: Boolean = false, withParent: Boolean = false) =
-    add(Visible(field, vis = false, focus = focus, withParent = withParent))
+    add(Visible(field, vis = false, focus = focus))
       .add(Require(field, require = false, focus = focus))
   def hideIgnore(field: Field[_], withParent: Boolean = false) =
-    add(Visible(field, vis = false, focus = false, withParent = withParent))
+    add(Visible(field, vis = false, focus = false))
       .add(Ignore(field, ignore = true))
 
   def setValue[T](field: Field[T], value: T) = add(SetValue(field, value))

@@ -1,4 +1,4 @@
-package webby.core.server.netty
+package webby.core.server
 
 import java.io.IOException
 import javax.annotation.Nullable
@@ -15,7 +15,6 @@ import webby.api.mvc._
 import webby.api.{Application, Logger}
 import webby.commons.io.cookie.CookieEncoderV0
 import webby.commons.system.log.{LogWriterHolder, PageLog, PageLogWriterPlugin}
-import webby.core.server.Server
 
 import scala.util.{Failure, Success}
 
