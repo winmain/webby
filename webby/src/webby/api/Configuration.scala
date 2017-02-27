@@ -77,11 +77,23 @@ case class Configuration(underlying: Config) {
     * Read a value from the underlying implementation,
     * catching Errors and wrapping it in an Option value.
     */
-  private def readValue[T](path: String, v: => T): Option[T] = {
+  private def readValueOpt[T](path: String, v: => T): Option[T] = {
     try {
       Option(v)
     } catch {
       case e: ConfigException.Missing => None
+      case NonFatal(e) => throw reportError(path, e.getMessage, Some(e))
+    }
+  }
+
+  private def readValueDef[T](path: String, value: => T, default: T): T = {
+    try {
+      value match {
+        case null => default
+        case v => v
+      }
+    } catch {
+      case e: ConfigException.Missing => default
       case NonFatal(e) => throw reportError(path, e.getMessage, Some(e))
     }
   }
@@ -101,7 +113,7 @@ case class Configuration(underlying: Config) {
     * @param validValues valid values for this configuration
     * @return a configuration value
     */
-  def getString(path: String, validValues: Option[Set[String]] = None): Option[String] = readValue(path, underlying.getString(path)).map {value =>
+  def getString(path: String, validValues: Option[Set[String]] = None): Option[String] = readValueOpt(path, underlying.getString(path)).map {value =>
     validValues match {
       case Some(values) if values.contains(value) => value
       case Some(values) if values.isEmpty => value
@@ -109,6 +121,9 @@ case class Configuration(underlying: Config) {
       case None => value
     }
   }
+
+  def getString(path: String, default: String): String = readValueDef(path, underlying.getString(path), default)
+
 
   /**
     * Retrieves a configuration value as an `Int`.
@@ -124,7 +139,9 @@ case class Configuration(underlying: Config) {
     * @param path the configuration key, relative to the configuration root key
     * @return a configuration value
     */
-  def getInt(path: String): Option[Int] = readValue(path, underlying.getInt(path))
+  def getInt(path: String): Option[Int] = readValueOpt(path, underlying.getInt(path))
+
+  def getInt(path: String, default: Int): Int = readValueDef(path, underlying.getInt(path), default)
 
   /**
     * Retrieves a configuration value as a `Boolean`.
@@ -141,7 +158,9 @@ case class Configuration(underlying: Config) {
     * @param path the configuration key, relative to the configuration root key
     * @return a configuration value
     */
-  def getBoolean(path: String): Option[Boolean] = readValue(path, underlying.getBoolean(path))
+  def getBoolean(path: String): Option[Boolean] = readValueOpt(path, underlying.getBoolean(path))
+
+  def getBoolean(path: String, default: Boolean): Boolean = readValueDef(path, underlying.getBoolean(path), default)
 
   /**
     * Retrieves a configuration value as `Milliseconds`.
@@ -158,7 +177,7 @@ case class Configuration(underlying: Config) {
     * engine.timeout = 1 second
     * }}}
     */
-  def getMilliseconds(path: String): Option[Long] = readValue(path, underlying.getDuration(path, TimeUnit.MILLISECONDS))
+  def getMilliseconds(path: String): Option[Long] = readValueOpt(path, underlying.getDuration(path, TimeUnit.MILLISECONDS))
 
   /**
     * Retrieves a configuration value as `Nanoseconds`.
@@ -175,7 +194,7 @@ case class Configuration(underlying: Config) {
     * engine.timeout = 1 second
     * }}}
     */
-  def getNanoseconds(path: String): Option[Long] = readValue(path, underlying.getDuration(path, TimeUnit.NANOSECONDS))
+  def getNanoseconds(path: String): Option[Long] = readValueOpt(path, underlying.getDuration(path, TimeUnit.NANOSECONDS))
 
   /**
     * Retrieves a configuration value as `Bytes`.
@@ -192,7 +211,9 @@ case class Configuration(underlying: Config) {
     * engine.maxSize = 512k
     * }}}
     */
-  def getBytes(path: String): Option[Long] = readValue(path, underlying.getBytes(path))
+  def getBytes(path: String): Option[Long] = readValueOpt(path, underlying.getBytes(path))
+
+  def getBytes(path: String, default: Long): Long = readValueDef(path, underlying.getBytes(path), default)
 
   /**
     * Retrieves a sub-configuration, i.e. a configuration instance containing all keys starting with a given prefix.
@@ -208,7 +229,7 @@ case class Configuration(underlying: Config) {
     * @param path the root prefix for this sub-configuration
     * @return a new configuration
     */
-  def getConfig(path: String): Option[Configuration] = readValue(path, underlying.getConfig(path)).map(Configuration(_))
+  def getConfig(path: String): Option[Configuration] = readValueOpt(path, underlying.getConfig(path)).map(Configuration(_))
 
   /**
     * Retrieves a configuration value as a `Double`.
@@ -224,7 +245,10 @@ case class Configuration(underlying: Config) {
     * @param path the configuration key, relative to the configuration root key
     * @return a configuration value
     */
-  def getDouble(path: String): Option[Double] = readValue(path, underlying.getDouble(path))
+  def getDouble(path: String): Option[Double] = readValueOpt(path, underlying.getDouble(path))
+
+  def getDouble(path: String, default: Double): Double = readValueDef(path, underlying.getDouble(path), default)
+
 
   /**
     * Retrieves a configuration value as a `Long`.
@@ -240,7 +264,10 @@ case class Configuration(underlying: Config) {
     * @param path the configuration key, relative to the configuration root key
     * @return a configuration value
     */
-  def getLong(path: String): Option[Long] = readValue(path, underlying.getLong(path))
+  def getLong(path: String): Option[Long] = readValueOpt(path, underlying.getLong(path))
+
+  def getLong(path: String, default: Long): Long = readValueDef(path, underlying.getLong(path), default)
+
 
   /**
     * Retrieves a configuration value as a `Number`.
@@ -256,7 +283,10 @@ case class Configuration(underlying: Config) {
     * @param path the configuration key, relative to the configuration root key
     * @return a configuration value
     */
-  def getNumber(path: String): Option[Number] = readValue(path, underlying.getNumber(path))
+  def getNumber(path: String): Option[Number] = readValueOpt(path, underlying.getNumber(path))
+
+  def getNumber(path: String, default: Number): Number = readValueDef(path, underlying.getNumber(path), default)
+
 
   /**
     * Retrieves a configuration value as a List of `Boolean`.
@@ -276,7 +306,7 @@ case class Configuration(underlying: Config) {
     * A configuration error will be thrown if the configuration value is not a valid `Boolean`.
     * Authorized vales are yes/no or true/false.
     */
-  def getBooleanList(path: String): Option[java.util.List[java.lang.Boolean]] = readValue(path, underlying.getBooleanList(path))
+  def getBooleanList(path: String): Option[java.util.List[java.lang.Boolean]] = readValueOpt(path, underlying.getBooleanList(path))
 
   /**
     * Retrieves a configuration value as a List of `Bytes`.
@@ -293,7 +323,7 @@ case class Configuration(underlying: Config) {
     * engine.maxSizes = [512k, 256k, 256k]
     * }}}
     */
-  def getBytesList(path: String): Option[java.util.List[java.lang.Long]] = readValue(path, underlying.getBytesList(path))
+  def getBytesList(path: String): Option[java.util.List[java.lang.Long]] = readValueOpt(path, underlying.getBytesList(path))
 
   /**
     * Retrieves a List of sub-configurations, i.e. a configuration instance for each key that matches the path.
@@ -306,7 +336,7 @@ case class Configuration(underlying: Config) {
     *
     * The root key of this new configuration will be "engine", and you can access any sub-keys relatively.
     */
-  def getConfigList(path: String): Option[java.util.List[Configuration]] = readValue[java.util.List[_ <: Config]](path, underlying.getConfigList(path)).map {configs => configs.asScala.map(Configuration(_)).asJava}
+  def getConfigList(path: String): Option[java.util.List[Configuration]] = readValueOpt[java.util.List[_ <: Config]](path, underlying.getConfigList(path)).map {configs => configs.asScala.map(Configuration(_)).asJava}
 
   /**
     * Retrieves a configuration value as a List of `Double`.
@@ -323,7 +353,7 @@ case class Configuration(underlying: Config) {
     * engine.maxSizes = [5.0, 3.34, 2.6]
     * }}}
     */
-  def getDoubleList(path: String): Option[java.util.List[java.lang.Double]] = readValue(path, underlying.getDoubleList(path))
+  def getDoubleList(path: String): Option[java.util.List[java.lang.Double]] = readValueOpt(path, underlying.getDoubleList(path))
 
   /**
     * Retrieves a configuration value as a List of `Integer`.
@@ -340,7 +370,7 @@ case class Configuration(underlying: Config) {
     * engine.maxSizes = [100, 500, 2]
     * }}}
     */
-  def getIntList(path: String): Option[java.util.List[java.lang.Integer]] = readValue(path, underlying.getIntList(path))
+  def getIntList(path: String): Option[java.util.List[java.lang.Integer]] = readValueOpt(path, underlying.getIntList(path))
 
   /**
     * Gets a list value (with any element type) as a ConfigList, which implements java.util.List<ConfigValue>.
@@ -357,7 +387,7 @@ case class Configuration(underlying: Config) {
     * engine.maxSizes = ["foo", "bar"]
     * }}}
     */
-  def getList(path: String): Option[ConfigList] = readValue(path, underlying.getList(path))
+  def getList(path: String): Option[ConfigList] = readValueOpt(path, underlying.getList(path))
 
   /**
     * Retrieves a configuration value as a List of `Long`.
@@ -374,7 +404,7 @@ case class Configuration(underlying: Config) {
     * engine.maxSizes = [10000000000000, 500, 2000]
     * }}}
     */
-  def getLongList(path: String): Option[java.util.List[java.lang.Long]] = readValue(path, underlying.getLongList(path))
+  def getLongList(path: String): Option[java.util.List[java.lang.Long]] = readValueOpt(path, underlying.getLongList(path))
 
   /**
     * Retrieves a configuration value as List of `Milliseconds`.
@@ -391,7 +421,7 @@ case class Configuration(underlying: Config) {
     * engine.timeouts = [1 second, 1 second]
     * }}}
     */
-  def getMillisecondsList(path: String): Option[java.util.List[java.lang.Long]] = readValue(path, underlying.getDurationList(path, TimeUnit.MILLISECONDS))
+  def getMillisecondsList(path: String): Option[java.util.List[java.lang.Long]] = readValueOpt(path, underlying.getDurationList(path, TimeUnit.MILLISECONDS))
 
   /**
     * Retrieves a configuration value as List of `Nanoseconds`.
@@ -408,7 +438,7 @@ case class Configuration(underlying: Config) {
     * engine.timeouts = [1 second, 1 second]
     * }}}
     */
-  def getNanosecondsList(path: String): Option[java.util.List[java.lang.Long]] = readValue(path, underlying.getDurationList(path, TimeUnit.NANOSECONDS))
+  def getNanosecondsList(path: String): Option[java.util.List[java.lang.Long]] = readValueOpt(path, underlying.getDurationList(path, TimeUnit.NANOSECONDS))
 
   /**
     * Retrieves a configuration value as a List of `Number`.
@@ -425,7 +455,7 @@ case class Configuration(underlying: Config) {
     * engine.maxSizes = [50, 500, 5000]
     * }}}
     */
-  def getNumberList(path: String): Option[java.util.List[java.lang.Number]] = readValue(path, underlying.getNumberList(path))
+  def getNumberList(path: String): Option[java.util.List[java.lang.Number]] = readValueOpt(path, underlying.getNumberList(path))
 
   /**
     * Retrieves a configuration value as a List of `ConfigObject`.
@@ -442,7 +472,7 @@ case class Configuration(underlying: Config) {
     * engine.properties = [{id: 5, power: 3}, {id: 6, power: 20}]
     * }}}
     */
-  def getObjectList(path: String): Option[java.util.List[_ <: ConfigObject]] = readValue[java.util.List[_ <: ConfigObject]](path, underlying.getObjectList(path))
+  def getObjectList(path: String): Option[java.util.List[_ <: ConfigObject]] = readValueOpt[java.util.List[_ <: ConfigObject]](path, underlying.getObjectList(path))
 
   /**
     * Retrieves a configuration value as a List of `String`.
@@ -459,7 +489,7 @@ case class Configuration(underlying: Config) {
     * names = ["Jim", "Bob", "Steve"]
     * }}}
     */
-  def getStringList(path: String): Option[java.util.List[java.lang.String]] = readValue(path, underlying.getStringList(path))
+  def getStringList(path: String): Option[java.util.List[java.lang.String]] = readValueOpt(path, underlying.getStringList(path))
 
   /**
     * Retrieves a ConfigObject for this path, which implements Map<String,ConfigValue>
@@ -476,7 +506,7 @@ case class Configuration(underlying: Config) {
     * engine.properties = {id: 1, power: 5}
     * }}}
     */
-  def getObject(path: String): Option[ConfigObject] = readValue(path, underlying.getObject(path))
+  def getObject(path: String): Option[ConfigObject] = readValueOpt(path, underlying.getObject(path))
 
   /**
     * Returns available keys.
