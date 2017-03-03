@@ -1,18 +1,21 @@
 package js.form;
 
+import js.form.field.Field;
 import js.html.XMLHttpRequest;
 
 class FormConfig {
   public function new() {}
+
+  public var strings = new FormStrings();
 
   // ------------------------------- Styles -------------------------------
 
   public var hiddenClass = 'hidden';
   public var hoverClass = 'hover';
 
-  public var formBlockClass = 'form-block';
-  public var formErrorsClass = 'form-errors';
-  public var formBlockErrorClass = 'form-block-error';
+  public var formGroupClass = 'form-group';
+  public var formErrorsBlockClass = 'form-errors-block';
+  public var formGroupErrorClass = 'form-group-error';
 
   public var fieldBoxClass = 'field-box';
   public var fieldBoxRequiredClass = 'field-box--required';
@@ -26,14 +29,11 @@ class FormConfig {
 
   public var withErrorClass = 'with-error';
 
-  // ------------------------------- Texts -------------------------------
-
-  public var someFieldsHasErrorText = 'Некоторые поля заполнены неправильно';
-  public var onUnloadConfirmText = 'У вас есть несохранённые изменения';
-
   // ------------------------------- Functions -------------------------------
 
   public function findSubmitButtons(form: Form): Array<Tag> return form.tag.fndAll('button[type=submit]');
+
+  public function findFieldSection(field: Field): Null<Tag> return field.tag.fndParent(function(t: Tag) return t.el.tagName == 'SECTION');
 
   public function showFormErrorDialog(text: String) {
     G.window.alert(text);

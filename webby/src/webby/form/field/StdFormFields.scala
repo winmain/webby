@@ -33,6 +33,7 @@ trait StdFormFields {self: Form =>
   protected def checkField(name: String, makeUniqueInputId: Boolean = false) = addField(new CheckField(this, name, makeUniqueInputId))
   protected def intField(id: String) = addField(new IntField(this, id))
   protected def longField(id: String) = addField(new LongField(this, id))
+  protected def floatField(id: String) = addField(new FloatField(this, id))
   protected def dateField(id: String) = addField(new DateField(this, id))
   protected def monthYearField(id: String) = addField(new MonthYearField(this, id))
   protected def phoneField(id: String) = addField(new PhoneField(this, id))

@@ -1,8 +1,8 @@
 package webby.form
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility
 import com.fasterxml.jackson.annotation.JsonInclude.Include
-import com.fasterxml.jackson.annotation.{JsonAutoDetect, JsonInclude, JsonProperty}
 import webby.api.mvc.{PlainResult, Results}
+import webby.commons.io.jackson.JacksonAnnotations._
 
 import scala.collection.mutable
 
@@ -40,13 +40,12 @@ case object FormSuccess extends FormResult with FormSuccess {@JsonProperty val s
  * @param sub Ошибки в подформах. Каждая запись в sub должна иметь установленные поля name, index.
  */
 @JsonInclude(Include.NON_EMPTY)
-@JsonAutoDetect(isGetterVisibility = Visibility.NONE, getterVisibility = Visibility.NONE)
 case class FormErrors(@JsonProperty var name: String = null,
                       @JsonProperty var index: Option[Int] = None,
                       @JsonProperty errors: mutable.Map[String, String] = mutable.Map.empty,
                       @JsonProperty required: mutable.Buffer[String] = mutable.Buffer.empty,
                       @JsonProperty selfErrors: mutable.Buffer[String] = mutable.Buffer.empty,
-                      @JsonProperty sub: mutable.Buffer[FormErrors] = mutable.Buffer.empty) extends FormResult {
+                      @JsonProperty sub: mutable.Buffer[FormErrors] = mutable.Buffer.empty) extends FormResult with JsonDisableAutodetect {
   override def &&(next: => FormResult): FormResult = this
   override def ++(another: FormErrors): FormErrors = { this ++= another; this }
   override def ++(another: FormResult): FormResult = { this ++= another; this }

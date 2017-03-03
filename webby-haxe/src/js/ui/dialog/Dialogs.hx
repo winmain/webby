@@ -1,4 +1,4 @@
-package js.ui;
+package js.ui.dialog;
 
 import js.html.KeyboardEvent;
 import js.lib.ArrayUtils;

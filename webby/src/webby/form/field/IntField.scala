@@ -15,7 +15,7 @@ class BaseIntField(val form: Form, val id: String) extends ValueField[Int] with 
     val nullValue = int(self.nullValue, 0)
   }
   override def jsProps: BaseJsProps = new JsProps
-  override def jsField: String = "int"
+  override def jsField: String = "number"
   override def parseJsValue(node: JsonNode): Either[String, Int] = {
     if (node.isTextual) {
       val text = node.asText()
@@ -33,7 +33,8 @@ class BaseIntField(val form: Form, val id: String) extends ValueField[Int] with 
 
   // ------------------------------- Html helpers -------------------------------
 
-  def inputNumber(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputTel)
+  def inputNumber(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputNumber)
+  def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputText)
 }
 
 /**

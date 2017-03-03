@@ -312,5 +312,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   def formTag(id: String = "form", method: String = "post")(implicit view: StdHtmlView, page: WebbyPage): StdFormTag =
     base.formTag(page.scripts, this, id, method)
 
-  def sectionBlock(implicit view: StdHtmlView): CommonTag = base.sectionBlock
+  def group(implicit view: StdHtmlView): CommonTag = view.div.cls(base.formGroupCls)
+  def row(implicit view: StdHtmlView): CommonTag = view.div.cls(base.formRowCls)
+  def formErrorsBlock(implicit view: StdHtmlView): CommonTag = view.div.cls(base.formErrorsBlockCls)
 }

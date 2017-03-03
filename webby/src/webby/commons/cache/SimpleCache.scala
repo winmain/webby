@@ -32,6 +32,13 @@ class SimpleCache[V](expireMillis: Long, cacheLoader: => V) {
     if (time >= expireOn) Some(getExpired) else None
   }
 
+  def invalidate(): Unit = {
+    updateSync.synchronized {
+      value = null.asInstanceOf[V]
+      expireOn = 0
+    }
+  }
+
   // ------------------------------- Private & protected methods -------------------------------
 
   protected def getExpired: V = {

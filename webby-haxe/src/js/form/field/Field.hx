@@ -2,6 +2,9 @@ package js.form.field;
 
 import goog.events.EventTarget;
 import js.form.Form;
+import js.html.Event;
+import js.html.InputElement;
+import js.html.KeyboardEvent;
 
 @:autoBuild(macros.KeepConstructorMacro.build())
 class Field extends EventTarget {
@@ -29,7 +32,7 @@ class Field extends EventTarget {
   public var tag(default, null): Tag;
   public var box(default, null): Tag;
   public var errorTag(default, null): Tag;
-  public var block(default, null): Null<FormBlock>;
+  public var block(default, null): Null<FormGroup>;
 
   public function new(form: Form, props: FieldProps) {
     super();
@@ -39,23 +42,25 @@ class Field extends EventTarget {
     // TODO: не очень хорошая логика с name и id. Надо бы сделать более простую/прямолинейную логику.
     name = G.or(props.name, function() return props.id);
     id = form.subId != null ? '${props.id}-${form.subId}' : props.id;
-    required = props.required || false;
+    required = G.toBool(props.required);
     tag = getTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
     if (tag == null) throw new Error('Field node #${id} not found');
 //    @$el = @initEl().prop('field', @)
-    box = getBoxTag().cls(form.config.fieldBoxClass);
+    box = initBoxTag().cls(form.config.fieldBoxClass);
     updateRequired();
     errorTag = createErrorTag();
     initElEvents();
-//    @block = @findFormBlock()
-//    if !props['enterKeySubmit'] && @suppressEnterKey()
-//      @$el.keypress (e) ->
-//        if e.which == 13
-//          e.preventDefault()
-//          return false
+    block = findFormBlock();
+    if (!props.enterKeySubmit && canSuppressEnterKey()) {
+      tag.on('keypress', function(e: KeyboardEvent) {
+        if (e.which == 13) {
+          e.preventDefault();
+          return false;
+        }
+        return null;
+      });
+    }
   }
-
-  // TODO: это пока что рыба
 
   /*
   Дополнительная инициализация, которая не может работать в конструкторе из-за неполностью
@@ -65,11 +70,12 @@ class Field extends EventTarget {
     enable(props.enabled == null ? true : props.enabled);
   }
 
-//  ###
-//  Установить значение полю. Если нужно прописать другой код для установки этого значения элементу, то следует переопределить setValueEl.
-//  Если же требуется предварительная конвертация значения перед установкой, тогда этот метод можно переопределить (например, конвертировать дату в текст).
-//  @export
-//  ###
+  /*
+  Установить значение полю. Если нужно прописать другой код для установки этого значения элементу, то следует переопределить setValueEl.
+  Если же требуется предварительная конвертация значения перед установкой, тогда этот метод можно переопределить (например, конвертировать дату в текст).
+   */
+  @:keep
+  @:expose('setValue')
   public function setValue(v: Null<Dynamic>) {
     var oldValue = value();
     setValueEl(v);
@@ -88,12 +94,14 @@ class Field extends EventTarget {
   }
 
   public function setValueEl(value: Null<Dynamic>) {
-    tag.setVal(value);
+    tag.setVal(isEmptyValue(value) ? null : value);
   }
 
   public function value(): Dynamic return tag.val();
 
-  public function isEmpty(): Bool return !value();
+  @:final public function isEmpty(): Bool return isEmptyValue(value());
+
+  public function isEmptyValue(v: Dynamic): Bool return !v;
 
   public function updateRequired() {
     box.setCls(form.config.fieldBoxRequiredClass, required);
@@ -101,11 +109,15 @@ class Field extends EventTarget {
 
   public function getTag(): Tag return form.tag.fnd('#' + id);
 
-//  # Найти и вернуть rr.form.FormBlock, в который вложено это поле; либо null, если такого не существует.
-//  findFormBlock: ->
-//    blockEl = @$el.parents('.form-block')[0]
-//    if blockEl then $(blockEl).data('block') else null
-//
+  /*
+  Найти и вернуть rr.form.FormBlock, в который вложено это поле; либо null, если такого не существует.
+   */
+  public function findFormBlock(): Null<FormGroup> {
+    var formBlockTag: Tag = tag.fndParent(function(t: Tag) return t.hasCls(form.config.formGroupClass));
+    if (formBlockTag != null) return form.findBlock(formBlockTag);
+    return null;
+  }
+
   /*
   Перейти к этому полю (например, при клике на бирку блока/формы с ошибкой)
    */
@@ -113,9 +125,15 @@ class Field extends EventTarget {
     tag.el.focus();
   }
 
-  public function show(v: Bool, withParent: Bool = false) {
+  public function show(v: Bool) {
     vis = v;
-    var t: Tag = withParent ? box.parent() : box;
+    var t: Tag;
+    if (hideWithSection()) {
+      t = getSection();
+      if (t == null) t = box;
+    } else {
+      t = box;
+    }
     t.setCls(form.config.hiddenClass, !v);
   }
 
@@ -131,17 +149,17 @@ class Field extends EventTarget {
   }
 
   public function initElEvents() {
-//    self = @
-//    @$el.bind('change keyup', (e) ->
-//      if e.type == 'keyup' && ((e.which == 13 && !/[\n\r]/.test(self.$el.val())) || (e.which >= 33 && e.which <= 40))
-//        # Проверка для случая, если был нажат enter, который привёл к сабмиту.
-//        # self.onChange() вызывать не следует, т.к. это приведёт к сбросу ошибки в этом поле, хотя само значение на самом деле не менялось.
-//        # Также, нажатие на стрелки и клавишы навигации не должно приводить к self.onChange()
-//        return
-//      self.onChange()
-//      self.dispatchEvent({type: self.changeEvent, parent: e})
-//    )
-//    .bind('focus', -> self.onFocus())
+    tag.on('change', onChangeWithEvent);
+    tag.on('keyup', function(e: KeyboardEvent) {
+      if ((e.which == 13 && !new RegExp('[\n\r]').test(tag.val())) || (e.which >= 33 && e.which <= 40)) {
+        // Проверка для случая, если был нажат enter, который привёл к сабмиту.
+        // onChange() вызывать не следует, т.к. это приведёт к сбросу ошибки в этом поле, хотя само значение на самом деле не менялось.
+        // Также, нажатие на стрелки и клавишы навигации не должно приводить к onChange()
+        return;
+      }
+      onChangeWithEvent(e);
+    });
+    tag.on('focus', onFocus);
   }
 
 //  fieldPath: -> @form.fieldPath(@name)
@@ -155,26 +173,46 @@ class Field extends EventTarget {
 //    topForm = @form.topForm()
 //    data['field'] = @fieldPath()
 //    $.jsonPost(topForm.formAction(), data, callback)
-//
-//  ###
-//  Подавлять нажатие enter'а в этом поле, чтобы форма не делала submit?
-//  ###
-//  suppressEnterKey: -> @$el.length && @$el[0].tagName == 'INPUT'
-//
+
+  /*
+  Подавлять нажатие enter'а в этом поле, чтобы форма не делала submit?
+   */
+  public function canSuppressEnterKey(): Bool return untyped tag.el.length && tag.el.tagName == 'INPUT';
+
   /*
   Do this field needed to be reinitialized every time after form submit?
   (this method can be overloaded in descendants)
    */
   public function reInitAfterSubmit(): Bool return false;
 
+  /*
+  Default `hideWithSection` value. Can be overriden in subclasses.
+   */
+  function defaultHideWithSection(): Bool return false;
+
+  /*
+  Calculate `hideWithSection` value using `defaultHideWithSection` and `props.hideWithSection`.
+  `props.hideWithSection` has a priority, so it will be used if it defined.
+  Otherwise `defaultHideWithSection` will be used.
+   */
+  @:final public function hideWithSection(): Bool {
+    var hws = props.hideWithSection;
+    return hws == null ? defaultHideWithSection() : hws;
+  }
+
+  /*
+  Find parent section tag. Used to hide tag with it's parent.
+   */
+  function getSection(): Null<Tag> return form.config.findFieldSection(this);
+
 
   // ------------------------------- Error & event handling methods -------------------------------
 
   /*
-  Вернуть элемент, задающий "коробку" всего поля.
+  Проинициализировать и вернуть элемент, задающий "коробку" всего поля.
   Под коробкой показывается сообщение об ошибке.
    */
-  public function getBoxTag(): Tag return tag;
+  public function initBoxTag(): Tag return tag;
 
   /*
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
@@ -186,33 +224,43 @@ class Field extends EventTarget {
     emptyError = false;
     error = null;
     updateErrorTag();
-    if (block != null) block.error.clearError(this);
+    blockClearError();
   }
 
-  public function onChange() {
+  function onChange() {
     resetError();
   }
 
-//  onFocus: ->
-//    @block?.error.clearError(@)
-
-  public function setError(v: Null<String>) {
-    error = v;
-    updateErrorTag();
-    if (block != null) block.error.setError(this);
+  function onChangeWithEvent(e: Event) {
+    onChange();
+    dispatchEvent({
+      type: ChangeEvent,
+      parent: e
+    });
   }
 
-//  ###
-//  Специальная вариация setError(), вызываемая яваскриптом во время заполнения блока.
-//  Основная цель - не показывать ошибку под блоком.
-//  ###
-//  setJsError: (@error) ->
-//    @updateErrorEl()
+  function onFocus() {
+    blockClearError();
+  }
+
+  public function setError(v: Null<String>) {
+    setJsError(v);
+    blockSetError();
+  }
+
+  /*
+  Специальная вариация setError(), вызываемая яваскриптом во время заполнения блока.
+  Основная цель - не показывать ошибку под блоком.
+   */
+  public function setJsError(v: String) {
+    error = v;
+    updateErrorTag();
+  }
 
   public function setEmptyError() {
     emptyError = true;
     updateErrorTag();
-    if (block != null) block.error.setError(this);
+    blockSetError();
   }
 
   public function updateErrorTag() {
@@ -228,6 +276,18 @@ class Field extends EventTarget {
   public function positionErrorTag() {
     errorTag.el.style.left = G.toString(box.el.offsetLeft);
   }
+
+  inline function tagInputEl(): InputElement return cast tag.el;
+
+  // ------------------------------- Private & protected methods -------------------------------
+
+  private function blockClearError() {
+    if (block != null) block.error.clearError(this);
+  }
+
+  private function blockSetError() {
+    if (block != null) block.error.setError(this);
+  }
 }
 
 @:build(macros.ExternalFieldsMacro.build())
@@ -239,4 +299,5 @@ class FieldProps {
   public var required: Null<Bool>;
   public var enabled: Null<Bool>;
   public var enterKeySubmit: Null<Bool>;
+  public var hideWithSection: Null<Bool>;
 }

@@ -1,10 +1,10 @@
 package js.form;
 
 /*
-Блок внутри формы (пример: section.cls("form-block")).
-Этот блок связан с полями, которые вложены в него. Также, он имеет элемент вывода ошибки.
+Группа элементов внутри формы, обычно выделяемая фоном (пример: div.cls("form-group")).
+Эта панель связана с полями, которые вложены в неё. Также, она имеет элемент вывода ошибки.
  */
-class FormBlock {
+class FormGroup {
   public var form(default, null): Form;
   public var tag(default, null): Tag;
   public var error(default, null): FormErrorBlock;
@@ -20,5 +20,5 @@ class FormBlock {
   /*
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
    */
-  function createErrorTag(): Tag return Tag.label.cls(form.config.formBlockErrorClass).cls(form.config.hiddenClass).addTo(tag);
+  function createErrorTag(): Tag return Tag.label.cls(form.config.formGroupErrorClass).cls(form.config.hiddenClass).addTo(tag);
 }

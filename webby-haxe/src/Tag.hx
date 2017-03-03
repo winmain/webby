@@ -5,13 +5,24 @@ import haxe.extern.EitherType;
 import js.html.Element;
 import js.html.Node;
 import js.html.NodeList;
+import js.html.TemplateElement;
 
 /*
 Html element wrapper
  */
 class Tag {
   public static function tag(tag: String): Tag return new Tag(G.document.createElement(tag));
-  public inline static function wrap(el: Element): Tag return new Tag(el);
+  public inline static function wrap(el: Null<Element>): Null<Tag> return el == null ? null : new Tag(el);
+
+  /*
+  Create new html element wrapped with Tag from string
+  @param {String} HTML representing a single element
+  */
+  public static function fromHtml(html: String): Tag {
+    var template: TemplateElement = cast G.document.createElement('template');
+    template.innerHTML = html;
+    return wrap(template.content.firstElementChild);
+  }
 
   @:keep
   @:expose('Tag.find')
@@ -162,6 +173,8 @@ class Tag {
 
   public function getId(): String return el.id;
 
+  public function equals(other: Tag): Bool return el == other.el;
+
   // ------------------------------- Element manipulation -------------------------------
 
   /*
@@ -285,7 +298,23 @@ class Tag {
 
   public function fndAnd(selectors: String, action: Tag -> Void): Void return findAnd2(el, selectors, action);
 
-  public function parent(): Tag return wrap(el.parentElement);
+  /*
+  Find first parent which satisfy `selector`.
+   */
+  public function fndParent(selector: Tag -> Bool): Null<Tag> {
+    var par = parent();
+    while (par != null) {
+      if (selector(par)) return par;
+      par = par.parent();
+    }
+    return null;
+  }
+
+  public function parent(): Null<Tag> return wrap(el.parentElement);
+
+  public function prev(): Null<Tag> return wrap(el.previousElementSibling);
+
+  public function next(): Null<Tag> return wrap(el.nextElementSibling);
 
   // ------------------------------- Events -------------------------------
 

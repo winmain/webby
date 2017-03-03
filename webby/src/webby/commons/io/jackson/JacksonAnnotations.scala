@@ -6,6 +6,7 @@ import scala.annotation.meta.{field, getter, param}
 
 object JacksonAnnotations {
   // @formatter:off
+  type JsonAutoDetect = com.fasterxml.jackson.annotation.JsonAutoDetect @param @field @getter
   type JsonDeserialize = com.fasterxml.jackson.databind.annotation.JsonDeserialize @param @field @getter
   type JsonFormat = com.fasterxml.jackson.annotation.JsonFormat @param @field @getter
   type JsonIgnore = com.fasterxml.jackson.annotation.JsonIgnore @param @field @getter

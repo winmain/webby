@@ -2,12 +2,13 @@ package js.mdl;
 
 import js.html.Element;
 import js.html.Event;
-import js.ui.Dialog;
+import js.ui.dialog.Dialog;
+import js.ui.dialog.DialogConfig;
 
 class MdlUtil {
   /* Пропатчить Dialog */
-  public static function useDialogs(): Void {
-    Dialog.onBeforeShow.push(function(dlg: Dialog) {ComponentHandler.upgradeElements(dlg.t.el);});
+  public static function useDialogs(config: DialogConfig): Void {
+    config.onBeforeShow.push(function(dlg: Dialog) {ComponentHandler.upgradeElements(dlg.tag.el);});
   }
 
   /*

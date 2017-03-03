@@ -1,38 +1,27 @@
-package js.ui;
+package js.ui.dialog;
 
-import js.core.WindowSize;
 import goog.events.EventTarget;
 import js.html.MouseEvent;
 
-@:allow(js.ui.Dialogs)
+@:allow(js.ui.dialog.Dialogs)
 class Dialog extends EventTarget  {
-  public static inline var FadeSpeed = 200;
-  public static inline var RemoveAfterTransformTime = 100;
-
-  public static inline var BodyDialogCss = 'dialog-opened';
-  public static inline var ContainerCss = 'dialog-container';
-  public static inline var ContainerVisibleCss = 'dialog-container--visible';
-  public static inline var ContainerShadeCss = 'dialog-container--shade';
-  public static inline var DialogCss = 'dialog';
+  public var config(default, null): DialogConfig;
 
   private var isShown = false;
 
   /* Контейнер с серым фоном, в котором лежит само окно */
   public var containerT: Tag;
 
-  public var t(default, null): Tag;
+  public var tag(default, null): Tag;
 
   /* Этот диалог должен закрываться по нажатию ESC */
-  public var escapeClose: Bool = true;
-
-  /* Открыть этот диалог с анимацией TODO: переделать на css-анимации */
-  public var animate: Bool = true;
+  public var escapeClose: Bool;
 
   /* Этот диалог в мобильной версии должен открываться на полный экран  */
-  public var mobileFullScreen: Bool = false;
+//  public var mobileFullScreen: Bool = false;
 
   /* Если указан, то в мобильной версии этот диалог будет открываться из этого элемента. Как-бы разворачиваясь из него. */
-  public var mobileOpenFrom: Tag;
+//  public var mobileOpenFrom: Tag;
 
   /* Если указан, то при закрытии окна должен происходить редирект на этот урл. */
   public var onHideRedirect: String;
@@ -40,23 +29,22 @@ class Dialog extends EventTarget  {
   /* Callback, вызываемый при клике на серый фон (container). Если вернёт true, то окно следует закрыть. */
   public var containerCloses: Void -> Bool = function() {return true;};
 
-  /* Колбеки, вызываемые перед показом диалога. Созданы для расширения этого класса. */
-  public static var onBeforeShow: Array<Dialog -> Void> = [];
-
-  public function new(t: Tag) {
+  public function new(config: DialogConfig, tag: Tag) {
     super();
-    this.t = t;
+    this.config = config;
+    this.tag = tag;
+    this.escapeClose = config.escapeClose;
   }
 
   public function show(): Void {
     if (isShown) return;
 
-    for (fn in onBeforeShow) fn(this);
+    for (fn in config.onBeforeShow) fn(this);
 
     Dialogs.add(this);
 
-    updateClose();
-    t.cls(DialogCss);
+    config.updateClose(this);
+    tag.cls(config.dialogCss);
 //    if (isMobileFullscreen()) {
 //      if (animate) {
 //        // Анимация появления окна из открывающего блока mobileOpenFrom
@@ -73,7 +61,7 @@ class Dialog extends EventTarget  {
 //    } else {
     ////////////////////////////
     containerT =
-    Tag.div.cls(ContainerCss).add(t).addTo(Tag.getBody())
+    Tag.div.cls(config.containerCss).add(tag).addTo(Tag.getBody())
     .onClick(function(e: MouseEvent) {
       if (e.target != null && e.target == containerT.el) {
         if (containerCloses()) hide();
@@ -81,15 +69,10 @@ class Dialog extends EventTarget  {
     });
 
     G.window.setTimeout(function() {
-      containerT.cls(ContainerVisibleCss);
+      containerT.cls(config.containerVisibleCss);
     }, 1);
 
-      // TODO: css // if !noAnim then el.fadeOut(0).fadeIn(fadeSpeed)
-//    }
     isShown = true;
-    // TODO: // position: absolute включается для планшетов, чтобы окно не прыгало при попытке зуминга на элемент в окне
-//    if !rr.windowSize.mobile && el.css('position') == 'absolute'
-//      el.css('top', $('body').scrollTop() + 60)
   }
 
   public function hide(noRedirect: Bool = false): Void {
@@ -97,7 +80,13 @@ class Dialog extends EventTarget  {
 
     // if rr.window.Modal.windows.count() == 1 && rr.history.whenOff('window') then return
     Dialogs.remove(this);
-    if (!(!noRedirect && onHideRedirect != null)) { // Если указан onHideRedirect, то окно лучше не скрывать, а просто дождаться редиректа
+
+    if (!noRedirect && onHideRedirect != null) {
+      // Сделаем редирект, но окно скрывать не будем. Лучше дождаться редиректа с открытым окном, чтобы окно закрывало собой функциональность сайта.
+      config.onHideRedirect(onHideRedirect);
+
+    } else {
+      // Скрываем окно, если нет редиректов
 //      if (isMobileFullscreen()) {
 //        t.el.style.transform = "translateY(${G.window.innerHeight}px)";
 //        G.window.setTimeout(function() {
@@ -106,27 +95,20 @@ class Dialog extends EventTarget  {
 //        }, RemoveAfterTransformTime);
 //      } else {
         // el.fadeOut(fadeSpeed, -> $(@).removeClass('shade').remove())
-      containerT.clsOff(ContainerVisibleCss);
+
+      containerT.clsOff(config.containerVisibleCss);
       G.window.setTimeout(function() {
         containerT.remove();
-      }, RemoveAfterTransformTime);
-//      }
+      }, config.removeAfterTransformTime);
     }
     isShown = false;
   }
 
   // ------------------------------- Private & protected methods -------------------------------
 
-  private function isMobileFullscreen(): Bool return mobileFullScreen && WindowSize.mobile;
-
-  private function updateClose() {
-//    that = @
-//    $((if rr.windowSize.mobile then '.close, header' else '.close'), @el).click () ->
-//      that.hide()
-    t.fndAnd('.close', function(t: Tag) {t.off('click', hide).on('click', hide);});
-  }
+//  private function isMobileFullscreen(): Bool return mobileFullScreen && WindowSize.mobile;
 
   function setShade(shade: Bool) {
-    containerT.setCls(ContainerShadeCss, shade);
+    containerT.setCls(config.containerShadeCss, shade);
   }
 }

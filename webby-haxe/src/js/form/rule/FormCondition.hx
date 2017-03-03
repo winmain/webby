@@ -1,10 +1,9 @@
 package js.form.rule;
 
-import js.form.field.Field;
-
 /*
 Form condition base class
  */
+import js.form.rule.FormCondition;
 @:autoBuild(macros.KeepConstructorMacro.build())
 class FormCondition {
   public function getFieldNames(): Array<String> return [];
@@ -23,7 +22,13 @@ class FormCondition {
   Register all common conditions
    */
   public static function regCommonConditions(): Void {
-    // TODO:
+    regCond(Not);
+    regCond(And);
+    regCond(Or);
+    regCond(FieldEquals);
+    regCond(FieldIn);
+    regCond(FieldEmpty);
+    regCond(FieldRegex);
   }
 
   /*
@@ -32,114 +37,144 @@ class FormCondition {
   public static function createCond(props: External): FormCondition return FormRule.internalCreate('condition', registry, props);
 }
 
-// TODO:
 
 /*
-###
-  Условие not
-###
-class rr.form.rule.Not extends rr.form.rule.Condition
-  constructor: (props) ->
-    @cond = rr.form.rule.Condition.createCond(props['cond'])
-
-  getFields: -> @cond.getFields()
-  check: (form) -> !@cond.check(form)
-
-
-###
-  Условие and
-###
-class rr.form.rule.And extends rr.form.rule.Condition
-  constructor: (props) ->
-    @c1 = rr.form.rule.Condition.createCond(props['c1'])
-    @c2 = rr.form.rule.Condition.createCond(props['c2'])
-
-  getFields: -> @c1.getFields().concat(@c2.getFields())
-  check: (form) -> @c1.check(form) && @c2.check(form)
-
-
-###
-Условие or
-###
-class rr.form.rule.Or extends rr.form.rule.Condition
-  constructor: (props) ->
-    @c1 = rr.form.rule.Condition.createCond(props['c1'])
-    @c2 = rr.form.rule.Condition.createCond(props['c2'])
-
-  getFields: -> @c1.getFields().concat(@c2.getFields())
-  check: (form) -> @c1.check(form) || @c2.check(form)
-
-
-###
-  Условие выполняется, если указанное поле имеет заданное значение
-###
-class rr.form.rule.FieldEquals extends rr.form.rule.Condition
-  constructor: (props) ->
-    @fieldName = props['field']
-    @value = props['value']
-
-  getFields: -> [@fieldName]
-  check: (form) -> form.fields[@fieldName].value() == @value
-
-
-###
-  Условие выполняется, если указанное поле имеет одно из заданных значений
-###
-class rr.form.rule.FieldIn extends rr.form.rule.Condition
-  constructor: (props) ->
-    @fieldName = props['field']
-    @values = props['values']
-
-  getFields: -> [@fieldName]
-  check: (form) ->
-    value = form.fields[@fieldName].value()
-    for v in @values
-      if v == value then return true
-    false
-
-
-###
-  Условие выполняется, если указанное поле пусто (не забыть проверить работоспособность метода isEmpty у поля)
-###
-class rr.form.rule.FieldEmpty extends rr.form.rule.Condition
-  constructor: (props) ->
-    @fieldName = props['field']
-
-  getFields: -> [@fieldName]
-  check: (form) -> form.fields[@fieldName].isEmpty()
-
-
-###
-  Условие выполняется, если указанное поле целиком совпадает с регуляркой
-###
-class rr.form.rule.FieldRegex extends rr.form.rule.Condition
-  constructor: (props) ->
-    @fieldName = props['field']
-    @regex = new RegExp('^' + props['regex'] + '$')
-
-  getFields: -> [@fieldName]
-  check: (form) -> @regex.test(form.fields[@fieldName].value())
-
-
-###
-  Создать новое условие по заданным параметрам
-###
-rr.form.rule.Condition.createCond = (props) ->
-  classes = rr.form.rule.Condition.classes()
-  cls = classes[props['cls']]
-  if !cls then throw "Form condition class '" + props['cls'] + "' not found"
-  new cls(props)
-
-###
-  Сопоставление класса условия
-  (функция здесь нужна потому, что google closure не успевает проинициализировать нужные классы на момент создания объекта)
-###
-rr.form.rule.Condition.classes = ->
-  'not': rr.form.rule.Not
-  'and': rr.form.rule.And
-  'or': rr.form.rule.Or
-  'fieldEquals': rr.form.rule.FieldEquals
-  'fieldIn': rr.form.rule.FieldIn
-  'fieldEmpty': rr.form.rule.FieldEmpty
-  'fieldRegex': rr.form.rule.FieldRegex
+`Not` condition
  */
+class Not extends FormCondition {
+  static public var REG = 'not';
+
+  public var cond(default, null): FormCondition;
+
+  public function new(props: External) {
+    cond = FormCondition.createCond(props.get('cond'));
+  }
+
+  override public function getFieldNames(): Array<String> return cond.getFieldNames();
+
+  override public function check(form: Form): Bool return !cond.check(form);
+}
+
+
+/*
+`And` condition
+ */
+class And extends FormCondition {
+  static public var REG = 'and';
+
+  public var c1(default, null): FormCondition;
+  public var c2(default, null): FormCondition;
+
+  public function new(props: External) {
+    c1 = FormCondition.createCond(props.get('c1'));
+    c2 = FormCondition.createCond(props.get('c2'));
+  }
+
+  override public function getFieldNames(): Array<String> return c1.getFieldNames().concat(c2.getFieldNames());
+
+  override public function check(form: Form): Bool return c1.check(form) && c2.check(form);
+}
+
+
+/*
+`Or` condition
+ */
+class Or extends FormCondition {
+  static public var REG = 'or';
+
+  public var c1(default, null): FormCondition;
+  public var c2(default, null): FormCondition;
+
+  public function new(props: External) {
+    c1 = FormCondition.createCond(props.get('c1'));
+    c2 = FormCondition.createCond(props.get('c2'));
+  }
+
+  override public function getFieldNames(): Array<String> return c1.getFieldNames().concat(c2.getFieldNames());
+
+  override public function check(form: Form): Bool return c1.check(form) || c2.check(form);
+}
+
+
+/*
+Condition satisfied when field value exactly equals specific value.
+ */
+class FieldEquals extends FormCondition {
+  static public var REG = 'fieldEquals';
+
+  public var fieldName(default, null): String;
+  public var value(default, null): Dynamic;
+
+  public function new(props: External) {
+    fieldName = props.get('field');
+    value = props.get('value');
+  }
+
+  override public function getFieldNames(): Array<String> return [fieldName];
+
+  override public function check(form: Form): Bool return form.fields.get(fieldName).value() == value;
+}
+
+
+/*
+Condition satisfied when field value equals one of specified values.
+ */
+class FieldIn extends FormCondition {
+  static public var REG = 'fieldIn';
+
+  public var fieldName(default, null): String;
+  public var values(default, null): Array<Dynamic>;
+
+  public function new(props: External) {
+    fieldName = props.get('field');
+    values = props.get('values');
+  }
+
+  override public function getFieldNames(): Array<String> return [fieldName];
+
+  override public function check(form: Form): Bool {
+    var value = form.fields.get(fieldName).value();
+    for (v in values) {
+      if (v == value) return true;
+    }
+    return false;
+  }
+}
+
+
+/*
+Condition satisfied when field is empty (don't forget to check method `Field.isEmpty`)
+ */
+class FieldEmpty extends FormCondition {
+  static public var REG = 'fieldEmpty';
+
+  public var fieldName(default, null): String;
+
+  public function new(props: External) {
+    fieldName = props.get('field');
+  }
+
+  override public function getFieldNames(): Array<String> return [fieldName];
+
+  override public function check(form: Form): Bool return form.fields.get(fieldName).isEmpty();
+}
+
+
+/*
+Condition satisfied when field fully matches specified regular expression.
+ */
+class FieldRegex extends FormCondition {
+  static public var REG = 'fieldRegex';
+
+  public var fieldName(default, null): String;
+  public var regex(default, null): RegExp;
+
+  public function new(props: External) {
+    fieldName = props.get('field');
+    regex = new RegExp('^' + props.get('regex') + '$');
+  }
+
+  override public function getFieldNames(): Array<String> return [fieldName];
+
+  override public function check(form: Form): Bool return regex.test(form.fields.get(fieldName).value());
+}

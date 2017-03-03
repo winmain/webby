@@ -14,7 +14,7 @@ class BaseLongField(val form: Form, val id: String) extends ValueField[Long] wit
     val nullValue = long(self.nullValue, 0L)
   }
   override def jsProps: BaseJsProps = new JsProps
-  override def jsField: String = "int"
+  override def jsField: String = "number"
   override def parseJsValue(node: JsonNode): Either[String, Long] = {
     if (node.isTextual) {
       val text = node.asText()

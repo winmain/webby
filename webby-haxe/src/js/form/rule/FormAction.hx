@@ -71,17 +71,15 @@ class Visible extends FieldAction {
   static public var REG = 'visible';
 
   public var vis(default, null): Bool;
-  public var withParent(default, null): Bool;
 
   public function new(props: External) {
     super(props);
     vis = G.toBool(props.get('vis'));
-    withParent = G.toBool(props.get('withParent'));
   }
 
   override public function execField(field: Field, turnOn: Bool): Bool {
     var v: Bool = untyped vis ^ (!turnOn);
-    field.show(v, withParent);
+    field.show(v);
     return v;
   }
 }

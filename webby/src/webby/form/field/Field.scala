@@ -241,6 +241,7 @@ trait Field[T] {self =>
     protected def boolTrue(value: Boolean): lang.Boolean = if (!value) FALSE else null
     protected def int(value: Int, default: Int): lang.Integer = if (value == default) null else lang.Integer.valueOf(value)
     protected def long(value: Long, default: Long): lang.Long = if (value == default) null else lang.Long.valueOf(value)
+    protected def float(value: Float, default: Float): lang.Float = if (value == default) null else lang.Float.valueOf(value)
   }
   def jsProps: BaseJsProps = new BaseJsProps
 

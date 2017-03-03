@@ -30,7 +30,9 @@ abstract class BaseForms {self =>
   // ------------------------------- Html helpers -------------------------------
 
   def formCls = "form hidden"
-  def formBlockCls = "form-block"
+  def formGroupCls = "form-group"
+  def formErrorsBlockCls = "form-errors-block"
+  def formRowCls = "form-row"
 
   def formCreateInitJsCode(form: Form, id: String): String = "Form.create(Tag.find('#" + id + "'), " + js.toJson(form.jsProps) + ").init()"
 
@@ -38,8 +40,6 @@ abstract class BaseForms {self =>
     scripts.addCode(formCreateInitJsCode(form, id))
     view.form.cls(formCls).id(id).method(method)
   }
-
-  def sectionBlock(implicit view: StdHtmlView): CommonTag = view.section.cls(formBlockCls)
 }
 
 

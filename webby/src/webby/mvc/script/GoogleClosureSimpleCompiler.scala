@@ -15,7 +15,7 @@ import com.google.javascript.jscomp._
   * }}}
   */
 object GoogleClosureSimpleCompiler {
-  def minify(code: String, langIn: CompilerOptions.LanguageMode, langOut: CompilerOptions.LanguageMode): Either[Array[JSError], String] = {
+  def minify(code: String)(optionsFn: CompilerOptions => Any): Either[Array[JSError], String] = {
     val compiler: Compiler = new Compiler(System.err)
     val options = new CompilerOptions
 
@@ -23,8 +23,7 @@ object GoogleClosureSimpleCompiler {
 
     options.setOutputCharset(StandardCharsets.UTF_8)
     options.setTrustedStrings(true)
-    options.setLanguageIn(langIn)
-    options.setLanguageOut(langOut)
+    optionsFn(options)
 
     compiler.initOptions(options)
 
@@ -35,5 +34,7 @@ object GoogleClosureSimpleCompiler {
   }
 
   def minifyEs5(code: String): Either[Array[JSError], String] =
-    minify(code, CompilerOptions.LanguageMode.ECMASCRIPT5, CompilerOptions.LanguageMode.ECMASCRIPT5)
+    minify(code) {options =>
+      options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5)
+    }
 }

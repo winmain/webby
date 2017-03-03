@@ -41,7 +41,7 @@ class Form extends EventTarget {
   public var formErrorsTag(default, null): Null<Tag>;
   public var errorBlock(default, null): FormErrorBlock;
 
-  public var blocks(default, null): Array<FormBlock>;
+  public var blocks(default, null): Array<FormGroup>;
   public var fields(default, null): JMap<String, Field>;
   public var rules(default, null): Array<FormRule>;
 
@@ -82,12 +82,11 @@ class Form extends EventTarget {
     controller = props.controller != null ? props.controller(this) : null;
 
     formErrorsTag = getFormErrorsTag();
-    if (formErrorsTag == null) throw new Error("." + config.formErrorsClass + " not found");
     errorBlock = new FormErrorBlock(config, parentForm != null ? parentForm.errorBlock : null, tag, formErrorsTag);
-    if (tag.hasCls(config.formBlockClass)) {
-      blocks = [new FormBlock(this, tag)]; // Сама форма является блоком, поэтому блок тут один
+    if (tag.hasCls(config.formGroupClass)) {
+      blocks = [new FormGroup(this, tag)]; // Сама форма является блоком, поэтому блок тут один
     } else {
-      blocks = [for (subTag in tag.fnd('.' + config.formBlockClass)) new FormBlock(this, subTag)];
+      blocks = [for (subTag in tag.fndAll('.' + config.formGroupClass)) new FormGroup(this, subTag)];
     }
 
     // this['fields'] нужен для доступа к полям формы для внешних скриптов
@@ -134,7 +133,7 @@ class Form extends EventTarget {
   }
 
   private function beforeUnloadHandler(): String {
-    return if (!finished && hasChanges()) config.onUnloadConfirmText; else null;
+    return if (!finished && hasChanges()) config.strings.onUnloadConfirmText; else null;
   }
 
   public override function disposeInternal() {
@@ -142,7 +141,7 @@ class Form extends EventTarget {
     deregisterForm(this);
   }
 
-  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + config.formErrorsClass);
+  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + config.formErrorsBlockClass);
 
 
   /*
@@ -351,7 +350,7 @@ class Form extends EventTarget {
   }
 
   function onPostSuccess(post: FormSuccess) {
-    finished = !post.clearFinished;
+    finished = !post.clearFinishedForm;
     if (onPostSuccessFn != null) onPostSuccessFn(post);
     else config.onFormSuccess(post);
 
@@ -379,6 +378,18 @@ class Form extends EventTarget {
     if (props.focusField != null) {
       fields.get(props.focusField).focus();
     }
+  }
+
+  /*
+  Найти FormBlock по его тегу
+   */
+  public function findBlock(tag: Tag): Null<FormGroup> {
+    for (block in blocks) {
+      if (block.tag.equals(tag)) {
+        return block;
+      }
+    }
+    return null;
   }
 
   // ------------------------------- Static methods -------------------------------
@@ -528,7 +539,7 @@ class FormSuccess {
   public var success: Bool;
 
   // Clear `Form.finished` flag on success
-  public var clearFinished: Null<Bool>;
+  public var clearFinishedForm: Null<Bool>;
 }
 
 
