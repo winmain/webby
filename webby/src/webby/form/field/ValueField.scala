@@ -39,12 +39,12 @@ trait ValueField[T] extends Field[T] {
       try {
         parseJsValue(node) match {
           case Right(v) => set(v); validate
-          case Left(error) => FormErrors(errors = mutable.Map(id -> error))
+          case Left(error) => FormErrors(errors = mutable.Map(shortId -> error))
         }
       } catch {
         case e: Exception =>
           Logger(getClass).warn("Error parsing js-value", e)
-          FormErrors(errors = mutable.Map(id -> "Некорректное значение поля"))
+          FormErrors(errors = mutable.Map(shortId -> "Некорректное значение поля"))
       }
     } else {
       setNull

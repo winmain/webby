@@ -46,7 +46,7 @@ case class Or(@JsonProperty c1: JsCondition, @JsonProperty c2: JsCondition) exte
 case class FieldEquals[T](f: Field[T], private val v: T) extends JsCondition {
   override def cls: String = "fieldEquals"
   override def check: Boolean = f.get == v
-  @JsonProperty def field: String = f.id
+  @JsonProperty def field: String = f.shortId
   @JsonProperty val value: AnyRef = f.toJsValue(v)
 }
 
@@ -59,7 +59,7 @@ case class FieldEquals[T](f: Field[T], private val v: T) extends JsCondition {
 case class FieldIn[T](f: Field[T], private val v: Iterable[T]) extends JsCondition {
   override def cls: String = "fieldIn"
   override def check: Boolean = {val fValue = f.get; v.exists(fValue == _)}
-  @JsonProperty def field: String = f.id
+  @JsonProperty def field: String = f.shortId
   @JsonProperty val values: mutable.Buffer[AnyRef] = v.map(f.toJsValue)(scala.collection.breakOut)
 }
 
@@ -71,7 +71,7 @@ case class FieldIn[T](f: Field[T], private val v: Iterable[T]) extends JsConditi
 case class FieldEmpty(f: Field[_]) extends JsCondition {
   override def cls: String = "fieldEmpty"
   override def check: Boolean = f.isEmpty
-  @JsonProperty def field: String = f.id
+  @JsonProperty def field: String = f.shortId
 }
 
 /**
@@ -83,5 +83,5 @@ case class FieldEmpty(f: Field[_]) extends JsCondition {
 case class FieldRegex(f: Field[_], @JsonProperty regex: String) extends JsCondition {
   override def cls: String = "fieldRegex"
   override def check: Boolean = f.get.toString.matches(regex)
-  @JsonProperty def field: String = f.id
+  @JsonProperty def field: String = f.shortId
 }

@@ -4,7 +4,6 @@ import querio.{MutableTableRecord, Table, TableRecord}
 import webby.commons.text.StdCharMatchers
 import webby.commons.text.StringWrapper.wrapper
 import webby.form._
-import webby.html.{StdHtmlView, StdInputTag}
 
 import scala.reflect.ClassTag
 
@@ -13,7 +12,7 @@ import scala.reflect.ClassTag
   * Пароль внутри этого поля хранится в виде хеша (т.е., оригинальное значение пароля получить невозможно).
   * Методы set устанавливают хеш пароля, но не сам пароль. Для установки пароля служит метод setPassword
   */
-class PasswordField(val form: Form, val id: String, val hashFn: String => String) extends ValueField[String] with PlaceholderField[String] {self =>
+class PasswordField(val form: Form, val shortId: String, val hashFn: String => String) extends ValueField[String] with PlaceholderField[String] {self =>
   var minLength: Option[Int] = Some(3)
   var maxLength: Option[Int] = Some(50)
 
@@ -58,13 +57,5 @@ class PasswordField(val form: Form, val id: String, val hashFn: String => String
     else if (!StdCharMatchers.passwordMatcher.matchesAllOf(get))
       Invalid("Недопустимые символы: &laquo;" + StdCharMatchers.passwordMatcher.negate.retainFrom(get).escapeXml + "&raquo;")
     else Valid
-  }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputPassword(implicit view: StdHtmlView): StdInputTag = {
-    val input = view.inputPassword.id(id).name(name)
-    if (placeholder != null) input.placeholder(placeholder)
-    input
   }
 }

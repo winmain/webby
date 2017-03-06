@@ -1,12 +1,11 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
-import webby.html.{StdHtmlView, StdInputTag}
 import webby.form.{Form, Invalid, ValidationResult}
 
 /**
   * Базовый класс для длинного целого числа (без minValue, maxValue)
   */
-class BaseLongField(val form: Form, val id: String) extends ValueField[Long] with PlaceholderField[Long] { self =>
+class BaseLongField(val form: Form, val shortId: String) extends ValueField[Long] with PlaceholderField[Long] {self =>
   var nullValue: Long = 0L
 
   // ------------------------------- Reading data & js properties -------------------------------
@@ -29,16 +28,12 @@ class BaseLongField(val form: Form, val id: String) extends ValueField[Long] wit
   // ------------------------------- Builder & validations -------------------------------
 
   def nullValue(v: Long): this.type = {nullValue = v; this}
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputNumber(implicit view: StdHtmlView): StdInputTag = placeholderInputText
 }
 
 /**
   * Поле для длинного целого числа
   */
-class LongField(form: Form, id: String) extends BaseLongField(form, id) { self =>
+class LongField(form: Form, id: String) extends BaseLongField(form, id) {self =>
   var minValue: Option[Long] = None
   var maxValue: Option[Long] = None
 

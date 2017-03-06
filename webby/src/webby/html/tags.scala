@@ -160,7 +160,7 @@ sealed trait PlaceholderTag extends BaseTag {
 
 // ------------------------- Tag implementations -------------------------
 
-class StdATag(implicit view: HtmlBase) extends CommonTag("a") {
+class StdATag(implicit view: HtmlBase) extends CommonTag("a") with NamedTag {
   def hrefRaw(raw: String): this.type = attr("href", raw)
   def href(url: Url): this.type = hrefRaw(url.quotedUrl)
   def hrefWithAnchor(url: Url, anchor: String): this.type = hrefRaw(url.quotedUrl + "#" + anchor)
@@ -169,8 +169,6 @@ class StdATag(implicit view: HtmlBase) extends CommonTag("a") {
   /** Специальный урл-заглушка */
   def hrefTODO: this.type = hrefRaw("#TODO")
   def hrefEmail(email: String): this.type = hrefRaw("mailto:" + email)
-
-  def name(v: String): this.type = attr("name", v)
 
   def target(v: String): this.type = attr("target", v)
   def targetBlank: this.type = target("_blank")
@@ -222,9 +220,8 @@ class StdFormTag(implicit view: HtmlBase) extends CommonTag("form") {
   def onsubmit(@Language("JavaScript") v: String): this.type = attr("onsubmit", v)
 }
 
-class StdInputTag()(implicit view: HtmlBase) extends CommonTag("input", shortClose = true) with ValuedTag with DisableTag with PlaceholderTag {
+class StdInputTag()(implicit view: HtmlBase) extends CommonTag("input", shortClose = true) with NamedTag with ValuedTag with DisableTag with PlaceholderTag {
   def tpe(v: String): this.type = attr("type", v)
-  def name(v: String): this.type = attr("name", v)
   def maxLength(v: Int): this.type = attr("maxlength", v)
 
   /** Раньше значение этого атрибута было "false" в силу политики разработчиков Chrome
@@ -305,7 +302,6 @@ class StdHrTag(implicit view: HtmlBase) extends CommonTag("hr", shortClose = tru
   def color(v: String): this.type = attr("color", v)
 }
 
-class StdMetaTag(implicit view: HtmlBase) extends CommonTag("meta", shortClose = true) {
-  def name(rawName: String): this.type = attr("name", rawName)
+class StdMetaTag(implicit view: HtmlBase) extends CommonTag("meta", shortClose = true) with NamedTag {
   def content(rawContent: String): this.type = attr("content", rawContent)
 }

@@ -2,9 +2,8 @@ package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.validator.EmailValidator
 import webby.form.{Form, Invalid, Valid, ValidationResult}
-import webby.html.{StdHtmlView, StdInputTag}
 
-class EmailField(val form: Form, val id: String) extends ValueField[String] with PlaceholderField[String] {self =>
+class EmailField(val form: Form, val shortId: String) extends ValueField[String] with PlaceholderField[String] {self =>
 
   // ------------------------------- Reading data & js properties -------------------------------
   override def jsField: String = "text"
@@ -23,8 +22,4 @@ class EmailField(val form: Form, val id: String) extends ValueField[String] with
       else Invalid("Некорректный email")
     }
   }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInputText
 }

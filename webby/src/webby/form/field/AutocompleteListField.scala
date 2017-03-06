@@ -12,7 +12,7 @@ import scala.collection.mutable
  * Свободный ввод запрещён, также как и для AutocompleteField.
  */
 class AutocompleteListField[T](val form: Form,
-                               val id: String,
+                               val shortId: String,
                                var jsSourceFunction: String,
                                var jsSourceArg: Any = null,
                                var toJs: T => Int,
@@ -58,14 +58,5 @@ class AutocompleteListField[T](val form: Form,
     if (minItems.exists(get.size < _)) return Invalid("Не менее " + recordPlural(minItems.get).str)
     if (maxItems.exists(get.size > _)) return Invalid("Не более " + recordPlural(maxItems.get).str)
     Valid
-  }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputTextInDiv(itemsTag: CommonTag => CommonTag = a => a, inputTag: StdInputTag => StdInputTag = a => a)(implicit view: StdHtmlView): HtmlBase = {
-    view.div.cls("autocomplete-list") {
-      itemsTag(view.div.cls("ac-items clearfix"))
-      inputTag(placeholderInputText.attr("autocomplete", "off"))
-    }
   }
 }

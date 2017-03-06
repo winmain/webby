@@ -1,14 +1,13 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.form.Form
-import webby.html.{StdHtmlView, StdInputTag}
 
 /**
- * Обычный автокомплит, состоящий из одного поля типа input type=text.
- * Возможно выбрать только вариант из списка. Свободный ввод запрещён.
- */
+  * Обычный автокомплит, состоящий из одного поля типа input type=text.
+  * Возможно выбрать только вариант из списка. Свободный ввод запрещён.
+  */
 class AutocompleteField[T](val form: Form,
-                           val id: String,
+                           val shortId: String,
                            var jsSourceFunction: String,
                            var jsSourceArg: Any = null,
                            var toJs: T => Int,
@@ -33,8 +32,4 @@ class AutocompleteField[T](val form: Form,
   override def toJsValue(v: T): AnyRef = if (v == null) null else toJs(v).asInstanceOf[AnyRef]
 
   override def nullValue: T = null.asInstanceOf[T]
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputText).autocompleteOff
 }

@@ -10,7 +10,6 @@ import querio._
 import webby.api.mvc.{PlainResult, Results}
 import webby.form._
 import webby.form.jsrule._
-import webby.html.{StdHtmlView, StdLabelTag}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -23,10 +22,12 @@ import scala.reflect.ClassTag
  */
 trait Field[T] {self =>
   def form: Form
-  def id: String
+  def shortId: String
+
+  val htmlId: String = form.base.makeFieldHtmlId(this)
 
   /** Имя элемента (input name="$name") */
-  @Nullable def name: String = id
+  @Nullable def name: String = shortId
 
   private var _value: T = nullValue
   def get: T = _value
@@ -111,9 +112,9 @@ trait Field[T] {self =>
   /**
     * Показывать/скрывать не только само поле, но и его родительский тег section.
     */
-  var _hideWithSection: Option[Boolean] = None
-  def hideWithSection(v: Option[Boolean]): this.type = {_hideWithSection = v; this}
-  def hideWithSection(v: Boolean = true): this.type = hideWithSection(Some(v))
+  var _hideWithRow: Option[Boolean] = None
+  def hideWithRow(v: Option[Boolean]): this.type = {_hideWithRow = v; this}
+  def hideWithRow(v: Boolean = true): this.type = hideWithRow(Some(v))
 
   /**
    * Список ограничений и проверок, накладываемых на это поле.
@@ -165,9 +166,9 @@ trait Field[T] {self =>
   = { constraints += new Constraint[T] {override def check(v: T): ValidationResult = if (validCondition(v)) Valid else Invalid(onConditionFailed)}; this }
 
   /** Создать и вернуть ошибку обязательного заполнения этого поля для формы */
-  def requiredError: FormErrors = FormErrors(required = ArrayBuffer(id))
+  def requiredError: FormErrors = FormErrors(required = ArrayBuffer(shortId))
   /** Создать и вернуть ошибку этого поля для формы */
-  def error(message: String): FormErrors = FormErrors(errors = mutable.Map(id -> message))
+  def error(message: String): FormErrors = FormErrors(errors = mutable.Map(shortId -> message))
 
   /** Вызов специального действия для этого поля из js */
   def connectedAction(tree: JsonNode): PlainResult = Results.BadRequest("Unsupported")
@@ -223,16 +224,16 @@ trait Field[T] {self =>
 
   @JsonInclude(JsonInclude.Include.NON_ABSENT)
   class BaseJsProps {
-    val id: String = self.id
+    val shortId: String = self.shortId
     val name: String = self.name match {
-      case n if n == self.id => null
+      case n if n == self.shortId => null
       case n => n
     }
     val jsField: String = self.jsField
     val required = boolFalse(self.required)
     val enabled = boolTrue(self.enabled)
     val enterKeySubmit = boolFalse(self._enterKeySubmit)
-    val hideWithSection = self._hideWithSection
+    val hideWithRow = self._hideWithRow
 
     // Вспомогательные функции для записи булевой переменной с дефолтным значением.
     // Для boolFalse дефолтное значение false, поэтому если value == false, то boolFalse вернёт null.
@@ -244,11 +245,6 @@ trait Field[T] {self =>
     protected def float(value: Float, default: Float): lang.Float = if (value == default) null else lang.Float.valueOf(value)
   }
   def jsProps: BaseJsProps = new BaseJsProps
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def label(implicit view: StdHtmlView): StdLabelTag = view.label.forId(id).cls("left")
-  def labelUpward(implicit view: StdHtmlView): StdLabelTag = view.label.forId(id).cls("left upward")
 
   // ------------------------------- Js helpers -------------------------------
 

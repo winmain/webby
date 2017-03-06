@@ -1,19 +1,14 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.form.Form
-import webby.html.{StdHtmlView, StdInputTag}
 
 /**
   * Скрытое строковое поле
   */
-class HiddenField(val form: Form, val id: String) extends ValueField[String] {
+class HiddenField(val form: Form, val shortId: String) extends ValueField[String] {
   override def jsField: String = "hidden"
   override def parseJsValue(node: JsonNode): Either[String, String] = parseJsString(node)(Right(_))
   override def nullValue: String = null
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputHidden(implicit view: StdHtmlView): StdInputTag = view.inputHidden.id(id).name(name)
 }
 
 /**
@@ -21,17 +16,13 @@ class HiddenField(val form: Form, val id: String) extends ValueField[String] {
   */
 class HiddenIntField(form: Form, id: String) extends BaseIntField(form, id) {
   override def jsField: String = "hidden"
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputHidden(implicit view: StdHtmlView): StdInputTag = view.inputHidden.id(id).name(name)
 }
 
 
 /**
   * Скрытое целочисленное поле
   */
-class HiddenBooleanField(val form: Form, val id: String) extends ValueField[Boolean] {
+class HiddenBooleanField(val form: Form, val shortId: String) extends ValueField[Boolean] {
   override def jsField: String = "hidden"
   override def parseJsValue(node: JsonNode): Either[String, Boolean] = parseJsString(node) {v =>
     try Integer.parseInt(v) match {
@@ -42,8 +33,4 @@ class HiddenBooleanField(val form: Form, val id: String) extends ValueField[Bool
     catch {case e: NumberFormatException => Left("Введите целое число")}
   }
   override def nullValue: Boolean = false
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputHidden(implicit view: StdHtmlView): StdInputTag = view.inputHidden.id(id).name(name)
 }

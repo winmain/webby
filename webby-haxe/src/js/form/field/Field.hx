@@ -40,13 +40,15 @@ class Field extends EventTarget {
     this.props = props;
     field = props.field;
     // TODO: не очень хорошая логика с name и id. Надо бы сделать более простую/прямолинейную логику.
-    name = G.or(props.name, function() return props.id);
-    id = form.subId != null ? '${props.id}-${form.subId}' : props.id;
-    required = G.toBool(props.required);
+    name = G.or(props.name, function() return props.shortId);
+    var suffix = form.subId != null ? '-' + form.subId : '';
+    id = form.htmlId + '-' + props.shortId + suffix;
     tag = getTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
     if (tag == null) throw new Error('Field node #${id} not found');
 //    @$el = @initEl().prop('field', @)
     box = initBoxTag().cls(form.config.fieldBoxClass);
+
+    required = G.toBool(props.required);
     updateRequired();
     errorTag = createErrorTag();
     initElEvents();
@@ -128,7 +130,7 @@ class Field extends EventTarget {
   public function show(v: Bool) {
     vis = v;
     var t: Tag;
-    if (hideWithSection()) {
+    if (hideWithRow()) {
       t = getSection();
       if (t == null) t = box;
     } else {
@@ -186,24 +188,24 @@ class Field extends EventTarget {
   public function reInitAfterSubmit(): Bool return false;
 
   /*
-  Default `hideWithSection` value. Can be overriden in subclasses.
+  Default `hideWithRow` value. Can be overriden in subclasses.
    */
-  function defaultHideWithSection(): Bool return false;
+  function defaultHideWithRow(): Bool return false;
 
   /*
-  Calculate `hideWithSection` value using `defaultHideWithSection` and `props.hideWithSection`.
-  `props.hideWithSection` has a priority, so it will be used if it defined.
-  Otherwise `defaultHideWithSection` will be used.
+  Calculate `hideWithRow` value using `defaultHideWithRow` and `props.hideWithRow`.
+  `props.hideWithRow` has a priority, so it will be used if it defined.
+  Otherwise `defaultHideWithRow` will be used.
    */
-  @:final public function hideWithSection(): Bool {
-    var hws = props.hideWithSection;
-    return hws == null ? defaultHideWithSection() : hws;
+  @:final public function hideWithRow(): Bool {
+    var hws = props.hideWithRow;
+    return hws == null ? defaultHideWithRow() : hws;
   }
 
   /*
   Find parent section tag. Used to hide tag with it's parent.
    */
-  function getSection(): Null<Tag> return form.config.findFieldSection(this);
+  function getSection(): Null<Tag> return form.config.findFieldRow(this);
 
 
   // ------------------------------- Error & event handling methods -------------------------------
@@ -292,12 +294,12 @@ class Field extends EventTarget {
 
 @:build(macros.ExternalFieldsMacro.build())
 class FieldProps {
+  public var shortId: String;
   public var jsField: String;
   public var field: String;
   public var name: Null<String>;
-  public var id: String;
   public var required: Null<Bool>;
   public var enabled: Null<Bool>;
   public var enterKeySubmit: Null<Bool>;
-  public var hideWithSection: Null<Bool>;
+  public var hideWithRow: Null<Bool>;
 }

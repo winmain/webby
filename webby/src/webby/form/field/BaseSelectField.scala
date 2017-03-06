@@ -1,8 +1,6 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.form.Form
-import webby.html._
-import webby.html.elements.SelectHtml
 
 abstract class BaseSelectField[T](val form: Form, id: String)
   extends ValueField[T] {self =>
@@ -22,8 +20,6 @@ abstract class BaseSelectField[T](val form: Form, id: String)
   }
   override def nullValue: T = null.asInstanceOf[T]
   override def toJsValue(v: T): AnyRef = if (isEmpty(v)) null else valueFn(v)
-
-  def defaultHtmlElement()(implicit view: StdHtmlView): HtmlBase
 }
 
 
@@ -35,82 +31,13 @@ abstract class BaseSelectField[T](val form: Form, id: String)
   * * мобильных табов навигации
   */
 class RadioGroupField[T](form: Form,
-                         val id: String,
+                         val shortId: String,
                          override var items: Iterable[T],
                          override var valueFn: T => String,
                          override var titleFn: T => String,
                          override var emptyTitle: Option[String] = None)
-  extends BaseSelectField[T](form, id) {selfField =>
+  extends BaseSelectField[T](form, shortId) {selfField =>
   override def jsField: String = "radioGroup"
-
-  // ------------------------------- Html helpers -------------------------------
-
-  private def render(topElemCls: String, labelCls: String)(implicit view: StdHtmlView): HtmlBase = {
-    view.div.id(id).cls(topElemCls) {
-      val firstIdx = if (emptyTitle.isDefined) -1 else 0
-      val lastIdx = items.size - 1
-      def renderItem(idx: Int, elId: String, value: String, title: String): Unit = {
-        view.inputRadio.id(elId).name(name).valueSafe(value)
-        view.label.forId(elId).cls(labelCls).clsIf(idx == firstIdx, "first").clsIf(idx == lastIdx, "last") ~ title
-      }
-      emptyTitle.foreach(title => renderItem(-1, id + "-", "", title))
-      for ((item, idx) <- items.zipWithIndex) {
-        val v = valueFn(item)
-        val elId = id + "-" + v
-        renderItem(idx, elId, v, titleFn(item))
-      }
-    }
-  }
-
-  class Renderer(topElemCls: String, labelCls: String)(implicit view: StdHtmlView) {
-    def main(topTag: CommonTag = view.div)(body: InnerRenderer => Any): HtmlBase =
-      topTag.id(id).cls(topElemCls) < body(new InnerRenderer(labelCls))
-  }
-
-  class InnerRenderer(labelCls: String)(implicit view: StdHtmlView) {
-    case class Item(item: T) {
-      val value: String = valueFn(item)
-      val elId: String = id + "-" + value
-      def inputRadio: StdInputCheckedTag = view.inputRadio.id(elId).name(name).valueSafe(value)
-      def label: StdLabelTag = view.label.forId(elId).cls(labelCls)
-    }
-    def field: RadioGroupField[T] = selfField
-    def withItem(fieldItem: T)(body: Item => Any): Unit = body(Item(fieldItem))
-    def items: Iterable[Item] = selfField.items.map(Item.apply)
-  }
-
-  /**
-    * Стандартная полоска радио-переключателей.
-    * Пример: [ A | B | C ]
-    */
-  def radioStripe()(implicit view: StdHtmlView): HtmlBase = render("radio-group-stripe", "radio-left")
-
-  /**
-    * Список классических радио-переключателей.
-    * Пример:
-    * () A
-    * () B
-    * () C
-    */
-  def radioList()(implicit view: StdHtmlView): HtmlBase = render("radio-group-list", "radio-left")
-
-  /**
-    * Рисование своего элемента. Это может быть полоска типа [[radioStripe()]], список [[radioList()]],
-    * или вообще что-то другое.
-    *
-    * @param topElemCls Класс внешнего элемента, задаёт общий стиль. Например: "radio-group-list", "radio-group-stripe"
-    * @param labelCls Класс каждого внутреннего label. Обычно это "radio-label"
-    */
-  def customRenderer(topElemCls: String, labelCls: String = "radio-left")
-                    (implicit view: StdHtmlView): Renderer =
-    new Renderer(topElemCls, labelCls)
-
-  /**
-    * Рисование своего списка радио-переключателей, похожего на [[radioList()]]
-    */
-  def customRadioList(labelCls: String = "radio-left")(implicit view: StdHtmlView): Renderer = customRenderer("radio-group-list", labelCls)
-
-  override def defaultHtmlElement()(implicit view: StdHtmlView): HtmlBase = radioStripe()
 }
 
 
@@ -118,12 +45,12 @@ class RadioGroupField[T](form: Form,
   * Выпадающий список элементов.
   */
 class SelectField[T](form: Form,
-                     val id: String,
+                     val shortId: String,
                      override var items: Iterable[T],
                      override var valueFn: T => String,
                      override var titleFn: T => String,
                      override var emptyTitle: Option[String] = None)
-  extends BaseSelectField[T](form, id) with PlaceholderField[T] {self =>
+  extends BaseSelectField[T](form, shortId) with PlaceholderField[T] {self =>
   override def jsField: String = "select"
 
   // ------------------------------- Reading data & js properties -------------------------------
@@ -131,22 +58,6 @@ class SelectField[T](form: Form,
     val placeholder: String = self.placeholder
   }
   override def jsProps = new JsProps
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def select(outerSpan: CommonTag => CommonTag = a => a)(implicit view: StdHtmlView): HtmlBase = {
-    SelectHtml()
-      .outerSpan(span => outerSpan(span.id(id)))
-      .innerSelect(_.name(name))
-      .render {
-        emptyTitle.foreach(title => view.option.value("") ~ title)
-        for (item <- items) {
-          val v = valueFn(item)
-          view.option.valueSafe(v) ~ titleFn(item)
-        }
-      }
-  }
-  override def defaultHtmlElement()(implicit view: StdHtmlView): HtmlBase = select()
 }
 
 
@@ -156,7 +67,7 @@ class SelectField[T](form: Form,
   * Поэтому, полученное от клиента значение здесь не проверяется.
   * Основное отличие этого поля от какого-нибудь обычного TextField в том, что его параметр jsField = "radioGroup".
   */
-class EmptyStringRadioGroupField(val form: Form, val id: String) extends ValueField[String] {
+class EmptyStringRadioGroupField(val form: Form, val shortId: String) extends ValueField[String] {
   override def jsField: String = "radioGroup"
   override def parseJsValue(node: JsonNode): Either[String, String] = parseJsString(node)(Right(_))
   override def nullValue: String = null

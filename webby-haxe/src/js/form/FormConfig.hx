@@ -16,6 +16,7 @@ class FormConfig {
   public var formGroupClass = 'form-group';
   public var formErrorsBlockClass = 'form-errors-block';
   public var formGroupErrorClass = 'form-group-error';
+  public var formRowClass = "form-row";
 
   public var fieldBoxClass = 'field-box';
   public var fieldBoxRequiredClass = 'field-box--required';
@@ -33,7 +34,7 @@ class FormConfig {
 
   public function findSubmitButtons(form: Form): Array<Tag> return form.tag.fndAll('button[type=submit]');
 
-  public function findFieldSection(field: Field): Null<Tag> return field.tag.fndParent(function(t: Tag) return t.el.tagName == 'SECTION');
+  public function findFieldRow(field: Field): Null<Tag> return field.tag.fndParent(function(t: Tag) return t.hasCls(formRowClass));
 
   public function showFormErrorDialog(text: String) {
     G.window.alert(text);

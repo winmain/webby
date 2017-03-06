@@ -11,7 +11,7 @@ import scala.collection.mutable
   * Список чекбоксов
   */
 class CheckListField[T](val form: Form,
-                        val id: String,
+                        val shortId: String,
                         var items: Iterable[T],
                         var valueFn: T => String,
                         var titleFn: T => String,
@@ -39,23 +39,4 @@ class CheckListField[T](val form: Form,
   def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, Set[T]])(implicit form: FormWithDb[TR, MTR]): this.type =
     dbConnector[TR, MTR](new DbSetFieldConnector[T, TR, MTR](self, dbField))
   def ~:~[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, Set[T]])(implicit form: FormWithDb[TR, MTR]): this.type = connect(dbField)
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def checkboxList(tag: String = "div", rowWrapper: StdHtmlView => CommonTag = _.div)(implicit view: StdHtmlView): HtmlBase = {
-    view.tag(tag).id(id).cls("check-list-field") {
-      for {item <- items
-           value = valueFn(item)
-      } {
-        rowWrapper(view) {
-          view.inputCheckbox.id(id + "-" + value).valueSafe(value)
-          view.label.forId(id + "-" + value).cls("checkbox-left") ~ titleFn(item)
-          if (commentFn != null) {
-            val comment: String = commentFn(item)
-            if (comment != null && !comment.isEmpty) view.div.cls("checkbox-comment") ~ comment
-          }
-        }
-      }
-    }
-  }
 }

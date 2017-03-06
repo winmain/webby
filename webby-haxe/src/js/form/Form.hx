@@ -23,6 +23,8 @@ class Form extends EventTarget {
 
   // ------------------------------- Class -------------------------------
 
+  public var htmlId(default, null): String;
+
   // Массив ошибок самой формы (это ошибки именно формы, а не её полей)
   public var selfErrors(default, null): Array<String> = [];
 
@@ -51,9 +53,11 @@ class Form extends EventTarget {
   public var finished(default, null): Bool;
   public var onPostSuccessFn(default, null): Null<External -> Void>;
 
-  public function new(tag: Tag, props: FormProps, ?subId: Null<Int>, ?parentField: Null<Field>) {
+  public function new(props: FormProps, ?subId: Null<Int>, ?parentField: Null<Field>) {
     super();
-    this.tag = tag;
+    htmlId = props.htmlId;
+    tag = Tag.find('#' + htmlId);
+    if (tag == null) throw new Error('Form tag id:${htmlId} not found');
     this.props = props;
     this.subId = subId;
     this.parentField = parentField;
@@ -66,7 +70,7 @@ class Form extends EventTarget {
 
   @:keep
   @:expose('Form.create')
-  static public function create(tag: Tag, props: FormProps): Form return new Form(tag, props);
+  static public function create(props: FormProps): Form return new Form(props);
 
   @:keep
   @:expose('Form.init')
@@ -469,6 +473,9 @@ class Form extends EventTarget {
  */
 @:build(macros.ExternalFieldsMacro.build())
 class FormProps {
+  // Form htmlId
+  public var htmlId: String;
+
   // Field definitions
   public var fields: Array<FieldProps>;
 

@@ -6,12 +6,11 @@ import java.time.temporal.{ChronoField, TemporalAccessor}
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.DateFormats
 import webby.form.{Form, Invalid, Valid, ValidationResult}
-import webby.html.{StdHtmlView, StdInputTag}
 
 /**
   * Поле даты со стандартным шаблоном dd_mm_yyyy (его можно переопределить)
   */
-class DateField(val form: Form, val id: String) extends ValueField[LocalDate] {self =>
+class DateField(val form: Form, val shortId: String) extends ValueField[LocalDate] {self =>
   var minDate: Option[LocalDate] = None
   var maxDate: Option[LocalDate] = None
 
@@ -49,12 +48,6 @@ class DateField(val form: Form, val id: String) extends ValueField[LocalDate] {s
     else if (maxDate.exists(get.compareTo(_) > 0)) Invalid("Не позднее " + formatter.format(maxDate.get))
     else Valid
   }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  protected def inputClass = "date"
-  // Тип этого инпута - телефон, иначе при вводе даты на андроиде будет показана нативный (неудобный и медленный) инпут
-  def input(implicit view: StdHtmlView): StdInputTag = view.inputTel.id(id).name(name).cls(inputClass).placeholder(placeholder)
 }
 
 /**
@@ -68,5 +61,4 @@ class MonthYearField(form: Form, id: String) extends DateField(form, id) {
     LocalDate.of(ta.get(ChronoField.YEAR), ta.get(ChronoField.MONTH_OF_YEAR), 1)
   }
   override def placeholder: String = "мм.гггг"
-  override protected def inputClass: String = "month-year"
 }

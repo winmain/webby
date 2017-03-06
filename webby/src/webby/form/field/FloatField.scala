@@ -1,9 +1,8 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.form.{Form, Invalid, Valid, ValidationResult}
-import webby.html.{StdHtmlView, StdInputTag}
 
-class FloatField(val form: Form, val id: String) extends ValueField[Float] with PlaceholderField[Float] {self =>
+class FloatField(val form: Form, val shortId: String) extends ValueField[Float] with PlaceholderField[Float] {self =>
   var nullValue: Float = Float.NaN
   var minValue: Option[Float] = None
   var maxValue: Option[Float] = None
@@ -30,8 +29,8 @@ class FloatField(val form: Form, val id: String) extends ValueField[Float] with 
   // ------------------------------- Builder & validations -------------------------------
 
   def nullValue(v: Float): this.type = {nullValue = v; this}
-  def minValue(v: Float): this.type = { minValue = Some(v); this }
-  def maxValue(v: Float): this.type = { maxValue = Some(v); this }
+  def minValue(v: Float): this.type = {minValue = Some(v); this}
+  def maxValue(v: Float): this.type = {maxValue = Some(v); this}
 
   /**
     * Проверки, специфичные для конкретной реализации Field.
@@ -42,9 +41,4 @@ class FloatField(val form: Form, val id: String) extends ValueField[Float] with 
     else if (maxValue.exists(get > _)) Invalid("Не более " + maxValue.get)
     else Valid
   }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputNumber(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputNumber)
-  def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputText)
 }

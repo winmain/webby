@@ -5,12 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import webby.commons.text.Plural
 import webby.form._
-import webby.html.{CommonTag, HtmlBase, StdHtmlView}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class FormListField[F <: Form](val form: Form, val id: String, var factory: () => F, var recordPlural: Plural)
+class FormListField[F <: Form](val form: Form, val shortId: String, var factory: () => F, var recordPlural: Plural)
   extends Field[Vector[F]] {self =>
 
   var defaultItems: Int = 0
@@ -54,7 +53,7 @@ class FormListField[F <: Form](val form: Form, val id: String, var factory: () =
     val defaultItems = self.defaultItems
     val minItems = self.minItems
     val maxItems = self.maxItems
-    val uniqueBy = self.uniqueBy.map {case (fn, msg) => fn(f).id -> msg}
+    val uniqueBy = self.uniqueBy.map {case (fn, msg) => fn(f).shortId -> msg}
     val sub = f.jsProps
   }
   override def jsProps = new JsProps
@@ -68,7 +67,7 @@ class FormListField[F <: Form](val form: Form, val id: String, var factory: () =
       setNull
       FormSuccess
     } else if (!node.isArray || !node.isInstanceOf[ArrayNode]) {
-      FormErrors(errors = mutable.Map(id -> "Некорректное значение формы"))
+      FormErrors(errors = mutable.Map(shortId -> "Некорректное значение формы"))
     } else {
       val formErrors = FormErrors()
       removeOldForms = super.get.map(f => f.key -> f)(scala.collection.breakOut)
@@ -81,7 +80,7 @@ class FormListField[F <: Form](val form: Form, val id: String, var factory: () =
         // Попытаться найти уже готовую подформу по ключу. Если такой нет, то создать новую.
         val subForm: F =
         if (key != 0) {
-          if (processedKeys.contains(key)) return FormErrors(errors = mutable.Map(id -> "Дублирующий ключ формы"))
+          if (processedKeys.contains(key)) return FormErrors(errors = mutable.Map(shortId -> "Дублирующий ключ формы"))
           processedKeys += key
           removeOldForms.get(key) match {
             case Some(oldForm) => removeOldForms.remove(key); oldForm
@@ -89,7 +88,7 @@ class FormListField[F <: Form](val form: Form, val id: String, var factory: () =
           }
         } else factory()
 
-        subForm.setJsValuesAndValidate(jsForm, FormErrors(name = id, index = Some(index))) match {
+        subForm.setJsValuesAndValidate(jsForm, FormErrors(name = shortId, index = Some(index))) match {
           case e: FormErrors => formErrors.sub += e
           case _ => ()
         }
@@ -173,36 +172,11 @@ class FormListField[F <: Form](val form: Form, val id: String, var factory: () =
       var idx = 0
       val values: Vector[F] = get
       while (idx < values.length) {
-        result.addSub(values(idx).applyValues(formRemoved), name = id, index = idx)
+        result.addSub(values(idx).applyValues(formRemoved), name = shortId, index = idx)
         idx += 1
       }
     }
-    removeOldForms.values.foreach(v => result.addSub(v.applyValues(formRemoved = true), name = id, index = 0))
+    removeOldForms.values.foreach(v => result.addSub(v.applyValues(formRemoved = true), name = shortId, index = 0))
     result.orSuccess
   }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  /**
-    * Шаблон подформы, который клонируется при добавлении нового элемента.
-    *
-    * @param tag         Обрамляющий тег шаблона. Клонируется именно этот тег.
-    * @param cls         Класс обрамляющего тега.
-    * @param mobileMulti Флаг, который должен быть установлен, если подформа на десктопной версии однострочная,
-    *                    а на мобильной она превращается в многострочную. Добавляет дополнительные паддинги в моб. версии.
-    * @param body        Тело шаблона,
-    */
-  def template(tag: String = "p", cls: String = null, mobileMulti: Boolean = false)(body: F => Any)(implicit view: StdHtmlView): HtmlBase =
-    view.tag(tag).id(id + "-template").cls("hide").cls(cls).clsIf(mobileMulti, "mobile-multi") < body(formStub)
-  def blockTemplate(tag: String = "section", cls: String = "form-block subform")(body: F => Any)(implicit view: StdHtmlView): HtmlBase =
-    view.tag(tag).id(id + "-template").cls("hide").cls(cls) {blockRemoveTag; body(formStub)}
-
-  def listPlaceholder(implicit view: StdHtmlView): CommonTag = view.div.id(id + "-list")
-  def smallAddTag(implicit view: StdHtmlView): CommonTag = view.a.hrefAnchor.cls("dotted").id(id + "-add")
-  def smallRemoveTag(implicit view: StdHtmlView): CommonTag = view.a.hrefAnchor.cls("small-remove").id(removeId)
-  def blockAddTag(implicit view: StdHtmlView): CommonTag = view.a.hrefAnchor.cls("block-add").id(id + "-add")
-  def blockRemoveTag(implicit view: StdHtmlView): CommonTag = view.a.hrefAnchor.cls("block-remove").id(removeId).title("Удалить блок")
-
-  /** id для html элемента удаления записи */
-  def removeId: String = "remove"
 }

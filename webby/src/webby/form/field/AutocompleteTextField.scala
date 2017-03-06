@@ -17,8 +17,4 @@ class AutocompleteTextField(form: Form,
   }
   override def jsProps = new AutocompleteJsProps
   override def jsField: String = "autocompleteText"
-
-  // ------------------------------- Html helpers -------------------------------
-
-  override def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInputText.attr("autocomplete", "off")
 }

@@ -13,7 +13,7 @@ trait JsAction extends JsonDisableAutodetect {
 }
 
 abstract class JsFieldAction(f: Field[_]) extends JsAction {
-  @JsonProperty def field: String = f.id
+  @JsonProperty def field: String = f.shortId
   override def jsOnly: Boolean = false
   override def serverOnly: Boolean = false
 }

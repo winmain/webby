@@ -76,7 +76,7 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
   def checkDbConnectors() {
     if (dbConnectors.size != fields.size - formFieldsWithDb.size) {
       sys.error("Some fields does not have DbConnector: " +
-        fields.withFilter(f => !formFieldsWithDb.contains(f) && !dbConnectors.exists(_.field == f)).map(_.id).mkString(", "))
+        fields.withFilter(f => !formFieldsWithDb.contains(f) && !dbConnectors.exists(_.field == f)).map(_.shortId).mkString(", "))
     }
   }
 

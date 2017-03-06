@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.{JsonInclude, JsonRawValue}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import webby.api.mvc.{PlainResult, ResultException, Results}
 import webby.commons.io.StdJs
-import webby.form.field.{Field, StdFormFields, FormListField, FormListFieldWithDb}
-import webby.form.jsrule.{StdFormJsRules, JsRule}
-import webby.html.{CommonTag, StdFormTag, StdHtmlView, WebbyPage}
+import webby.form.field.{Field, FormListField, FormListFieldWithDb, StdFormFields}
+import webby.form.jsrule.{JsRule, StdFormJsRules}
+import webby.html._
 
 import scala.collection.mutable
 import scala.util.control.ControlThrowable
@@ -21,6 +21,9 @@ import scala.util.control.ControlThrowable
 trait Form extends StdFormFields with StdFormJsRules {self =>
   type B <: BaseForms
   def base: B
+
+  /** Id тега формы при рендеринге html. Также, он является префиксом полей формы. */
+  val htmlId: String = "form"
 
   /**
     * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.
@@ -167,7 +170,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     val nullTree = tree == null || tree.isNull
     // Прочитать и проверить все поля
     for (field <- fields if !field.ignored && field.enabled) {
-      (if (nullTree) field.validate else field.setJsValueAndValidate(tree.get(field.id))) match {
+      (if (nullTree) field.validate else field.setJsValueAndValidate(tree.get(field.shortId))) match {
         case e: FormErrors => formErrors ++= e
         case _ => ()
       }
@@ -204,7 +207,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
       val names: util.Iterator[String] = tree.fieldNames()
       if (!names.hasNext) return None
       val name: String = names.next()
-      fields.find(_.id == name) match {
+      fields.find(_.shortId == name) match {
         case Some(listField: FormListField[_]) =>
           val form = listField.formStub
           form.resolveField(tree.get(name))
@@ -213,7 +216,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     } else if (tree.isTextual) {
       // Обычное поле
       val name: String = tree.asText()
-      fields.find(_.id == name)
+      fields.find(_.shortId == name)
     } else None
   }
 
@@ -257,6 +260,8 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
 
   @JsonInclude(JsonInclude.Include.NON_ABSENT)
   sealed class BaseJsProps {
+    val htmlId: String = self.htmlId
+
     val fields: Iterable[_] = self.fields.withFilter(!_.ignored).map(_.jsProps)
 
     /**
@@ -296,23 +301,14 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   def jsValues: mutable.OpenHashMap[String, AnyRef] = {
     val ret = new mutable.OpenHashMap[String, AnyRef]
     ret.put("_key", key.asInstanceOf[AnyRef])
-    for (field <- fields if !field.ignored) ret += field.id -> field.toJsValue
+    for (field <- fields if !field.ignored) ret += field.shortId -> field.toJsValue
     ret
   }
 
   def changedJsValues: mutable.OpenHashMap[String, AnyRef] = {
     val ret = new mutable.OpenHashMap[String, AnyRef]
     if (key != 0) ret.put("_key", key.asInstanceOf[AnyRef])
-    for (field <- fields if !field.ignored && field.changed) ret += field.id -> field.toJsValue
+    for (field <- fields if !field.ignored && field.changed) ret += field.shortId -> field.toJsValue
     ret
   }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def formTag(id: String = "form", method: String = "post")(implicit view: StdHtmlView, page: WebbyPage): StdFormTag =
-    base.formTag(page.scripts, this, id, method)
-
-  def group(implicit view: StdHtmlView): CommonTag = view.div.cls(base.formGroupCls)
-  def row(implicit view: StdHtmlView): CommonTag = view.div.cls(base.formRowCls)
-  def formErrorsBlock(implicit view: StdHtmlView): CommonTag = view.div.cls(base.formErrorsBlockCls)
 }

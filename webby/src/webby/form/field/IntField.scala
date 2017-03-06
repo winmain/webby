@@ -1,13 +1,12 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.collection.Pager
-import webby.html.{HtmlBase, StdHtmlView, StdInputTag}
 import webby.form.{Form, Invalid, Valid, ValidationResult}
 
 /**
- * Базовый класс для целого числа (без minValue, maxValue)
- */
-class BaseIntField(val form: Form, val id: String) extends ValueField[Int] with PlaceholderField[Int] {self =>
+  * Базовый класс для целого числа (без minValue, maxValue)
+  */
+class BaseIntField(val form: Form, val shortId: String) extends ValueField[Int] with PlaceholderField[Int] {self =>
   var nullValue: Int = 0
 
   // ------------------------------- Reading data & js properties -------------------------------
@@ -29,17 +28,12 @@ class BaseIntField(val form: Form, val id: String) extends ValueField[Int] with 
 
   // ------------------------------- Builder & validations -------------------------------
 
-  def nullValue(v: Int): this.type = { nullValue = v; this }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputNumber(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputNumber)
-  def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInput(view.inputText)
+  def nullValue(v: Int): this.type = {nullValue = v; this}
 }
 
 /**
- * Поле для целого числа
- */
+  * Поле для целого числа
+  */
 class IntField(form: Form, id: String) extends BaseIntField(form, id) {self =>
   var minValue: Option[Int] = None
   var maxValue: Option[Int] = None
@@ -54,13 +48,13 @@ class IntField(form: Form, id: String) extends BaseIntField(form, id) {self =>
 
   // ------------------------------- Builder & validations -------------------------------
 
-  def minValue(v: Int): this.type = { minValue = Some(v); this }
-  def maxValue(v: Int): this.type = { maxValue = Some(v); this }
+  def minValue(v: Int): this.type = {minValue = Some(v); this}
+  def maxValue(v: Int): this.type = {maxValue = Some(v); this}
 
   /**
-   * Проверки, специфичные для конкретной реализации Field.
-   * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
-   */
+    * Проверки, специфичные для конкретной реализации Field.
+    * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
+    */
   override def validateFieldOnly: ValidationResult = {
     if (minValue.exists(get < _)) Invalid("Не менее " + minValue.get)
     else if (maxValue.exists(get > _)) Invalid("Не более " + maxValue.get)
@@ -69,9 +63,9 @@ class IntField(form: Form, id: String) extends BaseIntField(form, id) {self =>
 }
 
 /**
- * Пэйджер (понадобился для CRM)
- */
-class PagerField(val form: Form, var step: Int, var nearRadius: Int, val id: String = "page") extends ValueField[Int] {self =>
+  * Пэйджер (понадобился для CRM)
+  */
+class PagerField(val form: Form, var step: Int, var nearRadius: Int, val shortId: String = "page") extends ValueField[Int] {self =>
   override def jsField: String = "pager"
 
   override def parseJsValue(node: JsonNode): Either[String, Int] = Right(node.asInt())
@@ -81,15 +75,14 @@ class PagerField(val form: Form, var step: Int, var nearRadius: Int, val id: Str
 
   // ------------------------------- Html helpers -------------------------------
 
-  def pagerComponent()(implicit view: StdHtmlView): HtmlBase = pagerComponent(get * step + 1)
-
-  def pagerComponent(totalCount: Int)(implicit view: StdHtmlView): HtmlBase = {
-    ???
-//    view.div.id(id + "-pager") {
-//      view.inputHidden.id(id).name(name).value(get)
-//      PagerComponent.linkTags(pager.helper(totalCount, nearRadius),
-//        (a, page) => a.hrefAnchor.attr("page", page))
-//        .writeComponent()(view.buf)
-//    }
-  }
+  //  def pagerComponent()(implicit view: StdHtmlView): HtmlBase = pagerComponent(get * step + 1)
+  //
+  //  def pagerComponent(totalCount: Int)(implicit view: StdHtmlView): HtmlBase = {
+  //    view.div.id(id + "-pager") {
+  //      view.inputHidden.id(id).name(name).value(get)
+  //      PagerComponent.linkTags(pager.helper(totalCount, nearRadius),
+  //        (a, page) => a.hrefAnchor.attr("page", page))
+  //        .writeComponent()(view.buf)
+  //    }
+  //  }
 }

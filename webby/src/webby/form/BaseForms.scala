@@ -1,8 +1,9 @@
 package webby.form
-import querio.{Transaction, _}
+import querio._
 import webby.commons.io.StdJs
 import webby.commons.text.Plural
-import webby.html.{CommonTag, JsCodeAppender, StdFormTag, StdHtmlView}
+import webby.form.field.Field
+import webby.html._
 
 abstract class BaseForms {self =>
   def db: DbTrait
@@ -14,32 +15,45 @@ abstract class BaseForms {self =>
 
   def js = StdJs.get
 
-  /** @see [[webby.form.Form.jsConfig]] */
+  /** @see [[webby.form.Form.jsConfig]]*/
   def jsConfig: String = null
 
   // ------------------------------- Form traits -------------------------------
 
-  trait Common extends Form {
+  protected trait BaseCommon extends Form {
     override type B = self.type
     override def base: B = self
     override def jsConfig: String = self.jsConfig
   }
 
-  trait WithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] with Common
+  protected trait BaseWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] with BaseCommon
 
   // ------------------------------- Html helpers -------------------------------
 
-  def formCls = "form hidden"
+  def formCls = "form"
+  def hiddenCls = "hidden"
+  def hideFormByDefault = true
+
   def formGroupCls = "form-group"
   def formErrorsBlockCls = "form-errors-block"
   def formRowCls = "form-row"
 
-  def formCreateInitJsCode(form: Form, id: String): String = "Form.create(Tag.find('#" + id + "'), " + js.toJson(form.jsProps) + ").init()"
+  def fieldCls = "field"
+  def fieldLabelCls = "field-label"
 
-  def formTag(scripts: JsCodeAppender, form: Form, id: String, method: String)(implicit view: StdHtmlView): StdFormTag = {
-    scripts.addCode(formCreateInitJsCode(form, id))
-    view.form.cls(formCls).id(id).method(method)
+  def autocompleteListFieldCls = "autocomplete-list-field"
+  def dateFieldCls = "date-field"
+  def monthYearFieldCls = "month-year-field"
+  def checkboxLeftCls = "checkbox-left"
+
+  def formCreateInitJsCode(form: Form): String = "Form.create(" + js.toJson(form.jsProps) + ").init()"
+
+  def formTag(scripts: JsCodeAppender, form: Form, id: String, method: String)(implicit view: HtmlBase): StdFormTag = {
+    scripts.addCode(formCreateInitJsCode(form))
+    view.form.cls(formCls).clsIf(hideFormByDefault, hiddenCls).id(id).method(method)
   }
+
+  def makeFieldHtmlId(field: Field[_]): String = field.form.htmlId + "-" + field.shortId
 }
 
 

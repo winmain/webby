@@ -1,13 +1,12 @@
 package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.StdStrHtml
-import webby.html.{StdHtmlView, StdInputTag, StdTextareaTag}
 import webby.form.{Form, Invalid, Valid, ValidationResult}
 
 /**
- * Текстовое поле
- */
-class TextField(val form: Form, val id: String) extends ValueField[String] with PlaceholderField[String] {self =>
+  * Текстовое поле
+  */
+class TextField(val form: Form, val shortId: String) extends ValueField[String] with PlaceholderField[String] {self =>
   var minLength: Option[Int] = None
   var maxLength: Option[Int] = Some(255)
   var trimSpaces: Boolean = true
@@ -45,25 +44,20 @@ class TextField(val form: Form, val id: String) extends ValueField[String] with 
 
   // ------------------------------- Builder & validations -------------------------------
 
-  def minLength(v: Int): this.type = { minLength = Some(v); this }
-  def maxLength(v: Int): this.type = { maxLength = Some(v); this }
-  def trimSpaces(v: Boolean): this.type = { trimSpaces = v; this }
-  def capitalize(v: Boolean): this.type = { capitalized = v; this }
-  def capitalize: this.type = { capitalized = true; this }
-  def rawText: this.type = { raw = true; this }
+  def minLength(v: Int): this.type = {minLength = Some(v); this}
+  def maxLength(v: Int): this.type = {maxLength = Some(v); this}
+  def trimSpaces(v: Boolean): this.type = {trimSpaces = v; this}
+  def capitalize(v: Boolean): this.type = {capitalized = v; this}
+  def capitalize: this.type = {capitalized = true; this}
+  def rawText: this.type = {raw = true; this}
 
   /**
-   * Проверки, специфичные для конкретной реализации Field.
-   * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
-   */
+    * Проверки, специфичные для конкретной реализации Field.
+    * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
+    */
   override def validateFieldOnly: ValidationResult = {
     if (minLength.exists(get.length < _)) Invalid("Не менее " + minLength.get + " символов")
     else if (maxLength.exists(get.length > _)) Invalid("Не более " + maxLength.get + " символов")
     else Valid
   }
-
-  // ------------------------------- Html helpers -------------------------------
-
-  def inputText(implicit view: StdHtmlView): StdInputTag = placeholderInputText
-  def textarea(implicit view: StdHtmlView): StdTextareaTag = placeholderTextarea
 }
