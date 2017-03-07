@@ -1,6 +1,6 @@
-import sbt.Keys.{baseDirectory, ivyLoggingLevel, packageBin, scalaSource, sources, startYear, _}
-import sbt.{UpdateLogging, _}
 import haxeidea.HaxeLib._
+import sbt.Keys.{baseDirectory, ivyLoggingLevel, scalaSource, sources, startYear, _}
+import sbt.{UpdateLogging, _}
 
 val buildScalaVersion = "2.12.1"
 
@@ -85,12 +85,22 @@ lazy val elasticOrm: Project = Project(
 
 // ------------------------------ webby-haxe project ------------------------------
 
+lazy val publishHaxe = taskKey[Unit]("publish-haxe")
+
 lazy val webbyHaxeBuild: Project = Project(
   "webby-haxe-build",
   file("webby-haxe/build"),
   settings = baseSettings ++ haxeLibSettings ++ Seq(
     name := "webby-haxe",
     artifactPath := baseDirectory.value / "webby-haxe.jar",
+
+    publish := Def.taskDyn {
+      if (scalaVersion.value == buildScalaVersion) {
+        Def.task {publish.value}
+      } else {
+        Def.task {println("::: Skip haxe publishing for this scala version")}
+      }
+    }.value,
 
     sourceDirectories in Compile := Seq(baseDirectory.value / "../src", baseDirectory.value / "../macro")
 
