@@ -1,6 +1,6 @@
 import haxeidea.HaxeLib._
-import sbt.Keys.{baseDirectory, ivyLoggingLevel, scalaSource, sources, startYear, _}
-import sbt.{UpdateLogging, _}
+import sbt.Keys._
+import sbt._
 
 val buildScalaVersion = "2.12.1"
 
@@ -85,7 +85,9 @@ lazy val elasticOrm: Project = Project(
 
 // ------------------------------ webby-haxe project ------------------------------
 
-lazy val publishHaxe = taskKey[Unit]("publish-haxe")
+// Haxe builds can publish only by this task `publishHaxe`
+// Because of scala cross version build
+val publishHaxe = taskKey[Unit]("publish-haxe")
 
 lazy val webbyHaxeBuild: Project = Project(
   "webby-haxe-build",
@@ -94,13 +96,8 @@ lazy val webbyHaxeBuild: Project = Project(
     name := "webby-haxe",
     artifactPath := baseDirectory.value / "webby-haxe.jar",
 
-    publish := Def.taskDyn {
-      if (scalaVersion.value == buildScalaVersion) {
-        Def.task {publish.value}
-      } else {
-        Def.task {println("::: Skip haxe publishing for this scala version")}
-      }
-    }.value,
+    publishHaxe := Classpaths.publishTask(publishConfiguration, deliver).value,
+    publish := {},
 
     sourceDirectories in Compile := Seq(baseDirectory.value / "../src", baseDirectory.value / "../macro")
 
