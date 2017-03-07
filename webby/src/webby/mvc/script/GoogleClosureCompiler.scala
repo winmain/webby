@@ -23,7 +23,8 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
                             prepends: Seq[SourceFile],
                             resultDir: Path,
                             commonIncludes: Seq[SourceFile],
-                            restModuleWrapper: String => String) {
+                            restModuleWrapper: String => String,
+                            muteAllWarnings: Boolean = false) {
 
   def compileModule(moduleName: String, jsFiles: Iterable[SourceFile], jsRestFiles: Iterable[SourceFile]): Seq[Path] = {
     val compiler: Compiler = new Compiler(System.err)
@@ -36,6 +37,13 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
     options.generateExports = true
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED)
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5)
+
+    // Disable warnings in Google closure library
+    options.addWarningsGuard(ByPathWarningsGuard.forPath(util.Arrays.asList("goog"), CheckLevel.OFF))
+
+    if (muteAllWarnings) {
+      options.addWarningsGuard(new MuteAllWarningsGuard)
+    }
 
     val externList: util.List[SourceFile] = AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment)
     externList.addAll(externs.asJavaCollection)
@@ -87,6 +95,15 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
         IOUtils.writeToFile(resultPath, totalSource)
         resultPath
       }
+    }
+  }
+}
+
+class MuteAllWarningsGuard extends WarningsGuard {
+  override def level(error: JSError): CheckLevel = {
+    error.getDefaultLevel match {
+      case CheckLevel.ERROR => CheckLevel.ERROR
+      case _ => CheckLevel.OFF
     }
   }
 }

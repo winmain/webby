@@ -54,6 +54,7 @@ import scala.io.Source
   * @param remapEntryPoints Переназначение входных файлов (entry points). Например, если у нас есть
   *                         класс MainEntryPoint.hx, а мы хотим, чтобы он был как main.js, поэтому
   *                         маппинг будет таким: Map("main.js" -> "MainEntryPoint.js")
+  * @param muteGCCWarnings  Turn off all Google Closure Compiler warnings. Useful with haxe-js compiler.
   */
 class GoogleClosureServer(libSource: GoogleClosureLibSource,
                           jsSourceDirs: Seq[Path],
@@ -63,7 +64,8 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
                           targetDir: Path,
                           targetGccDir: Path,
                           remapEntryPoints: Map[String, String] = Map.empty,
-                          errorRenderer: ScriptErrorRenderer = new DefaultScriptErrorRenderer) {
+                          errorRenderer: ScriptErrorRenderer = new DefaultScriptErrorRenderer,
+                          muteGCCWarnings: Boolean = false) {
 
   val log = webby.api.Logger(getClass)
 
@@ -76,7 +78,8 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     prepends = prepends.map(_.minified),
     resultDir = targetGccDir,
     commonIncludes = Seq(libSource.baseJs),
-    restModuleWrapper = restModuleWrapper)
+    restModuleWrapper = restModuleWrapper,
+    muteAllWarnings = muteGCCWarnings)
 
   def targetContentType: String = "application/x-javascript"
   private val allowedExtensions: Vector[String] = (Set(".js") ++ preCompilers.map(_.sourceDotExt)).toVector
