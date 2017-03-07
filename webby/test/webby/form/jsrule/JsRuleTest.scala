@@ -9,7 +9,7 @@ class JsRuleTest extends FunSuite with Matchers {
   // Этот тест проверяет, что все поля JsRule просериализованы
   // Он будет падать для jackson версии 2.5 и выше (пока мы не придумаем как это пофиксить)
   test("test json serialization") {
-    class MyForm extends StubForms.Common {
+    class MyForm extends StubForms.BaseCommon {
       val field = checkField("tt")
       addRule(_ when field.isEmptyRule show field)
     }

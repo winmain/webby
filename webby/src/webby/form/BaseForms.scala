@@ -20,13 +20,13 @@ abstract class BaseForms {self =>
 
   // ------------------------------- Form traits -------------------------------
 
-  protected trait BaseCommon extends Form {
+  trait BaseCommon extends Form {
     override type B = self.type
     override def base: B = self
     override def jsConfig: String = self.jsConfig
   }
 
-  protected trait BaseWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] with BaseCommon
+  trait BaseWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] with BaseCommon
 
   // ------------------------------- Html helpers -------------------------------
 
