@@ -73,7 +73,13 @@ class Form extends EventTarget {
   static public function create(props: FormProps): Form return new Form(props);
 
   @:keep
-  @:expose('Form.init')
+  @:expose('Form.createInit')
+  static public function createInit(props: FormProps): Form {
+    var form = create(props);
+    form.init();
+    return form;
+  }
+
   public function init() {
     registerForm(this);
     if (formEl.method != 'get') { // Для method="get" форма не работает через js - делаем простой сабмит (чтобы можно было делать простые формы)

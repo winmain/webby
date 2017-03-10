@@ -46,7 +46,7 @@ abstract class BaseForms {self =>
   def monthYearFieldCls = "month-year-field"
   def checkboxLeftCls = "checkbox-left"
 
-  def formCreateInitJsCode(form: Form): String = "Form.create(" + js.toJson(form.jsProps) + ").init()"
+  def formCreateInitJsCode(form: Form): String = "Form.createInit(" + js.toJson(form.jsProps) + ")"
 
   def formTag(scripts: JsCodeAppender, form: Form, id: String, method: String)(implicit view: HtmlBase): StdFormTag = {
     scripts.addCode(formCreateInitJsCode(form))
