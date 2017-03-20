@@ -6,7 +6,7 @@ val buildScalaVersion = "2.12.1"
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.4.2",
+  version := "0.4.3",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(

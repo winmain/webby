@@ -107,7 +107,7 @@ extern class String {
 		result `Array` contains a leading (or trailing) empty String `""` element.
 		Two subsequent delimiters also result in an empty String `""` element.
 	**/
-  function split(delimiter: EitherType<String, RegExp>, ?limit: Int): Array<String>;
+  function split( delimiter : String ) : Array<String>;
 
   /**
 		Returns `len` characters of `this` String, starting at position `pos`.
