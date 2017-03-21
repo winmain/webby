@@ -401,6 +401,15 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     * Это девелоперская версия, сам closure compiler здесь не запускается.
     */
   def serveDev(servePath: String)(implicit req: RequestHeader): PlainResult = {
+    composeDev(servePath) match {
+      case Some(result) => makeResult(result.etag, result.lastModified)(result.result.getBytes)
+      case None => Results.NotFoundRaw("File not found")
+    }
+  }
+
+  case class ComposeDevResult(result: String, etag: String, lastModified: Long)
+
+  def composeDev(servePath: String): Option[ComposeDevResult] = {
     //    val t0 = System.currentTimeMillis()
     lazyUpdateFiles()
 
@@ -451,9 +460,9 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
       //println("Update time: " + (t1 - t0) + "ms, glue time: " + (t2 - t1) + "ms")
 
       val etag = lastResultLength + "-" + totalCount
-      makeResult(etag, lastModified)(result.getBytes)
+      Some(ComposeDevResult(result, etag, lastModified))
     } else {
-      Results.NotFoundRaw("File not found")
+      None
     }
   }
 
