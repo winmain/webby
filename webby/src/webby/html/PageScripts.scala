@@ -22,6 +22,8 @@ trait JsCodeAppender {
   */
 abstract class PageScripts extends JsCodeAppender {
   protected val jsParts: ArrayBuffer[JsPart] = new ArrayBuffer[JsPart](4)
+  /** Optional jsParts. They will be loaded, but jsOnLoad does not require them to complete. */
+  protected val optJsParts: ArrayBuffer[JsPart] = new ArrayBuffer[JsPart](4)
   protected val tags: StringBuilder = new StringBuilder()
   protected val uniqueExternalScriptUrls: ArrayBuffer[String] = new ArrayBuffer[String](4)
 
@@ -32,8 +34,8 @@ abstract class PageScripts extends JsCodeAppender {
   }
 
   /** Include JsPart-script dependency */
-  def addJsPart(jsPartName: String, url: String, version: Int = 0): Unit = {
-    jsParts += JsPart(jsPartName, if (version == 0) url else url + "?" + version)
+  def addJsPart(jsPartName: String, url: String, version: Int = 0, optional: Boolean = false): Unit = {
+    (if (optional) optJsParts else jsParts) += JsPart(jsPartName, if (version == 0) url else url + "?" + version)
   }
 
   /** Add external asynchronous script */
@@ -67,7 +69,7 @@ abstract class PageScripts extends JsCodeAppender {
     buf + "<script>jsParts={"
     jsParts.foreachWithSep(buf ++ '"' ++ _.name ++ '"' ++ ":0", buf ++ ',')
     buf + "};"
-    jsParts.foreachWithSep(jsPart => buf + "importJsPart(\"" + jsPart.name + "\",\"" + jsPart.url + "\")", buf + ";")
+    (jsParts ++ optJsParts).foreachWithSep(jsPart => buf + "importJsPart(\"" + jsPart.name + "\",\"" + jsPart.url + "\")", buf + ";")
     buf + "</script>"
 
     buf ++ tags
