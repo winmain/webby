@@ -23,8 +23,11 @@ object StaticCtl extends StdCtl {
     */
   def at(basePath: String, subPath: String) = SimpleAction {req =>
     PageLog.noLog()
-    val path: Path = StdPaths.get.root.resolve(basePath).resolve(subPath)
-    if (!Files.exists(path)) {
+    val base: Path = StdPaths.get.root.resolve(basePath).toAbsolutePath
+    val path: Path = base.resolve(subPath).toAbsolutePath
+    if (!path.startsWith(base)) {
+      BadRequest("Invalid path")
+    } else if (Files.isDirectory(path) || !Files.exists(path)) {
       NotFoundRaw
     } else {
       PlainResult(HttpResponseStatus.OK, Files.readAllBytes(path))
