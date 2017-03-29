@@ -1,8 +1,9 @@
 package webby.html
-import java.time.LocalDateTime
+import java.time.{LocalDate, ZoneId}
 
 import com.google.common.net.HttpHeaders
 import webby.commons.text.SB
+import webby.commons.time.StdDates
 import webby.mvc.ActTrait
 import webby.mvc.script.{JsClassHolder, LessClassHolder}
 
@@ -10,8 +11,8 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 trait WebbyPage extends ActTrait {
-  val now = LocalDateTime.now()
-  def today = now.toLocalDate
+  val now: Long = System.currentTimeMillis()
+  lazy val today: LocalDate = StdDates.toLocalDate(now, ZoneId.systemDefault())
 
   def scripts: PageScripts
 
