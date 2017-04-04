@@ -108,7 +108,12 @@ abstract class Application {
     * @return The plugin instance used by this application.
     * @throws Error if no plugins of type T are loaded by this application.
     */
-  def plugin[T](implicit ct: ClassTag[T]): Option[T] = plugin(ct.runtimeClass).asInstanceOf[Option[T]]
+  def plugin[T](implicit ct: ClassTag[T]): Option[T] = plugin(ct.runtimeClass.asInstanceOf[Class[T]])
+
+  def plugins[T](pluginClass: Class[T]): Vector[T] =
+    plugins.filter(p => pluginClass.isAssignableFrom(p.getClass)).map(_.asInstanceOf[T])
+
+  def plugins[T](implicit ct: ClassTag[T]): Vector[T] = plugins(ct.runtimeClass.asInstanceOf[Class[T]])
 
 
   // Reconfigure logger

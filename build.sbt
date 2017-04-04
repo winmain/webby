@@ -6,7 +6,7 @@ val buildScalaVersion = "2.12.1"
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.4.6",
+  version := "0.4.7",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(
@@ -51,7 +51,7 @@ val commonDependencies = {
 
   deps.result()
 }
-val querio = "com.github.citrum.querio" %% "querio" % "0.6.10" // querio orm
+val querio = "com.github.citrum.querio" %% "querio" % "0.6.11" // querio orm
 
 /**
   * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
@@ -136,7 +136,7 @@ lazy val webby: Project = Project(
       deps += "com.typesafe.akka" %% "akka-actor" % "2.4.17" % "optional" // Used in webby.api.libs.concurrent.Akka
       deps += "com.typesafe.akka" %% "akka-slf4j" % "2.4.17" % "optional"
       deps += "org.scala-stm" %% "scala-stm" % "0.8" % "optional" // Used in webby.api.libs.concurrent.Promise
-      deps += "com.zaxxer" % "HikariCP" % "2.4.7" % "optional" // Database connector, used in webby.api.db.HikariCPPlugin
+      deps += "com.zaxxer" % "HikariCP" % "2.6.1" % "optional" // Database connector, used in webby.api.db.HikariCPPlugin
       deps += "org.jsoup" % "jsoup" % "1.6.3" % "optional" // Html parsing, used in webby.commons.text.StdStrHtmlJsoup
       deps += "org.zeroturnaround" % "jr-sdk" % "6.4.6" % "optional" // JRebel SDK (class reloader), used in webby.commons.system.JRebelUtils
       deps += "uk.co.caprica" % "juds" % "0.94.1" % "optional" // Unix socket support, used in webby.commons.system.SdDaemon
