@@ -12,9 +12,9 @@ object Using {
     *     println(count)
     * }}}
     */
-  def apply[T <: AutoCloseable]
+  def apply[T <: AutoCloseable, R]
   (resource: T)
-  (block: T => Unit) {
+  (block: T => R): R = {
     try {
       block(resource)
     } finally {
