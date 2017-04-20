@@ -88,7 +88,7 @@ abstract class NettyServer(appProvider: ApplicationProvider, port: Int, address:
 
     if (!profile.isTest) Logger.webby.info("Shutting down Netty channels")
     // Close all opened sockets
-    val bgFuture: concurrent.Future[_] = bossGroup.shutdownGracefully(0, 10, TimeUnit.SECONDS)
+    bossGroup.shutdownGracefully(0, 10, TimeUnit.SECONDS)
     val wgFuture: concurrent.Future[_] = workerGroup.shutdownGracefully(0, 60, TimeUnit.SECONDS)
     httpChannel.closeFuture().sync()
     wgFuture.awaitUninterruptibly()

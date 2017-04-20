@@ -34,13 +34,9 @@ trait BaseRoute[R] {
 }
 
 abstract class RouteRoute extends BaseRoute[Route] {
-  import scala.language.implicitConversions
-
   protected override final def route(methods: Seq[HttpMethod], parts: Seq[String], args: Seq[Any]): Route = new Route(methods, toDomain, parts, args, httpsOnly = httpsOnly)
 }
 
 abstract class RouteHandlers extends BaseRoute[Handler] {
-  import scala.language.implicitConversions
-
   protected override final def route(methods: Seq[HttpMethod], parts: Seq[String], args: Seq[Any]): Handler = sys.error("Method cannot be implemented")
 }

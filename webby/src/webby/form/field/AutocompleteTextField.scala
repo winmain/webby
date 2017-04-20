@@ -1,6 +1,5 @@
 package webby.form.field
 import webby.form.Form
-import webby.html.{StdHtmlView, StdInputTag}
 
 /**
  * Текстовое поле, аналогичное TextField, но с поддержкой необязательного автокомплита.

@@ -1,8 +1,8 @@
 package webby.commons.collection
 
 import scala.collection.immutable.{IntMap, LongMap}
-import scala.collection.mutable.{ArrayBuffer, Builder}
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.language.implicitConversions
 
 object IterableWrapper {

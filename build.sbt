@@ -3,6 +3,7 @@ import sbt.Keys._
 import sbt._
 
 val buildScalaVersion = "2.12.2"
+val buildCrossScalaVersions = Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
@@ -28,9 +29,9 @@ val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
 
 val commonSettings = baseSettings ++ Seq(
   scalaVersion := buildScalaVersion,
-  crossScalaVersions := Seq("2.11.11", "2.12.2"),
+  crossScalaVersions := buildCrossScalaVersions,
 
-  scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
+  scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials", "-Xlint:-unused"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
   javacOptions in doc := Seq("-source", "1.8"),
   ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)) // forcing scala version

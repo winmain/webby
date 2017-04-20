@@ -10,7 +10,6 @@ import webby.api.mvc.{PlainResult, ResultException, Results}
 import webby.commons.io.StdJs
 import webby.form.field.{Field, FormListField, FormListFieldWithDb, StdFormFields}
 import webby.form.jsrule.{JsRule, StdFormJsRules}
-import webby.html._
 
 import scala.collection.mutable
 import scala.util.control.ControlThrowable

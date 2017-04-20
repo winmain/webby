@@ -2,7 +2,6 @@ package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import querio.{MutableTableRecord, Table, TableRecord}
 import webby.form.{Form, FormWithDb}
-import webby.html.{CommonTag, HtmlBase, StdHtmlView}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

@@ -1,5 +1,4 @@
 package webby.form
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import webby.api.mvc.{PlainResult, Results}
 import webby.commons.io.jackson.JacksonAnnotations._

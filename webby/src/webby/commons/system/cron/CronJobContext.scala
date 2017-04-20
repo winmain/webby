@@ -5,7 +5,6 @@ import javax.annotation.Nullable
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import org.quartz.JobExecutionContext
 
-import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 /**

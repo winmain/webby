@@ -8,7 +8,6 @@ import webby.commons.io.Url
 import webby.route._
 
 import scala.annotation.tailrec
-import scala.language.experimental.macros
 import scala.reflect.runtime.universe._
 
 trait RouteConfigV1 {

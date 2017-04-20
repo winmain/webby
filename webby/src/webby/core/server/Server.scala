@@ -8,8 +8,6 @@ import webby.api.mvc.Results._
 import webby.api.mvc._
 import webby.core.system.ApplicationProvider
 
-import scala.language.postfixOps
-
 /**
  * provides generic server behaviour for Webby applications
  */

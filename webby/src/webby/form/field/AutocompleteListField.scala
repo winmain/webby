@@ -2,7 +2,6 @@ package webby.form.field
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.Plural
 import webby.form.{Form, Invalid, Valid, ValidationResult}
-import webby.html.{CommonTag, HtmlBase, StdHtmlView, StdInputTag}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
