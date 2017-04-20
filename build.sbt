@@ -2,7 +2,7 @@ import haxeidea.HaxeLib._
 import sbt.Keys._
 import sbt._
 
-val buildScalaVersion = "2.12.1"
+val buildScalaVersion = "2.12.2"
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
@@ -28,7 +28,7 @@ val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
 
 val commonSettings = baseSettings ++ Seq(
   scalaVersion := buildScalaVersion,
-  crossScalaVersions := Seq("2.11.8", "2.12.1"),
+  crossScalaVersions := Seq("2.11.11", "2.12.2"),
 
   scalacOptions ++= Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-feature", "-language:existentials"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF-8"),
