@@ -50,6 +50,9 @@ class GoogleClosureServerBuilder {
   var _muteGCCWarnings: Boolean = false
   def muteGCCWarnings(v: Boolean) = {_muteGCCWarnings = v; this}
 
+  var _sourceMapConfig: GccSourceMapConfig = null
+  def sourceMapConfig(v: GccSourceMapConfig) = {_sourceMapConfig = v; this}
+
   // ------------------------------- Common uses -------------------------------
 
   def useCoffeeScript = preCompiler(ExternalCoffeeScriptCompiler(goog = true))
@@ -76,6 +79,7 @@ class GoogleClosureServerBuilder {
       targetDir = withDefault(_targetDir, StdPaths.get.jsAssetType.targetAssetsPath),
       targetGccDir = withDefault(_targetGccDir, StdPaths.get.jsGccAssetType.targetAssetsPath),
       remapEntryPoints = _remapEntryPoints,
+      sourceMapConfig = Option(_sourceMapConfig),
       errorRenderer = withDefault(_errorRenderer, new DefaultScriptErrorRenderer),
       muteGCCWarnings = _muteGCCWarnings
     )

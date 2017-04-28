@@ -1,6 +1,6 @@
 package webby.mvc.script
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import java.util
 
 import com.google.common.base.Charsets
@@ -18,11 +18,20 @@ import scala.collection.JavaConverters._
   * {{{
   *   deps += "com.google.javascript" % "closure-compiler" % "v20170124"
   * }}}
+  *
+  * @param externs            Javascript externs
+  * @param mainModulePrepends This scripts will be simply prepended as is in main module
+  * @param resultDir          The output path for compiled js files
+  * @param commonIncludes     Google closure compiler library files and other dependencies
+  * @param sourceMapConfig    Configuration for source map generation
+  * @param restModuleWrapper  Wrap rest module in this javascript code
+  * @param muteAllWarnings    Add [[MuteAllWarningsGuard]] to mute Google closure compiler warnings
   */
 class GoogleClosureCompiler(externs: Seq[SourceFile],
-                            prepends: Seq[SourceFile],
+                            mainModulePrepends: Seq[SourceFile],
                             resultDir: Path,
                             commonIncludes: Seq[SourceFile],
+                            sourceMapConfig: Option[GccSourceMapConfig] = None,
                             restModuleWrapper: String => String,
                             muteAllWarnings: Boolean = false) {
 
@@ -37,6 +46,12 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
     options.generateExports = true
     options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED)
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5)
+
+    // Enable sourcemaps
+    sourceMapConfig.foreach {cfg =>
+      options.setSourceMapIncludeSourcesContent(true)
+      options.setSourceMapOutputPath(cfg.resultDir.toString)
+    }
 
     // Disable warnings in Google closure library
     options.addWarningsGuard(ByPathWarningsGuard.forPath(util.Arrays.asList("goog"), CheckLevel.OFF))
@@ -75,24 +90,40 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
     compiler.initOptions(options)
     val result: Result = compiler.compileModules(externList, jsModules, options)
 
+    // Add sources to sourcemap
+    commonIncludes.foreach(p => compiler.getSourceMap.addSourceFile(p))
+    jsFiles.foreach(p => compiler.getSourceMap.addSourceFile(p))
+
     if (result.errors.nonEmpty) Nil
     else {
       jsModules.asScala.map {jsMod =>
         val source: String = compiler.toSource(jsMod)
+        val sourceMapFooter: String = sourceMapConfig match {
+          case None => ""
+          case Some(cfg) => "\n//# sourceMappingURL=" + cfg.basePath + jsMod.getName + cfg.suffix
+        }
         val totalSource: String =
           if (jsMod eq mainModule) {
             new SB {
-              prepends.foreach(+_.getCode)
-              +source
+              mainModulePrepends.foreach(+_.getCode)
+              +source + sourceMapFooter
             }.str
           } else {
             // rest module
-            restModuleWrapper(source)
-            "if(!window._rest){_restm=[];_rest=function(m){_restm.push(m)}};_rest(function(){" + source + "})"
+            restModuleWrapper(source + sourceMapFooter)
           }
         val resultPath: Path = resultDir.resolve(jsMod.getName + ".js")
         Files.createDirectories(resultPath.getParent)
         IOUtils.writeToFile(resultPath, totalSource)
+
+        // Save sourcemap
+        sourceMapConfig.foreach {cfg =>
+          Files.createDirectories(cfg.resultDir)
+          val writer = Files.newBufferedWriter(cfg.resultDir.resolve(jsMod.getName + cfg.suffix))
+          compiler.getSourceMap.appendTo(writer, jsMod.getName)
+          writer.close()
+        }
+
         resultPath
       }
     }
@@ -107,3 +138,14 @@ class MuteAllWarningsGuard extends WarningsGuard {
     }
   }
 }
+
+/**
+  * @param resultDir            The output path for the source map
+  * @param basePath             The base path prefix to source map in output files including trailing slash '/'
+  * @param suffix               Source map file suffix
+  * @param includeSourceContent Whether to include full file contents in the source map.
+  */
+case class GccSourceMapConfig(resultDir: Path = Paths.get("target/asset-resources/js-sourcemap"),
+                              basePath: String = "/js-sourcemap/",
+                              suffix: String = ".js.map",
+                              includeSourceContent: Boolean = true)
