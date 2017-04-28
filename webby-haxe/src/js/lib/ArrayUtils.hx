@@ -2,7 +2,7 @@ package js.lib;
 
 class ArrayUtils {
   /*
-  Проверить, есть ли элемент `value` в массиве `array`.
+  Returns true if `array` contains element `value`.
    */
   public static function contains<T>(array: Array<T>, value: T): Bool return array.indexOf(value) != -1;
 
@@ -29,16 +29,22 @@ class ArrayUtils {
   }
 
   /*
-  Получить последний элемент массива
+  Returns last element of the array
    */
   public inline static function last<T>(array: Array<T>): T return array[array.length - 1];
 
+  /*
+  Returns true if array is empty
+   */
   public inline static function isEmpty(array: Array<Dynamic>): Bool return array.length == 0;
 
+  /*
+  Returns true if array is not empty
+   */
   public inline static function nonEmpty(array: Array<Dynamic>): Bool return array.length > 0;
 
   /*
-  Удалить все элементы из массива
+  Remove all elements from the array
    */
   public static function removeAll(array: Array<Dynamic>): Void {
     array.splice(0, array.length);
@@ -51,5 +57,57 @@ class ArrayUtils {
     if (!contains(array, value)) {
       array.push(value);
     }
+  }
+
+  /*
+  Find and return first element matches the predicate in `array`. Or null if such element not found.
+   */
+  public static function find<T>(array: Array<T>, predicate: T -> Bool): Null<T> {
+    var i = 0;
+    while (i < array.length) {
+      if (predicate(array[i])) return array[i];
+      i++;
+    }
+    return null;
+  }
+
+  /*
+  Tests whether a predicate holds for some of the elements of the `array`.
+  Returns `true` if the given `predicate` holds for some of the elements of the `array`, otherwise `false`.
+   */
+  public static function exists<T>(array: Array<T>, predicate: T -> Bool): Bool {
+    var i = 0;
+    while (i < array.length) {
+      if (predicate(array[i])) return true;
+      i++;
+    }
+    return false;
+  }
+
+  /*
+  Tests whether a predicate holds for all elements of the `array`.
+  Returns `true` if the given predicate `predicate` holds for all elements of the `array`
+  or if the `array` is empty. Otherwise `false`.
+   */
+  public static function forall<T>(array: Array<T>, predicate: T -> Bool): Bool {
+    var i = 0;
+    while (i < array.length) {
+      if (!predicate(array[i])) return false;
+      i++;
+    }
+    return true;
+  }
+
+  /*
+  Counts the number of elements in the `array` which satisfy a `predicate`.
+   */
+  public static function count<T>(array: Array<T>, predicate: T -> Bool): Int {
+    var i = 0;
+    var ret = 0;
+    while (i < array.length) {
+      if (predicate(array[i])) ret++;
+      i++;
+    }
+    return ret;
   }
 }
