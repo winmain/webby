@@ -1,5 +1,5 @@
 package webby.adm
-import java.sql.Timestamp
+import java.time.Instant
 
 import querio.{AnyTable, MutableTableRecord, TableRecord}
 
@@ -19,12 +19,12 @@ trait StaffTrait extends TableRecord {
   def active: Boolean
   def adm: Boolean
   def addPermissions: Set[_ <: OnePermission]
-  def createdOn: Timestamp
-  def lastLoginOn: Option[Timestamp]
+  def createdOn: Instant
+  def lastLoginOn: Option[Instant]
   def fullname: String
 }
 
 trait MutableStaffTrait[TR <: StaffTrait] extends MutableTableRecord[TR] {
   var id: Int
-  var lastLoginOn: Option[Timestamp]
+  var lastLoginOn: Option[Instant]
 }

@@ -1,5 +1,5 @@
 package webby.adm
-import java.sql.Timestamp
+import java.time.Instant
 
 import querio.{AnyTable, MutableTableRecord, TableRecord}
 
@@ -11,14 +11,14 @@ trait StaffSessTableTrait { self: AnyTable =>
   def id: Int_TF
   def token: Long_TF
   def staffId: Int_TF
-  def endTime: Timestamp_TF
+  def endTime: Instant_TF
 }
 
 trait StaffSessTrait extends TableRecord {
   def id: Int
   def token: Long
   def staffId: Int
-  def endTime: Timestamp
+  def endTime: Instant
 
   def adm: AdmTrait
 
@@ -38,5 +38,5 @@ trait MutableStaffSessTrait[TR <: StaffSessTrait] extends MutableTableRecord[TR]
   var id: Int
   var token: Long
   var staffId: Int
-  var endTime: Timestamp
+  var endTime: Instant
 }

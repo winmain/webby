@@ -24,13 +24,13 @@ class StdStaffSessCache[Adm <: AdmTrait](val adm: Adm) extends StaffSessCacheTra
     val maybeRecord: Option[StaffSess] = readRecordById(now, id)
     maybeRecord.foreach(putRecord)
     maybeRecord
-  }.filter(_.endTime.getTime > now)
+  }.filter(_.endTime.toEpochMilli > now)
 
   override def byToken(now: Long, token: Long): Option[StaffSess] = partialTokenCache.get(token).orElse {
     val maybeRecord: Option[StaffSess] = readRecordByToken(now, token)
     maybeRecord.foreach(putRecord)
     maybeRecord
-  }.filter(_.endTime.getTime > now)
+  }.filter(_.endTime.toEpochMilli > now)
 
   override def resetCache(): Unit = {
     partialIdCache = IntMap.empty
@@ -62,10 +62,10 @@ class StdStaffSessCache[Adm <: AdmTrait](val adm: Adm) extends StaffSessCacheTra
   }
 
   protected def readRecordById(now: Long, id: Int): Option[StaffSess] =
-    adm.db.findById(adm.staffSessTable, id).filter(_.endTime.getTime > now)
+    adm.db.findById(adm.staffSessTable, id).filter(_.endTime.toEpochMilli > now)
 
   protected def readRecordByToken(now: Long, token: Long): Option[StaffSess] =
-    adm.db.findByField(adm.staffSessTable.token, token).filter(_.endTime.getTime > now)
+    adm.db.findByField(adm.staffSessTable.token, token).filter(_.endTime.toEpochMilli > now)
 
   protected def putRecord(record: StaffSess): Unit = {
     partialIdCache = partialIdCache.updated(record.id, record)

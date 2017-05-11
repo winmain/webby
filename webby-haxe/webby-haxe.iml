@@ -2,9 +2,10 @@
 <module type="HAXE_MODULE" version="4">
   <component name="HaxeModuleSettingsStorage">
     <option name="buildConfig" value="1" />
+    <option name="excludeFromCompilation" value="true" />
     <option name="haxeTarget" value="JavaScript" />
     <option name="hxmlPath" value="$MODULE_DIR$/build.hxml" />
-    <option name="outputFolder" value="$MODULE_DIR$/../classes/production/webby-haxe-js" />
+    <option name="outputFolder" value="$MODULE_DIR$/build/target/webby-haxe-js" />
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/build/target/webby-haxe-js" />

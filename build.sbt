@@ -7,7 +7,7 @@ val buildCrossScalaVersions = Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.4.9",
+  version := "0.4.10",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(
@@ -52,7 +52,7 @@ val commonDependencies = {
 
   deps.result()
 }
-val querio = "com.github.citrum.querio" %% "querio" % "0.6.11" // querio orm
+val querio = "com.github.citrum.querio" %% "querio" % "0.6.13" // querio orm
 
 /**
   * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.

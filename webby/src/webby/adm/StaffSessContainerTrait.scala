@@ -1,6 +1,6 @@
 package webby.adm
 import java.security.SecureRandom
-import java.sql.Timestamp
+import java.time.Instant
 
 import querio.{AnyTable, DbTrait}
 import webby.commons.time.StdDates
@@ -38,10 +38,10 @@ class StdStaffSessContainer[Adm <: AdmTrait](val adm: Adm) extends StaffSessCont
       val sess = adm.createNewStaffSess
       sess.staffId = staffId
       sess.token = token
-      sess.endTime = new Timestamp(now + timeoutInSeconds * StdDates.Second)
+      sess.endTime = Instant.ofEpochMilli(now + timeoutInSeconds * StdDates.Second)
       db.insert(sess)
 
-      db.updatePatchOne(adm.staffTable, staffId)(_.lastLoginOn = Some(new Timestamp(now)))
+      db.updatePatchOne(adm.staffTable, staffId)(_.lastLoginOn = Some(Instant.ofEpochMilli(now)))
     }
     token
   }
@@ -58,14 +58,14 @@ class StdStaffSessContainer[Adm <: AdmTrait](val adm: Adm) extends StaffSessCont
   override def setTimeout(now: Long, staffSess: StaffSess, timeoutInSeconds: Int): StaffSess = {
     db.dataTrReadUncommittedNoLog {implicit dt =>
       db.updateRecordPatch(adm.staffSessTable, staffSess.asInstanceOf[adm.StaffSess]) {r =>
-        r.endTime = new Timestamp(now + timeoutInSeconds * StdDates.Second)
+        r.endTime = Instant.ofEpochMilli(now + timeoutInSeconds * StdDates.Second)
       }.toRecord
     }
   }
 
   override def weed(): Unit = {
     db.dataTrReadUncommittedNoLog {implicit dt =>
-      db.deleteByCondition(adm.staffSessTable, adm.staffSessTable.endTime < new Timestamp(System.currentTimeMillis()))
+      db.deleteByCondition(adm.staffSessTable, adm.staffSessTable.endTime < Instant.ofEpochMilli(System.currentTimeMillis()))
     }
   }
 
