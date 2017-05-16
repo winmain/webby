@@ -2,6 +2,7 @@ package webby.mvc.script
 
 import java.nio.file.{Files, Path, Paths}
 import java.util
+import javax.annotation.Nullable
 
 import com.google.common.base.Charsets
 import com.google.javascript.jscomp._
@@ -91,12 +92,20 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
     val result: Result = compiler.compileModules(externList, jsModules, options)
 
     // Add sources to sourcemap
-    commonIncludes.foreach(p => compiler.getSourceMap.addSourceFile(p))
-    jsFiles.foreach(p => compiler.getSourceMap.addSourceFile(p))
+    if (sourceMapConfig.isDefined) {
+      commonIncludes.foreach(p => compiler.getSourceMap.addSourceFile(p))
+      jsFiles.foreach(p => compiler.getSourceMap.addSourceFile(p))
+      jsRestFiles.foreach(p => compiler.getSourceMap.addSourceFile(p))
+    }
 
     if (result.errors.nonEmpty) Nil
     else {
       jsModules.asScala.map {jsMod =>
+        @Nullable val sourceMap: SourceMap = compiler.getSourceMap
+        // We need to reset SourceMap between writing out the modules.
+        // see https://groups.google.com/d/msg/closure-compiler-discuss/utJDsHPPh7A/w_NVhnnf3dsJ
+        if (sourceMap != null) sourceMap.reset()
+
         val source: String = compiler.toSource(jsMod)
         val sourceMapFooter: String = sourceMapConfig match {
           case None => ""
