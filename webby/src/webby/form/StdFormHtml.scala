@@ -1,7 +1,7 @@
 package webby.form
 import webby.form.field.{AutocompleteTextField, _}
 import webby.html._
-import webby.html.elements.SelectHtml
+import webby.html.elements.{RichSelectConfig, RichSelectHtml}
 
 /**
   * Form html helpers
@@ -41,6 +41,7 @@ class StdFormHtml(form: Form)(implicit view: StdHtmlView, page: WebbyPage) {
   def inputText(field: FloatField): StdInputTag = wrapFieldPH(field, view.inputText)
 
   def inputText(field: TextField): StdInputTag = wrapFieldPH(field, view.inputText)
+  def textarea(field: TextField): StdTextareaTag = wrapFieldPH(field, view.textarea)
 
   def inputText(field: UrlField): StdInputTag = wrapFieldPH(field, view.inputText)
 
@@ -89,8 +90,11 @@ class StdFormHtml(form: Form)(implicit view: StdHtmlView, page: WebbyPage) {
 
   // ------------------------------- Radio & select fields -------------------------------
 
-  def select[T](field: SelectField[T], outerSpan: CommonTag => CommonTag = a => a): HtmlBase = {
-    SelectHtml()
+  def richSelect[T](field: RichSelectField[T],
+                    outerSpan: CommonTag => CommonTag = a => a,
+                    selectConfig: RichSelectConfig = null): HtmlBase = {
+    val selectConf = if (selectConfig != null) selectConfig else form.base.selectConfig
+    RichSelectHtml(selectConf)
       .outerSpan(span => outerSpan(span.id(field.htmlId).cls(form.base.fieldCls)))
       .innerSelect(_.name(field.name))
       .render {

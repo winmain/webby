@@ -43,7 +43,7 @@ class Field extends EventTarget {
     name = G.or(props.name, function() return props.shortId);
     var suffix = form.subId != null ? '-' + form.subId : '';
     id = form.htmlId + '-' + props.shortId + suffix;
-    tag = getTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
+    tag = initTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
     if (tag == null) throw new Error('Field node #${id} not found');
 //    @$el = @initEl().prop('field', @)
     box = initBoxTag().cls(form.config.fieldBoxClass);
@@ -109,7 +109,7 @@ class Field extends EventTarget {
     box.setCls(form.config.fieldBoxRequiredClass, required);
   }
 
-  public function getTag(): Tag return form.tag.fnd('#' + id);
+  public function initTag(): Tag return form.tag.fnd('#' + id);
 
   /*
   Найти и вернуть rr.form.FormBlock, в который вложено это поле; либо null, если такого не существует.

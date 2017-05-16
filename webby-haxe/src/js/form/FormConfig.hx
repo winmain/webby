@@ -1,6 +1,7 @@
 package js.form;
 
 import js.form.field.Field;
+import js.form.field.RichSelectConfig;
 import js.html.XMLHttpRequest;
 
 class FormConfig {
@@ -63,4 +64,8 @@ class FormConfig {
     }
     */
   }
+
+  // ------------------------------- Extensions -------------------------------
+
+  public var selectConfig: RichSelectConfig;
 }

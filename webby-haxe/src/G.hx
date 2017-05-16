@@ -33,8 +33,8 @@ class G {
 
   inline public static function and2<A, T>(a: A, b: A -> T): T return untyped __js__('({0} && {1})', a, b(a));
 
-  public static function require(v: Bool): Void {
-    if (!v) throw "Requirement failed";
+  public static function require(v: Bool, error: String = null): Void {
+    if (!v) throw (error == null ? "Requirement failed" : error);
   }
 
   // ------------------------------- Browser methods -------------------------------

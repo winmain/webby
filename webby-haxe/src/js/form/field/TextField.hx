@@ -15,41 +15,34 @@ class TextField extends Field {
     minLength = props.minLength;
     maxLength = props.maxLength;
 
-    // TODO:
+    tag.on('blur', function() {
+      if (!isEmpty()) {
+        var v: String = strValue();
+        if (minLength > 0 && v.length < minLength) {
+          setJsError(form.config.strings.noLessThanCharsError(minLength));
+        }
+      }
+    });
+    // TODO: дополнительный код, если будет поддержка jquery.textarea_autosize
+    // if @isTextarea = $el[0] && $el[0].tagName == 'TEXTAREA'
+    //   $el.textareaAutoSize()
   }
 
-  // TODO:
-}
+  override function onChange() {
+    if (!isEmpty() && maxLength > 0 && strValue().length > maxLength) {
+      setJsError(form.config.strings.noLessThanCharsError(maxLength));
+    } else super.onChange();
+  }
 
-/*
-class rr.form.field.TextField extends rr.form.field.BaseField
-  constructor: (form, props) ->
-    super(form, props)
-    self = @
-    @minLength = props['minLength']
-    @maxLength = props['maxLength']
+  function strValue(): String return value();
 
-    $el = @$el
-    $el.blur(->
-      value = self.value()
-      if value
-        if self.minLength && value.length < self.minLength
-          self.setJsError('Не менее ' + self.minLength + ' символов')
-    )
-    if @isTextarea = $el[0] && $el[0].tagName == 'TEXTAREA'
-      $el.textareaAutoSize()
-
-  onChange: ->
-    val = @value()
-    if val && @maxLength && val.length > @maxLength
-      @setJsError('Не более ' + @maxLength + ' символов')
-    else super()
-
+  // TODO: дополнительный код, если будет поддержка jquery.textarea_autosize
+  /*
   onFormShown: ->
     super()
     if @vis && @isTextarea then @$el.textareaAutoSize()
-
- */
+   */
+}
 
 @:build(macros.ExternalFieldsMacro.build())
 class TextFieldProps extends FieldProps {

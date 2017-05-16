@@ -44,14 +44,14 @@ class RadioGroupField[T](form: Form,
 /**
   * Выпадающий список элементов.
   */
-class SelectField[T](form: Form,
-                     val shortId: String,
-                     override var items: Iterable[T],
-                     override var valueFn: T => String,
-                     override var titleFn: T => String,
-                     override var emptyTitle: Option[String] = None)
+class RichSelectField[T](form: Form,
+                         val shortId: String,
+                         override var items: Iterable[T],
+                         override var valueFn: T => String,
+                         override var titleFn: T => String,
+                         override var emptyTitle: Option[String] = None)
   extends BaseSelectField[T](form, shortId) with PlaceholderField[T] {self =>
-  override def jsField: String = "select"
+  override def jsField: String = "richSelect"
 
   // ------------------------------- Reading data & js properties -------------------------------
   class JsProps extends SelectJsProps {

@@ -8,9 +8,9 @@ import webby.html.{CommonTag, HtmlBase, StdHtmlView, StdSelectTag}
   * ВАЖНО: Этот элемент нельзя использовать в отрыве от формы, т.к. он требует выполнения SelectField.coffee
   * для своей работы.
   *
-  * @see [[webby.form.field.SelectField.select()]] Для примера использования этого класса
+  * @see [[webby.form.StdFormHtml.richSelect()]] Для примера использования этого класса
   */
-case class SelectHtml() {
+case class RichSelectHtml(config: RichSelectConfig) {
   private var _outerSpan: CommonTag => CommonTag = a => a
   def outerSpan(fn: CommonTag => CommonTag): this.type = {_outerSpan = fn; this}
 
@@ -18,11 +18,16 @@ case class SelectHtml() {
   def innerSelect(fn: StdSelectTag => StdSelectTag): this.type = {_innerSelect = fn; this}
 
   def render(renderOptions: => Any)(implicit view: StdHtmlView): HtmlBase = {
-    _outerSpan(view.span.cls("select")) {
-      view.label
+    _outerSpan(view.span.cls(config.outerCls)) {
+      view.label.cls(config.labelCls)
       _innerSelect(view.select) {
         renderOptions
       }
     }
   }
+}
+
+class RichSelectConfig {
+  def outerCls = "richselect"
+  def labelCls = "richselect-label"
 }

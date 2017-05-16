@@ -11,5 +11,10 @@ class FormStrings {
   // ------------------------------- Fields -------------------------------
 
   public function noLessThanError(minValue: Dynamic) return 'Не менее ' + minValue;
+
   public function noMoreThanError(maxValue: Dynamic) return 'Не более ' + maxValue;
+
+  public function noLessThanCharsError(minValue: Dynamic) return 'Не менее ' + minValue + ' символов';
+
+  public function noMoreThanCharsError(maxValue: Dynamic) return 'Не более ' + maxValue + ' символов';
 }

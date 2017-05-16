@@ -4,6 +4,7 @@ import webby.commons.io.StdJs
 import webby.commons.text.Plural
 import webby.form.field.Field
 import webby.html._
+import webby.html.elements.RichSelectConfig
 
 abstract class BaseForms {self =>
   def db: DbTrait
@@ -54,6 +55,8 @@ abstract class BaseForms {self =>
   }
 
   def makeFieldHtmlId(field: Field[_]): String = field.form.htmlId + "-" + field.shortId
+
+  def selectConfig = new RichSelectConfig()
 }
 
 

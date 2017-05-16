@@ -56,12 +56,10 @@ trait StdFormFields {self: Form =>
   protected def radioGroupOldEnumField[E <: ScalaDbEnumCls[E]](id: String, enum: ScalaDbEnum[E])(titleFn: E => String, emptyTitle: Option[String] = None) =
     addField(new RadioGroupField[E](this, id, enum.values, valueFn = _.getDbValue, titleFn = titleFn, emptyTitle = emptyTitle))
 
-  protected def selectField[T](id: String, items: Iterable[T], valueFn: T => String, titleFn: T => String, emptyTitle: Option[String] = None) =
-    addField(new SelectField[T](this, id, items, valueFn = valueFn, titleFn = titleFn, emptyTitle = emptyTitle))
-  protected def selectEnumField[E <: DbEnum](id: String, enum: E)(titleFn: E#V => String, values: Iterable[E#V] = enum.values, emptyTitle: Option[String] = None) =
-    addField(new SelectField[E#V](this, id, values, valueFn = _.getId.toString, titleFn = titleFn, emptyTitle = emptyTitle))
-  protected def selectOldEnumField[E <: ScalaDbEnumCls[E]](id: String, enum: ScalaDbEnum[E])(titleFn: E => String, values: Iterable[E] = enum.values, emptyTitle: Option[String] = None) =
-    addField(new SelectField[E](this, id, values, valueFn = _.getDbValue, titleFn = titleFn, emptyTitle = emptyTitle))
+  protected def richSelectField[T](id: String, items: Iterable[T], valueFn: T => String, titleFn: T => String, emptyTitle: Option[String] = None) =
+    addField(new RichSelectField[T](this, id, items, valueFn = valueFn, titleFn = titleFn, emptyTitle = emptyTitle))
+  protected def richSelectEnumField[E <: DbEnum](id: String, enum: E)(titleFn: E#V => String, values: Iterable[E#V] = enum.values, emptyTitle: Option[String] = None) =
+    addField(new RichSelectField[E#V](this, id, values, valueFn = _.getId.toString, titleFn = titleFn, emptyTitle = emptyTitle))
 
   protected def checkListField[T](id: String, items: Iterable[T], valueFn: T => String, titleFn: T => String, commentFn: T => String = null) =
     addField(new CheckListField[T](this, id, items, valueFn = valueFn, titleFn = titleFn, commentFn = commentFn))
