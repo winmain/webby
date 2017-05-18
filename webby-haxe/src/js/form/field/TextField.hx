@@ -30,7 +30,7 @@ class TextField extends Field {
 
   override function onChange() {
     if (!isEmpty() && maxLength > 0 && strValue().length > maxLength) {
-      setJsError(form.config.strings.noLessThanCharsError(maxLength));
+      setJsError(form.config.strings.noMoreThanCharsError(maxLength));
     } else super.onChange();
   }
 
