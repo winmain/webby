@@ -13,19 +13,19 @@ class UrlValidatorTest extends FunSuite with TableDrivenPropertyChecks with Matc
       , ("a", false)
       , ("a.a", false)
       , ("aa.aa", false)
-      , ("rosrabota.ru", false)
-      , ("//rosrabota.ru", false)
-      , ("http:/rosrabota.ru", false)
+      , ("example.ru", false)
+      , ("//example.ru", false)
+      , ("http:/example.ru", false)
       , ("http://", false)
       , ("http://a", false)
       , ("http://a.a", false)
       , ("http://b.cc", false)
       , ("http://bb.c", false)
       , ("http://bb.cc", true)
-      , ("http://rosrabota.ru", true)
-      , ("http://росработа.рф", true)
-      , ("https://rosrabota.ru", true)
-      , ("ftp://rosrabota.ru", false)
+      , ("http://example.ru", true)
+      , ("http://пример.рф", true)
+      , ("https://example.ru", true)
+      , ("ftp://example.ru", false)
     ).forEvery {case (givenUrl, result) =>
       UrlValidator.validate(givenUrl).isDefined shouldEqual result
     }
@@ -33,7 +33,7 @@ class UrlValidatorTest extends FunSuite with TableDrivenPropertyChecks with Matc
 
   test("validateDomainTable") {
     Table[String, Array[String], Boolean](("given url", "allowed domains", "result")
-      , ("http://rosrabota.ru", Array("vk.com"), false)
+      , ("http://example.ru", Array("vk.com"), false)
       , ("http://vk.com", Array("vk.com"), true)
       , ("http://www.vk.com", Array("vk.com"), true)
       , ("http://", Array[String](), false)

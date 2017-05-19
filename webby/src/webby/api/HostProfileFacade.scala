@@ -11,27 +11,27 @@ import javax.annotation.Nullable
   * Пример реализации:
   * {{{
   * trait HostProfile extends StdHostProfile {
-  *   // Запрос обрабатывается на основном сервере Росработы?
-  *   def isRosrabota: Boolean
+  *   // Запрос обрабатывается на основном сервере?
+  *   def isMain: Boolean
   *
   *   // Запрос обрабатывается на сервере Ио?
   *   def isIo: Boolean
   * }
   *
-  * object RosrabotaHostProfile extends HostProfile {
-  *   override def isRosrabota: Boolean = true
+  * object MainHostProfile extends HostProfile {
+  *   override def isMain: Boolean = true
   *   override def isIo: Boolean = false
   * }
   *
   * object IoHostProfile extends HostProfile {
-  *   override def isRosrabota: Boolean = false
+  *   override def isMain: Boolean = false
   *   override def isIo: Boolean = true
   * }
   *
   *
   * object HostProfile extends HostProfileObject[HostProfile] {
   *   override protected def profileByName: PartialFunction[String, HostProfile] = {
-  *     case "rosrabota" => RosrabotaHostProfile
+  *     case "main" => MainHostProfile
   *     case "io" => IoHostProfile
   *   }
   * }

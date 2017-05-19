@@ -66,7 +66,7 @@ object ElasticSearch {
   /**
    * Сделать http запрос напрямую к elastic-серверу.
    * Например, чтобы задать mapping, нужно вызвать этот метод с параметрами:
-   * method=PUT, subPath=/rosrabota-vac/main/_mapping, data=Some([mapping-json stream])
+   * method=PUT, subPath=/myindex/main/_mapping, data=Some([mapping-json stream])
    *
    * Результат возвращается строкой. Также, метод может бросить FileNotFoundException, IOException.
    */
