@@ -56,8 +56,8 @@ class TextField(val form: Form, val shortId: String) extends ValueField[String] 
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minLength.exists(get.length < _)) Invalid("Не менее " + minLength.get + " символов")
-    else if (maxLength.exists(get.length > _)) Invalid("Не более " + maxLength.get + " символов")
+    if (minLength.exists(get.length < _)) Invalid(form.strings.noLessThanCharsError(minLength.get))
+    else if (maxLength.exists(get.length > _)) Invalid(form.strings.noMoreThanCharsError(maxLength.get))
     else Valid
   }
 }

@@ -51,11 +51,11 @@ class PasswordField(val form: Form, val shortId: String, val hashFn: String => S
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minLength.exists(get.length < _)) Invalid("Не менее " + minLength.get + " символов")
-    else if (maxLength.exists(get.length > _)) Invalid("Не более " + maxLength.get + " символов")
+    if (minLength.exists(get.length < _)) Invalid(form.strings.noLessThanCharsError(minLength.get))
+    else if (maxLength.exists(get.length > _)) Invalid(form.strings.noMoreThanCharsError(maxLength.get))
     else if (StdCharMatchers.rusLetters.matchesAnyOf(get)) Invalid("Пароль не должен содержать русских букв")
     else if (!StdCharMatchers.passwordMatcher.matchesAllOf(get))
-      Invalid("Недопустимые символы: &laquo;" + StdCharMatchers.passwordMatcher.negate.retainFrom(get).escapeXml + "&raquo;")
+      Invalid(form.strings.invalidSymbols(StdCharMatchers.passwordMatcher.negate.retainFrom(get).escapeXml))
     else Valid
   }
 }

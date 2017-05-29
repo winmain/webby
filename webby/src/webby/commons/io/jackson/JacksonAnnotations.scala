@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 
 import scala.annotation.meta.{field, getter, param}
 
+/**
+  * These annotation aliases are needed only for Scala and Jackson proper interoperability.
+  * We can use original annotations, but in this case they will be often under-propagated.
+  */
 object JacksonAnnotations {
   // @formatter:off
   type JsonAutoDetect = com.fasterxml.jackson.annotation.JsonAutoDetect @param @field @getter

@@ -12,5 +12,5 @@ import webby.commons.io.Resources
 trait JsClassHolder {
   implicit protected def _jsClassHolder: JsClassHolder = this
 
-  val jsResHolder = StdResourceHolder.jsMin(Resources.nameForClass(getClass, ".js"))
+  val jsResHolder = StdResourceHolder.get.jsMin(Resources.nameForClass(getClass, ".js"))
 }

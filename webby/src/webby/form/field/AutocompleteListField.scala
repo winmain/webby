@@ -7,9 +7,9 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 /**
- * Автокомплит, позволяющий добавить несколько записей.
- * Свободный ввод запрещён, также как и для AutocompleteField.
- */
+  * Автокомплит, позволяющий добавить несколько записей.
+  * Свободный ввод запрещён, также как и для AutocompleteField.
+  */
 class AutocompleteListField[T](val form: Form,
                                val shortId: String,
                                var jsSourceFunction: String,
@@ -34,9 +34,9 @@ class AutocompleteListField[T](val form: Form,
   override def nullValue: Iterable[T] = mutable.Buffer.empty[T]
   override def parseJsValue(node: JsonNode): Either[String, Iterable[T]] = {
     if (node == null) return Right(nullValue)
-    Right(node.asScala.map { nodeEl =>
+    Right(node.asScala.map {nodeEl =>
       val value = nodeEl.asInt()
-      fromJs(value).getOrElse(return Left("Некорректное значение"))
+      fromJs(value).getOrElse(return Left(form.strings.invalidValue))
     })
   }
 
@@ -45,17 +45,17 @@ class AutocompleteListField[T](val form: Form,
   // ------------------------------- Builder & validations -------------------------------
 
   /** Проверка на минимальное количество элементов (подформ) */
-  def minItems(v: Int): this.type = { minItems = Some(v); this }
+  def minItems(v: Int): this.type = {minItems = Some(v); this}
   /** Проверка на максимальное количество элементов (подформ) */
-  def maxItems(v: Int): this.type = { maxItems = Some(v); this }
+  def maxItems(v: Int): this.type = {maxItems = Some(v); this}
 
   /**
-   * Проверки, специфичные для конкретной реализации Field.
-   * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
-   */
+    * Проверки, специфичные для конкретной реализации Field.
+    * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
+    */
   override def validateFieldOnly: ValidationResult = {
-    if (minItems.exists(get.size < _)) return Invalid("Не менее " + recordPlural(minItems.get).str)
-    if (maxItems.exists(get.size > _)) return Invalid("Не более " + recordPlural(maxItems.get).str)
+    if (minItems.exists(get.size < _)) return Invalid(form.strings.noLessThanError(recordPlural(minItems.get).str))
+    if (maxItems.exists(get.size > _)) return Invalid(form.strings.noMoreThanError(recordPlural(maxItems.get).str))
     Valid
   }
 }

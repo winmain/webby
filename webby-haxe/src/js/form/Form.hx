@@ -284,11 +284,16 @@ class Form extends EventTarget {
         // --- Произошла при отправке запроса ---
         // TODO: loaderGif.remove()
         // TODO: buttonLocker.unlock() # Разлочить кнопки
-        config.onErrorSubmit(xhr);
+        config.onErrorSubmit(this, xhr);
       });
     xhr.open('POST', formAction(), true);
     xhr.responseType = XMLHttpRequestResponseType.JSON;
+    tuneXhrOnSubmit(xhr);
     xhr.send(JSON.stringify(postData));
+  }
+
+  function tuneXhrOnSubmit(xhr: XMLHttpRequest) {
+    xhr.withCredentials = true;
   }
 
   @:keep

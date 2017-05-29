@@ -26,7 +26,7 @@ class AutocompleteField[T](val form: Form,
   override def parseJsValue(node: JsonNode): Either[String, T] = parseJsInt(node) {intValue =>
     fromJs(intValue) match {
       case Some(v) => Right(v)
-      case None => Left("Некорректное значение")
+      case None => Left(form.strings.invalidValue)
     }
   }
   override def toJsValue(v: T): AnyRef = if (v == null) null else toJs(v).asInstanceOf[AnyRef]

@@ -34,7 +34,7 @@ class RusFioField(val form: Form, val shortId: String) extends ValueField[RusFio
 
       val family = trimmedCapString(node.get(0))
       val name = trimmedCapString(node.get(1))
-      if (family == null || name == null) Left("Некорректное значение")
+      if (family == null || name == null) Left(form.strings.invalidValue)
       else
         Right(RusFio(family, name, patronymic = if (node.size() == 3) trimmedCapString(node.get(2)) else null))
     }

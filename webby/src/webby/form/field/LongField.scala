@@ -20,7 +20,7 @@ class BaseLongField(val form: Form, val shortId: String) extends ValueField[Long
       if (text.isEmpty) Right(nullValue)
       else
         try Right(java.lang.Long.parseLong(text))
-        catch {case e: NumberFormatException => Left("Введите целое число")}
+        catch {case _: NumberFormatException => Left(form.strings.enterIntegerNumber)}
     } else
       Right(node.asLong(nullValue))
   }
@@ -55,8 +55,8 @@ class LongField(form: Form, id: String) extends BaseLongField(form, id) {self =>
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minValue.exists(get < _)) Invalid("Не менее " + minValue.get)
-    else if (maxValue.exists(get > _)) Invalid("Не более " + maxValue.get)
+    if (minValue.exists(get < _)) Invalid(form.strings.noLessThanError(minValue.get))
+    else if (maxValue.exists(get > _)) Invalid(form.strings.noMoreThanError(maxValue.get))
     else super.validateFieldOnly
   }
 }

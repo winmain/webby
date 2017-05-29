@@ -276,7 +276,7 @@ class Field extends EventTarget {
   }
 
   public function positionErrorTag() {
-    errorTag.el.style.left = G.toString(box.el.offsetLeft);
+    errorTag.el.style.left = G.toString(box.el.offsetLeft) + 'px';
   }
 
   inline function tagInputEl(): InputElement return cast tag.el;

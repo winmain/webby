@@ -21,7 +21,7 @@ class FloatField(val form: Form, val shortId: String) extends ValueField[Float] 
       if (text.isEmpty) Right(nullValue)
       else
         try Right(text.toFloat)
-        catch {case e: NumberFormatException => Left("Введите вещественное число")}
+        catch {case _: NumberFormatException => Left(form.strings.enterFloatNumber)}
     } else
       Right(node.asDouble(nullValue).toFloat)
   }
@@ -37,8 +37,8 @@ class FloatField(val form: Form, val shortId: String) extends ValueField[Float] 
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minValue.exists(get < _)) Invalid("Не менее " + minValue.get)
-    else if (maxValue.exists(get > _)) Invalid("Не более " + maxValue.get)
+    if (minValue.exists(get < _)) Invalid(form.strings.noLessThanError(minValue.get))
+    else if (maxValue.exists(get > _)) Invalid(form.strings.noMoreThanError(maxValue.get))
     else Valid
   }
 }

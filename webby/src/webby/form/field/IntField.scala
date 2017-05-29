@@ -21,7 +21,7 @@ class BaseIntField(val form: Form, val shortId: String) extends ValueField[Int] 
       if (text.isEmpty) Right(nullValue)
       else
         try Right(Integer.parseInt(text))
-        catch {case e: NumberFormatException => Left("Введите целое число")}
+        catch {case _: NumberFormatException => Left(form.strings.enterIntegerNumber)}
     } else
       Right(node.asInt(nullValue))
   }
@@ -56,8 +56,8 @@ class IntField(form: Form, id: String) extends BaseIntField(form, id) {self =>
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minValue.exists(get < _)) Invalid("Не менее " + minValue.get)
-    else if (maxValue.exists(get > _)) Invalid("Не более " + maxValue.get)
+    if (minValue.exists(get < _)) Invalid(form.strings.noLessThanError(minValue.get))
+    else if (maxValue.exists(get > _)) Invalid(form.strings.noMoreThanError(maxValue.get))
     else Valid
   }
 }

@@ -67,16 +67,16 @@ abstract class PageScripts extends JsCodeAppender {
   def printForPage()(implicit buf: HtmlBuffer, page: WebbyPage): Unit = {
     // jsParts
     buf + "<script>jsParts={"
-    jsParts.foreachWithSep(buf ++ '"' ++ _.name ++ '"' ++ ":0", buf ++ ',')
+    jsParts.foreachWithSep(buf + '"' + _.name + '"' + ":0", buf + ',')
     buf + "};"
     (jsParts ++ optJsParts).foreachWithSep(jsPart => buf + "importJsPart(\"" + jsPart.name + "\",\"" + jsPart.url + "\")", buf + ";")
     buf + "</script>"
 
-    buf ++ tags
-    buf ++ "\n<script>"
+    buf + tags
+    buf + "\n<script>"
     //restPart.foreach(buf ++ _.restPart)
-    if (_onLoadCode != null) buf ++ "jsOnLoad(function(){" ++ code ++ "})"
-    buf ++ "</script>"
+    if (_onLoadCode != null) buf + "jsOnLoad(function(){" + code + "})"
+    buf + "</script>"
   }
 
   def getForExec: String = code.toString

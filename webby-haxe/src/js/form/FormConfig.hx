@@ -48,7 +48,7 @@ class FormConfig {
   // rr.util.Actions.onResult(post, [])
   public function onFormSuccess(post: External) {}
 
-  public function onErrorSubmit(xhr: XMLHttpRequest) {
+  public function onErrorSubmit(form: Form, xhr: XMLHttpRequest) {
     G.window.alert('Server error ' + xhr.status);
     /*
     if (xhr.status == 500) {

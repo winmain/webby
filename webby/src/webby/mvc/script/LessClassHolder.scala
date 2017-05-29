@@ -12,5 +12,5 @@ import webby.commons.io.Resources
 trait LessClassHolder {
   implicit protected def _lessClassHolder: LessClassHolder = this
 
-  val lessResHolder = StdResourceHolder.lessMin(Resources.nameForClass(getClass, ".less"))
+  val lessResHolder = StdResourceHolder.get.lessMin(Resources.nameForClass(getClass, ".less"))
 }

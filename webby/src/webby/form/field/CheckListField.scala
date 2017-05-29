@@ -24,7 +24,7 @@ class CheckListField[T](val form: Form,
     if (node == null) return Right(nullValue)
     Right(node.asScala.map {nodeEl =>
       val value = nodeEl.asText()
-      items.find(valueFn(_) == value).getOrElse(return Left("Некорректное значение"))
+      items.find(valueFn(_) == value).getOrElse(return Left(form.strings.invalidValue))
     })
   }
 

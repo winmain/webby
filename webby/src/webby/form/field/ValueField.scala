@@ -44,7 +44,7 @@ trait ValueField[T] extends Field[T] {
       } catch {
         case e: Exception =>
           Logger(getClass).warn("Error parsing js-value", e)
-          FormErrors(errors = mutable.Map(shortId -> "Некорректное значение поля"))
+          FormErrors(errors = mutable.Map(shortId -> form.strings.invalidValue))
       }
     } else {
       setNull

@@ -24,7 +24,7 @@ class DateField(val form: Form, val shortId: String) extends ValueField[LocalDat
   override def jsField: String = "date"
   override def parseJsValue(node: JsonNode): Either[String, LocalDate] = parseJsString(node) {v =>
     try Right(parse(v.trim))
-    catch {case e: Exception => Left("Некорректная дата")}
+    catch {case _: Exception => Left(form.strings.invalidDate)}
   }
   override def toJsValue(v: LocalDate): AnyRef = if (v == null) null else formatter.format(v)
 
@@ -32,7 +32,7 @@ class DateField(val form: Form, val shortId: String) extends ValueField[LocalDat
 
   def formatter: DateTimeFormatter = DateFormats.dd_mm_yyyy_formatter
   def parse(v: String): LocalDate = LocalDate.parse(v.trim, formatter)
-  def placeholder: String = "дд.мм.гггг"
+  def placeholder: String = form.strings.datePlaceholder
 
   // ------------------------------- Builder & validations -------------------------------
 
@@ -44,8 +44,8 @@ class DateField(val form: Form, val shortId: String) extends ValueField[LocalDat
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minDate.exists(get.compareTo(_) < 0)) Invalid("Не ранее " + formatter.format(minDate.get))
-    else if (maxDate.exists(get.compareTo(_) > 0)) Invalid("Не позднее " + formatter.format(maxDate.get))
+    if (minDate.exists(get.compareTo(_) < 0)) Invalid(form.strings.notEarlierThanError(formatter.format(minDate.get)))
+    else if (maxDate.exists(get.compareTo(_) > 0)) Invalid(form.strings.noLaterThanError(formatter.format(maxDate.get)))
     else Valid
   }
 }
@@ -60,5 +60,5 @@ class MonthYearField(form: Form, id: String) extends DateField(form, id) {
     val ta: TemporalAccessor = formatter.parse(v)
     LocalDate.of(ta.get(ChronoField.YEAR), ta.get(ChronoField.MONTH_OF_YEAR), 1)
   }
-  override def placeholder: String = "мм.гггг"
+  override def placeholder: String = form.strings.monthYearPlaceholder
 }

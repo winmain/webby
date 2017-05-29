@@ -70,18 +70,3 @@ class PageLogWriterPlugin(app: Application) extends LogWriterPlugin(app) {
 class MailLogWriterPlugin(app: Application) extends LogWriterPlugin(app) {
   override val fileName: Option[String] = app.configuration.getString("maillog.file").filter(!_.isEmpty)
 }
-
-/**
- * Логгер обработки платежей pay.log
- */
-class PayLogWriterPlugin(app: Application) extends LogWriterPlugin(app) {
-  override val fileName: Option[String] = app.configuration.getString("paylog.file").filter(!_.isEmpty)
-  override def bufferSize: Int = 0
-}
-
-/**
- * Логгер парсинга партнёрских вакансий partner.log
- */
-class PartnerLogWriterPlugin(app: Application) extends LogWriterPlugin(app) {
-  override val fileName: Option[String] = app.configuration.getString("partnerlog.file").filter(!_.isEmpty)
-}

@@ -2,6 +2,7 @@ package webby.form
 
 import java.sql.SQLException
 import java.util
+import java.util.Locale
 import javax.annotation.Nullable
 
 import com.fasterxml.jackson.annotation.{JsonInclude, JsonRawValue}
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import webby.api.mvc.{PlainResult, ResultException, Results}
 import webby.commons.io.StdJs
 import webby.form.field.{Field, FormListField, FormListFieldWithDb, StdFormFields}
+import webby.form.i18n.FormStrings
 import webby.form.jsrule.{JsRule, StdFormJsRules}
 
 import scala.collection.mutable
@@ -20,8 +22,12 @@ import scala.util.control.ControlThrowable
 trait Form extends StdFormFields with StdFormJsRules {self =>
   type B <: BaseForms
   def base: B
+  def initLocale: Locale
 
-  /** Id тега формы при рендеринге html. Также, он является префиксом полей формы. */
+  /** Form tag id. Used in rendering html form. Also it is prefix for field ids, see [[BaseForms.makeFieldHtmlId()]].
+    * IMPORTANT! To override this field you should do it before any field declarations occur.
+    * Because every field initializes it [[Field.htmlId]] value in constructor.
+    */
   val htmlId: String = "form"
 
   /**
@@ -31,6 +37,11 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   var key: Int = 0
 
   def isNew: Boolean = key == 0
+
+  /** This form locale. Can be changed in any time. */
+  var locale: Locale = initLocale
+
+  def strings: FormStrings = base.strings(locale)
 
   /** Подтверждать закрытие/смену страницы специальным js-оповещением? */
   var onUnloadConfirm = true

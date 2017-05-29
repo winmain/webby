@@ -119,7 +119,7 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
             }.str
           } else {
             // rest module
-            restModuleWrapper(source + sourceMapFooter)
+            restModuleWrapper(source) + sourceMapFooter
           }
         val resultPath: Path = resultDir.resolve(jsMod.getName + ".js")
         Files.createDirectories(resultPath.getParent)

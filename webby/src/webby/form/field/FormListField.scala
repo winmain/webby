@@ -67,11 +67,12 @@ class FormListField[F <: Form](val form: Form, val shortId: String, var factory:
       setNull
       FormSuccess
     } else if (!node.isArray || !node.isInstanceOf[ArrayNode]) {
-      FormErrors(errors = mutable.Map(shortId -> "Некорректное значение формы"))
+      FormErrors(errors = mutable.Map(shortId -> "Invalid form value"))
     } else {
       val formErrors = FormErrors()
       removeOldForms = super.get.map(f => f.key -> f)(scala.collection.breakOut)
-      removeOldForms.remove(0) // Нет смысла хранить значения без ключей - их всё равно нет в базе.
+      removeOldForms.remove(0)
+      // Нет смысла хранить значения без ключей - их всё равно нет в базе.
       val processedKeys = mutable.Buffer.empty[Int]
 
       val valueBuilder = Vector.newBuilder[F]
@@ -79,14 +80,14 @@ class FormListField[F <: Form](val form: Form, val shortId: String, var factory:
         val key = {val k = jsForm.get("_key"); if (k == null) 0 else k.asInt(0)}
         // Попытаться найти уже готовую подформу по ключу. Если такой нет, то создать новую.
         val subForm: F =
-        if (key != 0) {
-          if (processedKeys.contains(key)) return FormErrors(errors = mutable.Map(shortId -> "Дублирующий ключ формы"))
-          processedKeys += key
-          removeOldForms.get(key) match {
-            case Some(oldForm) => removeOldForms.remove(key); oldForm
-            case None => factory()
-          }
-        } else factory()
+          if (key != 0) {
+            if (processedKeys.contains(key)) return FormErrors(errors = mutable.Map(shortId -> "Duplicate form key"))
+            processedKeys += key
+            removeOldForms.get(key) match {
+              case Some(oldForm) => removeOldForms.remove(key); oldForm
+              case None => factory()
+            }
+          } else factory()
 
         subForm.setJsValuesAndValidate(jsForm, FormErrors(name = shortId, index = Some(index))) match {
           case e: FormErrors => formErrors.sub += e
@@ -136,8 +137,8 @@ class FormListField[F <: Form](val form: Form, val shortId: String, var factory:
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (minItems.exists(get.size < _)) return Invalid("Не менее " + recordPlural(minItems.get).str)
-    if (maxItems.exists(get.size > _)) return Invalid("Не более " + recordPlural(maxItems.get).str)
+    if (minItems.exists(get.size < _)) return Invalid(form.strings.noLessThanError(recordPlural(minItems.get).str))
+    if (maxItems.exists(get.size > _)) return Invalid(form.strings.noMoreThanError(recordPlural(maxItems.get).str))
 
     // Проверка на уникальное значение поля у всех заполненных подформ uniqueBy
     for ((fn, errorMsg) <- uniqueBy) {
@@ -153,7 +154,7 @@ class FormListField[F <: Form](val form: Form, val shortId: String, var factory:
     locally {
       val set = mutable.Set[Int]()
       if (!get.forall(form => if (form.key != 0) set.add(form.key) else true))
-        return Invalid("Неуникальный ключ подформ")
+        return Invalid("Non-unique subform key")
     }
 
     Valid

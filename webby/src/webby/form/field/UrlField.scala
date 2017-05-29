@@ -11,6 +11,8 @@ class UrlField(val form: Form,
   var allowedSchemes: Array[String] = Array("http", "https")
   var defaultScheme: String = "http"
 
+  val MaxLength = 250
+
   // ------------------------------- Reading data & js properties -------------------------------
   override def jsField: String = "text"
   override def parseJsValue(node: JsonNode): Either[String, String] = parseJsString(node)(Right(_))
@@ -28,13 +30,13 @@ class UrlField(val form: Form,
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.
     */
   override def validateFieldOnly: ValidationResult = {
-    if (get.length > 250) Invalid("Не более 250 символов")
+    if (get.length > MaxLength) Invalid(form.strings.noMoreThanCharsError(MaxLength))
     else UrlValidator.validate(get, allowedSchemes = allowedSchemes) match {
-      case None => Invalid("Некорректная ссылка")
+      case None => Invalid(form.strings.invalidUrl)
       case Some(url) =>
         if (allowedDomains.nonEmpty && !UrlValidator.validateDomain(url, allowedDomains)) {
-          if (allowedDomains.size == 1) return Invalid("Ссылка должна содержать домен " + allowedDomains.head)
-          else return Invalid("Ссылка должна содержать один из доменов: " + allowedDomains.mkString(", "))
+          if (allowedDomains.size == 1) return Invalid(form.strings.urlMustContainDomain(allowedDomains.head))
+          else return Invalid(form.strings.urlMustContainOneOfDomains(allowedDomains.mkString(", ")))
         }
         Valid
     }

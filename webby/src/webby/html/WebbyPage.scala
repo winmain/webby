@@ -39,6 +39,11 @@ trait WebbyPage extends ActTrait {
   lazy val chromeVersion: Option[Int] = WebbyPage.getMajorVersion(WebbyPage.chromeVersion, userAgent)
 
   /**
+    * Версия Firefox. Пока что нужна только для локалки для включения ECMAScript6.
+    */
+  lazy val firefoxVersion: Option[Int] = WebbyPage.getMajorVersion(WebbyPage.firefoxVersion, userAgent)
+
+  /**
     * Android version (example: 4.4 or 5.1)
     * WebView in Android apps prior to 4.4 doesn't tell Chrome version in User-agent string
     */
@@ -69,6 +74,7 @@ object WebbyPage {
   private val ieVersion = "MSIE (\\d+)".r
   private val webkitVersion = "AppleWebKit/(\\d+)".r
   private val chromeVersion = "Chrome/(\\d+)".r
+  private val firefoxVersion = "Firefox/(\\d+)".r
   private val androidVersion = "Android (\\d+)\\.(\\d+)".r
   private val googleBot = "Google(?:bot| Page Speed)".r
 

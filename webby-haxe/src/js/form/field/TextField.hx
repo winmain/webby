@@ -10,6 +10,8 @@ class TextField extends Field {
   public var minLength: Null<Int>;
   public var maxLength: Null<Int>;
 
+  private var isTextarea: Bool;
+
   public function new(form: Form, props: TextFieldProps) {
     super(form, props);
     minLength = props.minLength;
@@ -23,6 +25,7 @@ class TextField extends Field {
         }
       }
     });
+    isTextarea = tag.el.tagName == 'TEXTAREA';
     // TODO: дополнительный код, если будет поддержка jquery.textarea_autosize
     // if @isTextarea = $el[0] && $el[0].tagName == 'TEXTAREA'
     //   $el.textareaAutoSize()

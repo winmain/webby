@@ -146,7 +146,7 @@ class G {
    * @param name Имя части, как он записан в jsParts
    * @param url Урл для подгрузки
    */
-  inline public static function jsPartLoad(name: String, url: String):Void return untyped __js__('jsPartLoad({0}, {1})', name, url);
+  inline public static function jsPartLoad(name: String, url: String): Void return untyped __js__('jsPartLoad({0}, {1})', name, url);
 
   /**
    * Выполнить код #exec только после загрузки части #partName.

@@ -10,6 +10,7 @@ object Using {
     *     var count = 0
     *     while (r.readLine != null) count += 1
     *     println(count)
+    *   }
     * }}}
     */
   def apply[T <: AutoCloseable, R]

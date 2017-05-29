@@ -65,7 +65,7 @@ class FormErrorBlock {
   public function clearError(item: EitherType<Field, FormErrorBlock>) {
     if (GoogArray.remove(errors, item)) {
       if (errors.isEmpty() && parent != null) {
-        parent.clearError(item);
+        parent.clearError(this);
       }
       updateErrorTag();
     }

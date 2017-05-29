@@ -10,8 +10,10 @@ class StdFormHtml(form: Form)(implicit view: StdHtmlView, page: WebbyPage) {
 
   // ------------------------------- Form and layout -------------------------------
 
-  def formTag(method: String = "post"): StdFormTag =
+  def formTag(method: String = "post"): StdFormTag = {
     form.base.formTag(page.scripts, form, form.htmlId, method)
+    // Warning! If you want to change form id, see Form.htmlId field.
+  }
 
   def group: CommonTag = view.div.cls(form.base.formGroupCls)
   def row: CommonTag = view.div.cls(form.base.formRowCls)

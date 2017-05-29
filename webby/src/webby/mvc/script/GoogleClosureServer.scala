@@ -73,7 +73,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
 
   def restModulePrepend: String = "if(!window._rest){_restm=[];_rest=function(m){_restm.push(m)}};_rest(function(){"
   def restModuleAppend: String = "})"
-  def restModuleWrapper(source: String): String = restModulePrepend + source + restModulePrepend
+  def restModuleWrapper(source: String): String = restModulePrepend + source + restModuleAppend
 
   private val closureCompiler = new GoogleClosureCompiler(
     externs = externs,
@@ -426,7 +426,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
       def addFile(closureFile: ClosureFile) {
         val name: String = closureFile.source.getName
         if (!included.contains(name)) {
-          closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap(n)))
+          closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap.getOrElse(n, sys.error(s"Cannot find class '$n' for ignoreMainDeps directive in ${closureFile.source.getOriginalPath}"))))
           if (closureFile.entryPoint) {
             prepends.foreach(+_.source.getCode)
             +baseJsBody
@@ -560,7 +560,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     def addFile(closureFile: ClosureFile) {
       val name = closureFile.source.getName
       if (!included.contains(name)) {
-        closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap(n)))
+        closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap.getOrElse(n, sys.error(s"Cannot find class '$n' for ignoreMainDeps directive in ${closureFile.source.getOriginalPath}"))))
         included += name
         includedSources += closureFile.source
         for (cls <- closureFile.requires) {

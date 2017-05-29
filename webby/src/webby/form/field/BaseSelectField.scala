@@ -16,7 +16,7 @@ abstract class BaseSelectField[T](val form: Form, id: String)
   override def jsProps = new SelectJsProps
   override def parseJsValue(node: JsonNode): Either[String, T] = parseJsString(node) {v =>
     for (item <- items) if (valueFn(item) == v) return Right(item)
-    Left("Некорректное значение")
+    Left(form.strings.invalidValue)
   }
   override def nullValue: T = null.asInstanceOf[T]
   override def toJsValue(v: T): AnyRef = if (isEmpty(v)) null else valueFn(v)

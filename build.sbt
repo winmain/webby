@@ -80,7 +80,7 @@ lazy val elasticOrm: Project = Project(
   file("elastic-orm"),
   settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.2.0" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
+    libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.4.5" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
     libraryDependencies += querio
   )).dependsOn(webby)
 

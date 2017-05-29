@@ -28,9 +28,9 @@ class HiddenBooleanField(val form: Form, val shortId: String) extends ValueField
     try Integer.parseInt(v) match {
       case 0 => Right(false)
       case 1 => Right(true)
-      case _ => Left("Некорректное значение")
+      case _ => Left(form.strings.invalidValue)
     }
-    catch {case e: NumberFormatException => Left("Введите целое число")}
+    catch {case e: NumberFormatException => Left(form.strings.enterIntegerNumber)}
   }
   override def nullValue: Boolean = false
 }

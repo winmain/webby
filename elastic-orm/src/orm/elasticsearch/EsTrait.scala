@@ -171,14 +171,14 @@ trait EsTrait {
     /** Запись значения в ElasticSearch */
     def to(v: Set[E]): AnyRef =
       if (v.isEmpty) null
-      else asJavaCollectionConverter(v.map(_.index))
+      else asJavaCollection(v.map(_.index))
   })
 
   // ------------------------------- / -------------------------------
 
   protected def arrayField[T](n: String, fr: Record => Iterable[T]) = field[Iterable[T]](n, fr, new Conv[Iterable[T]] {
     def from(j: AnyRef): Iterable[T] = if (j == null) Iterable.empty else j.asInstanceOf[jl.Iterable[T]].asScala
-    def to(v: Iterable[T]): AnyRef = asJavaIterableConverter(v)
+    def to(v: Iterable[T]): AnyRef = asJavaIterable(v)
   })
   protected def intArrayField(n: String, fr: Record => Iterable[Int]) = arrayField[Int](n, fr)
   protected def stringArrayField(n: String, fr: Record => Iterable[String]) = arrayField[String](n, fr)
@@ -244,7 +244,7 @@ trait EsWrite extends EsBaseRecord {
   protected def objectListField[CC <: EsRecord, M <: EsSubTypeMeta[CC]]
   (name: String, fromRecord: Record => Iterable[_], meta: M): FList[CC, M] = {
     val list = fromRecord(record)
-    valueMap.put(name, asJavaCollectionConverter(list.flatMap {e =>
+    valueMap.put(name, asJavaCollection(list.flatMap {e =>
       val r = e.asInstanceOf[meta.type#Record]
       if (meta.validateRecord(r)) Seq(meta.makeWrite(r).valueMap) else Nil
     }))
@@ -350,7 +350,7 @@ class EsField[T, Record](val name: String, val fromRecord: Record => T, conv: Co
   def boostedName(boost: Int): String = if (boost == 1) name else name + "^" + boost
 
   def termQuery(value: Any): TermQueryBuilder = new TermQueryBuilder(name, value)
-  def inQuery(values: Seq[_]): TermsQueryBuilder = new TermsQueryBuilder(name, asJavaIterableConverter(values))
+  def inQuery(values: Seq[_]): TermsQueryBuilder = new TermsQueryBuilder(name, asJavaIterable(values))
   def rangeQuery: RangeQueryBuilder = new RangeQueryBuilder(name)
   def existsQuery: ExistsQueryBuilder = new ExistsQueryBuilder(name)
 }
