@@ -1,5 +1,7 @@
 package goog.ui.ac;
 
+import haxe.Constraints.Function;
+
 /**
  * Basic class for matching words in an array
  * @constructor
@@ -8,7 +10,6 @@ package goog.ui.ac;
  * @param {boolean=} opt_noSimilar if true, do not do similarity matches for the
  *     input token against the dictionary.
  */
-import haxe.Constraints.Function;
 @:jsRequire('goog.ui.ac.ArrayMatcher')
 extern class ArrayMatcher<T> {
   function new(rows: Array<T>, ?opt_noSimilar: Bool);

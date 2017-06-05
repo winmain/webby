@@ -10,7 +10,7 @@ trait FormStrings {
   def invalidEmail: String
   def invalidUrl: String
   def enterIntegerNumber: String
-  def enterFloatNumber: String
+  def enterRealNumber: String
 
   def noLessThanError(minValue: Any): String
   def noMoreThanError(maxValue: Any): String

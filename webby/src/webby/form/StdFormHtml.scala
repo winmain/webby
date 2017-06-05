@@ -22,6 +22,7 @@ class StdFormHtml(form: Form)(implicit view: StdHtmlView, page: WebbyPage) {
   // ------------------------------- Fields -------------------------------
 
   def label(field: Field[_]): StdLabelTag = view.label.forId(field.htmlId).cls(form.base.fieldLabelCls)
+  def labelSimple(field: Field[_]): StdLabelTag = view.label.forId(field.htmlId)
 
   def wrapField[T <: CommonTag with NamedTag](field: Field[_], tag: T): T = {
     tag.id(field.htmlId).name(field.name).cls(form.base.fieldCls)
@@ -66,8 +67,8 @@ class StdFormHtml(form: Form)(implicit view: StdHtmlView, page: WebbyPage) {
   def inputHidden(field: HiddenBooleanField): StdInputTag = wrapField(field, view.inputHidden)
 
   // Тип этого инпута - телефон, иначе при вводе даты на андроиде будет показана нативный (неудобный и медленный) инпут
-  def inputText(field: DateField): StdInputTag = wrapField(field, view.inputTel).cls(form.base.dateFieldCls)
-  def inputText(field: MonthYearField): StdInputTag = wrapField(field, view.inputTel).cls(form.base.monthYearFieldCls)
+  def inputText(field: RuDateField): StdInputTag = wrapFieldPH(field, view.inputTel).cls(form.base.dateFieldCls)
+  def inputText(field: RuMonthYearField): StdInputTag = wrapFieldPH(field, view.inputTel).cls(form.base.monthYearFieldCls)
 
   def inputTextInDiv(field: AutocompleteListField[_], itemsTag: CommonTag => CommonTag = a => a, inputTag: StdInputTag => StdInputTag = a => a): HtmlBase = {
     view.div.cls(form.base.autocompleteListFieldCls) {

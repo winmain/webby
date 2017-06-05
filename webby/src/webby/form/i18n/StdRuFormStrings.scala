@@ -10,7 +10,7 @@ class StdRuFormStrings extends FormStrings {
   override def invalidEmail: String = "Некорректный email"
   override def invalidUrl: String = "Некорректная ссылка"
   override def enterIntegerNumber: String = "Введите целое число"
-  override def enterFloatNumber: String = "Введите вещественное число"
+  override def enterRealNumber: String = "Введите вещественное число"
 
   override def noLessThanError(minValue: Any): String = "Не менее " + minValue
   override def noMoreThanError(maxValue: Any): String = "Не более " + maxValue

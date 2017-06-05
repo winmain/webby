@@ -212,7 +212,7 @@ extern class EventTarget extends Disposable implements Listenable {
  * @return {goog.events.ListenableKey} the found listener or null if not found.
  * @template SCOPE,EVENTOBJ
  */
-  function getListener<EVENTOBJ>(type: EitherType<String, EventId<EVENTOBJ>>, listener: EitherType<EVENTOBJ -> Dynamic, Function>, capture: Bool, ?opt_listenerScope: Dynamic): ListenableKey;
+  function getListener<EVENTOBJ>(type: EitherType<String, EventId<EVENTOBJ>>, listener: EitherType<EVENTOBJ -> Dynamic, Function>, capture: Bool, ?opt_listenerScope: Dynamic): Null<ListenableKey>;
 
 
 /**

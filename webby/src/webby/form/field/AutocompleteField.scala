@@ -17,7 +17,7 @@ class AutocompleteField[T](val form: Form,
 
   // ------------------------------- Reading data & js properties -------------------------------
   class JsProps extends BaseJsProps {
-    val source = self.jsSourceFunction
+    val sourceFn = self.jsSourceFunction
     val sourceArg = self.jsSourceArg
     val addRendererCls = self.addRendererCls
   }

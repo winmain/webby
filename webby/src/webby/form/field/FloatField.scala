@@ -21,7 +21,7 @@ class FloatField(val form: Form, val shortId: String) extends ValueField[Float] 
       if (text.isEmpty) Right(nullValue)
       else
         try Right(text.toFloat)
-        catch {case _: NumberFormatException => Left(form.strings.enterFloatNumber)}
+        catch {case _: NumberFormatException => Left(form.strings.enterRealNumber)}
     } else
       Right(node.asDouble(nullValue).toFloat)
   }

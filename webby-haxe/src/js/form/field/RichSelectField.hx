@@ -16,7 +16,7 @@ class RichSelectField extends Field {
   public function new(form: Form, props: RichSelectFieldProps) {
     super(form, props);
     var selectConfig = form.config.selectConfig;
-    G.require(selectConfig != null, "SelectConfig is not configured");
+    G.require(selectConfig != null, "RichSelectConfig is not configured");
     label = box.fnd('.' + selectConfig.labelCls);
     G.require(label != null, "No label found");
 

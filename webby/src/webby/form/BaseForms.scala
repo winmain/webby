@@ -3,7 +3,7 @@ import java.util.Locale
 
 import querio._
 import webby.commons.io.StdJs
-import webby.commons.text.{Locales, Plural}
+import webby.commons.text.Plural
 import webby.form.field.Field
 import webby.form.i18n.FormStrings
 import webby.html._
@@ -29,6 +29,7 @@ abstract class BaseForms {self =>
   trait BaseCommon extends Form {
     override type B = self.type
     override def base: B = self
+    override def initLocale: Locale = Locale.ENGLISH
     override def jsConfig: String = self.jsConfig
   }
 
@@ -47,10 +48,10 @@ abstract class BaseForms {self =>
   def fieldCls = "field"
   def fieldLabelCls = "field-label"
 
+  def checkboxLeftCls = "checkbox-left"
   def autocompleteListFieldCls = "autocomplete-list-field"
   def dateFieldCls = "date-field"
   def monthYearFieldCls = "month-year-field"
-  def checkboxLeftCls = "checkbox-left"
 
   def formCreateInitJsCode(form: Form): String = "Form.createInit(" + js.toJson(form.jsProps) + ")"
 

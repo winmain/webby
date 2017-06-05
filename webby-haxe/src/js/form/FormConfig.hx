@@ -1,13 +1,15 @@
 package js.form;
 
+import js.form.field.AutocompleteSource;
 import js.form.field.Field;
 import js.form.field.RichSelectConfig;
+import js.form.i18n.FormStrings;
 import js.html.XMLHttpRequest;
 
 class FormConfig {
   public function new() {}
 
-  public var strings = new FormStrings();
+  public var strings: FormStrings;
 
   // ------------------------------- Styles -------------------------------
 
@@ -68,4 +70,6 @@ class FormConfig {
   // ------------------------------- Extensions -------------------------------
 
   public var selectConfig: RichSelectConfig;
+
+  public var autocompleteSource: AutocompleteSource;
 }
