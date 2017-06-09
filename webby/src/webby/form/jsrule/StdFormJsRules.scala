@@ -37,13 +37,13 @@ class JsWhenBuilder(cond: JsCondition, actions: mutable.Buffer[JsAction] = mutab
   def ignore(field: Field[_]) = add(Ignore(field, ignore = true))
   def unIgnore(field: Field[_]) = add(Ignore(field, ignore = false))
 
-  def showRequire(field: Field[_], focus: Boolean = false, withParent: Boolean = false) =
+  def showRequire(field: Field[_], focus: Boolean = false) =
     add(Visible(field, vis = true, focus = focus))
       .add(Require(field, require = true, focus = focus))
-  def hideOptional(field: Field[_], focus: Boolean = false, withParent: Boolean = false) =
+  def hideOptional(field: Field[_], focus: Boolean = false) =
     add(Visible(field, vis = false, focus = focus))
       .add(Require(field, require = false, focus = focus))
-  def hideIgnore(field: Field[_], withParent: Boolean = false) =
+  def hideIgnore(field: Field[_]) =
     add(Visible(field, vis = false, focus = false))
       .add(Ignore(field, ignore = true))
 

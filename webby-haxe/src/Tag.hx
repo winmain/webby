@@ -228,6 +228,8 @@ class Tag {
     return this;
   }
 
+  public function removeAttr(key: String): Tag return attr(key, false);
+
   public function id(v: String): Tag {
     el.id = v;
     return this;
@@ -341,6 +343,16 @@ class Tag {
     }
     return this;
   }
+
+  /*
+  from http://youmightnotneedjquery.com/#trigger_native
+   */
+//  public function triggerNative(type: String) {
+//    // For a full list of event types: https://developer.mozilla.org/en-US/docs/Web/API/document.createEvent
+//    var event = G.document.createEvent('HTMLEvents');
+//    event.initEvent(type, true, false);
+//    el.dispatchEvent(event);
+//  }
 
   // MouseEvent
   public function onClick(handler: Function): Tag return on('click', untyped handler);

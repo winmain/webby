@@ -301,10 +301,12 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   def jsConfig: String = null
 
   /**
-    * Js-контроллер форм, обеспечивающий динамику формы. Он должен находиться в package rr.form.controller
-    * Пример: rr.form.controller.ResForm
+    * Js-контроллер форм, обеспечивающий динамику формы.
+    * Это ссылка на функцию (или сама функция), которая будет вызвана при старте формы.
+    * При вызове функции, она получит на вход один параметр - саму форму.
+    * Пример: MyFormController
     */
-  def jsController: String = null
+  @JsonRawValue def jsController: String = null
 
   def jsProps: Form#BaseJsProps = new BaseJsProps
 

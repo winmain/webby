@@ -1,6 +1,5 @@
 package js.form;
 
-import js.html.XMLHttpRequestResponseType as XMLHttpRequestResponseType;
 import goog.events.EventTarget;
 import js.form.field.Field;
 import js.form.field.FormListField;
@@ -287,12 +286,13 @@ class Form extends EventTarget {
         config.onErrorSubmit(this, xhr);
       });
     xhr.open('POST', formAction(), true);
-    xhr.responseType = XMLHttpRequestResponseType.JSON;
     tuneXhrOnSubmit(xhr);
     xhr.send(JSON.stringify(postData));
   }
 
   function tuneXhrOnSubmit(xhr: XMLHttpRequest) {
+    XhrUtils.setJsonContentType(xhr);
+    XhrUtils.setJsonResponseType(xhr);
     xhr.withCredentials = true;
   }
 

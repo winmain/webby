@@ -110,7 +110,7 @@ trait Field[T] {self =>
   def enterKeySubmit: this.type = { _enterKeySubmit = true; this }
 
   /**
-    * Показывать/скрывать не только само поле, но и его родительский тег section.
+    * Показывать/скрывать не только само поле, но и его родительский [[BaseForms.formRowCls]].
     */
   var _hideWithRow: Option[Boolean] = None
   def hideWithRow(v: Option[Boolean]): this.type = {_hideWithRow = v; this}

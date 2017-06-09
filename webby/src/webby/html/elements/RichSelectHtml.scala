@@ -1,5 +1,6 @@
 package webby.html.elements
 
+import webby.form.html.StdFormHtml
 import webby.html.{CommonTag, HtmlBase, StdHtmlView, StdSelectTag}
 
 /**
@@ -8,7 +9,7 @@ import webby.html.{CommonTag, HtmlBase, StdHtmlView, StdSelectTag}
   * ВАЖНО: Этот элемент нельзя использовать в отрыве от формы, т.к. он требует выполнения SelectField.coffee
   * для своей работы.
   *
-  * @see [[webby.form.StdFormHtml.richSelect()]] Для примера использования этого класса
+  * @see [[StdFormHtml.richSelect()]] Для примера использования этого класса
   */
 case class RichSelectHtml(config: RichSelectConfig) {
   private var _outerSpan: CommonTag => CommonTag = a => a

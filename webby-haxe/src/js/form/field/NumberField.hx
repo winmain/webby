@@ -16,8 +16,8 @@ class NumberField extends Field {
     maxValue = props.maxValue;
 
     tag.on('blur', function() {
-      var v = value();
-      if (v != null) {
+      var v: Dynamic = value();
+      if (v != "") {
         if (minValue != null && v < minValue) {
           setJsError(form.config.strings.noLessThanError(minValue));
         }
