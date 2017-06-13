@@ -1,7 +1,7 @@
 package webby.form.field
 import querio._
 import webby.commons.text.Plural
-import webby.form.{Form, FormWithDb}
+import webby.form.{Form, FormWithDb, SubForm}
 
 /**
   * Trait, включающий в себя объявления всех типов полей для удобного описания формы через DSL.
@@ -12,19 +12,19 @@ trait StdFormFields {self: Form =>
 
   // ----------- !!! Все методы, возвращающие конструкторы полей должны быть обрамлены в addField() !!!
 
-  protected def formList[F <: Form](id: String, factory: () => F) = addField(new FormListField(this, id, factory, base.recordRPlural))
+  protected def formList[F <: SubForm](id: String, factory: () => F) = addField(new FormListField(this, id, factory, base.recordRPlural))
 
-  protected def formListWithDbLinked[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  protected def formListWithDbLinked[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Int]) =
     addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Int]](
       this, id, () => factory, parentField, _.set(_, _), base.recordRPlural))
 
-  protected def formListWithDbLinkedOpt[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  protected def formListWithDbLinkedOpt[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Option[Int]]) =
     addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Option[Int]]](
       this, id, () => factory, parentField, (f, r, p) => f.set(r, Some(p)), base.recordRPlural))
 
-  protected def formListWithDbStandalone[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  protected def formListWithDbStandalone[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (table: Table[TR, MTR])(id: String, factory: => F) =
     addFormFieldWithDb(new FormListFieldWithDbStandalone[F, TR, MTR](
       this, id, () => factory, base.recordRPlural))

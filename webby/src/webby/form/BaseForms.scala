@@ -24,6 +24,9 @@ abstract class BaseForms {self =>
   /** @see [[webby.form.Form.jsConfig]]*/
   def jsConfig: String = null
 
+  def formId = "form"
+  def subFormId = "$subform$"
+
   // ------------------------------- Form traits -------------------------------
 
   trait BaseCommon extends Form {

@@ -1,6 +1,6 @@
 package webby.form.jsrule
 import webby.commons.io.jackson.JacksonAnnotations._
-import webby.form.Form
+import webby.form.SubForm
 import webby.form.field.{Field, FormListField}
 
 trait JsAction extends JsonDisableAutodetect {
@@ -102,7 +102,7 @@ case class SetValue2[T](f: Field[T], vOn: T, vOff: T) extends JsFieldAction(f) {
   *
   * @param f Поле.
   */
-case class AddSubform(f: FormListField[_ <: Form]) extends JsFieldAction(f) {
+case class AddSubform(f: FormListField[_ <: SubForm]) extends JsFieldAction(f) {
   override def cls: String = "addSubform"
   override def jsOnly: Boolean = true
   override def execute(turnOn: Boolean): Unit = {}

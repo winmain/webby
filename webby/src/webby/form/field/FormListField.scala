@@ -9,8 +9,12 @@ import webby.form._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class FormListField[F <: Form](val form: Form, val shortId: String, var factory: () => F, var recordPlural: Plural)
+class FormListField[F <: SubForm](val form: Form, val shortId: String, var factory: () => F, var recordPlural: Plural)
   extends Field[Vector[F]] {self =>
+
+  val htmlTemplateId = htmlId + "-template"
+  val htmlListId = htmlId + "-list"
+  val htmlAddId = htmlId + "-add"
 
   var defaultItems: Int = 0
   var minItems: Option[Int] = None

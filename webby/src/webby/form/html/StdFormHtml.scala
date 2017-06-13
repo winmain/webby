@@ -129,35 +129,4 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
       }
     }
   }
-
-  // ------------------------------- FormListField -------------------------------
-
-  // TODO: переделать методы для FormListField, возможно вынести в отдельный компонент
-
-  /**
-    * Шаблон подформы, который клонируется при добавлении нового элемента.
-    *
-    * @param tag         Обрамляющий тег шаблона. Клонируется именно этот тег.
-    * @param cls         Класс обрамляющего тега.
-    * @param mobileMulti Флаг, который должен быть установлен, если подформа на десктопной версии однострочная,
-    *                    а на мобильной она превращается в многострочную. Добавляет дополнительные паддинги в моб. версии.
-    * @param body        Тело шаблона,
-    */
-  def formListTemplate[F <: Form](field: FormListField[F], tag: String = "p", cls: String = null, mobileMulti: Boolean = false)(body: F => Any): HtmlBase =
-    view.tag(tag).id(field.htmlId + "-template").cls("hide").cls(cls).clsIf(mobileMulti, "mobile-multi") < body(field.formStub)
-
-  def formListBlockTemplate[F <: Form](field: FormListField[F], tag: String = "section", cls: String = "form-block subform")(body: F => Any): HtmlBase =
-    view.tag(tag).id(field.htmlId + "-template").cls("hide").cls(cls) {
-      formListBlockRemoveTag(field)
-      body(field.formStub)
-    }
-
-  def formListPlaceholder(field: FormListField[_ <: Form]): CommonTag = view.div.id(field.htmlId + "-list")
-  def formListSmallAddTag(field: FormListField[_ <: Form]): CommonTag = view.a.hrefAnchor.cls("dotted").id(field.htmlId + "-add")
-  def formListSmallRemoveTag(field: FormListField[_ <: Form]): CommonTag = view.a.hrefAnchor.cls("small-remove").id(formListRemoveId)
-  def formListBlockAddTag(field: FormListField[_ <: Form]): CommonTag = view.a.hrefAnchor.cls("block-add").id(field.htmlId + "-add")
-  def formListBlockRemoveTag(field: FormListField[_ <: Form]): CommonTag = view.a.hrefAnchor.cls("block-remove").id(formListRemoveId).title("Удалить блок")
-
-  /** id для html элемента удаления записи */
-  def formListRemoveId: String = "remove"
 }

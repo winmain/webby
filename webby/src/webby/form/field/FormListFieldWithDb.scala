@@ -1,10 +1,10 @@
 package webby.form.field
 import querio._
 import webby.commons.text.Plural
-import webby.form.{ChangedItemType, Form, FormWithDb}
+import webby.form.{ChangedItemType, Form, FormWithDb, SubForm}
 
 
-abstract class FormListFieldWithDb[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+abstract class FormListFieldWithDb[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
 (form: Form, id: String, factory: () => F, recordPlural: Plural) extends FormListField[F](form, id, factory, recordPlural) {
 
   // Сохранённые записи всех подформ.
@@ -29,7 +29,7 @@ abstract class FormListFieldWithDb[F <: FormWithDb[TR, MTR], TR <: TableRecord, 
   * @tparam TR  Запись в таблице БД
   * @tparam MTR Изменяемая запись в таблице БД
   */
-class FormListFieldWithDbLinked[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR], FIELD <: Table[TR, MTR]#Field[Int, _]]
+class FormListFieldWithDbLinked[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR], FIELD <: Table[TR, MTR]#Field[Int, _]]
 (form: Form, id: String, fact: () => F, val parentField: FIELD, setter: (FIELD, MTR, Int) => Any, recordPlural: Plural)
   extends FormListFieldWithDb[F, TR, MTR](form, id, fact, recordPlural) {
 
@@ -64,7 +64,7 @@ class FormListFieldWithDbLinked[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR
   * @param fact Фабрика создания новой формы
   * @tparam F Форма
   */
-class FormListFieldWithDbStandalone[F <: FormWithDb[TR, MTR], TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+class FormListFieldWithDbStandalone[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
 (form: Form, id: String, fact: () => F, recordPlural: Plural)
   extends FormListFieldWithDb[F, TR, MTR](form, id, fact, recordPlural) {
 

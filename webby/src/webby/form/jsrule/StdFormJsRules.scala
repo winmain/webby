@@ -1,7 +1,7 @@
 package webby.form.jsrule
 import javax.annotation.Nullable
 
-import webby.form.Form
+import webby.form.SubForm
 import webby.form.field.{Field, FormListField}
 
 import scala.collection.mutable
@@ -50,5 +50,5 @@ class JsWhenBuilder(cond: JsCondition, actions: mutable.Buffer[JsAction] = mutab
   def setValue[T](field: Field[T], value: T) = add(SetValue(field, value))
   def setValue2[T](field: Field[T], valueOn: T, valueOff: T) = add(SetValue2(field, valueOn, valueOff))
 
-  def addSubform(field: FormListField[_ <: Form]) = add(AddSubform(field))
+  def addSubform(field: FormListField[_ <: SubForm]) = add(AddSubform(field))
 }

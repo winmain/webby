@@ -104,6 +104,30 @@ extern class GoogString {
 
   // TODO: не все методы перечислены здесь
 
+
+/**
+ * Trims white spaces to the left and right of a string.
+ * @param {string} str The string to trim.
+ * @return {string} A trimmed copy of {@code str}.
+ */
+  static function trim(str: String): String;
+
+
+/**
+ * Trims whitespaces at the left end of a string.
+ * @param {string} str The string to left trim.
+ * @return {string} A trimmed copy of {@code str}.
+ */
+  static function trimLeft(str: String): String;
+
+
+/**
+ * Trims whitespaces at the right end of a string.
+ * @param {string} str The string to right trim.
+ * @return {string} A trimmed copy of {@code str}.
+ */
+  static function trimRight(str: String): String;
+
 /**
  * Escapes characters in the string that are not safe to use in a RegExp.
  * @param {*} s The string to escape. If not a string, it will be casted

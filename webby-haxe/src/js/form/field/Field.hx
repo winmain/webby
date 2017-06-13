@@ -41,8 +41,7 @@ class Field extends EventTarget {
     field = props.field;
     // TODO: не очень хорошая логика с name и id. Надо бы сделать более простую/прямолинейную логику.
     name = G.or(props.name, function() return props.shortId);
-    var suffix = form.subId != null ? '-' + form.subId : '';
-    id = form.htmlId + '-' + props.shortId + suffix;
+    id = form.htmlId + '-' + props.shortId;
     tag = initTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
     if (tag == null) throw new Error('Field node #${id} not found');
 //    @$el = @initEl().prop('field', @)
@@ -131,7 +130,7 @@ class Field extends EventTarget {
     vis = v;
     var t: Tag;
     if (hideWithRow()) {
-      t = getSection();
+      t = getRow();
       if (t == null) t = box;
     } else {
       t = box;
@@ -203,9 +202,9 @@ class Field extends EventTarget {
   }
 
   /*
-  Find parent section tag. Used to hide tag with it's parent.
+  Find parent row tag. Used to hide tag with it's parent.
    */
-  function getSection(): Null<Tag> return form.config.findFieldRow(this);
+  function getRow(): Null<Tag> return form.config.findFieldRow(this);
 
 
   // ------------------------------- Error & event handling methods -------------------------------

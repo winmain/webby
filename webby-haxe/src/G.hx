@@ -1,8 +1,9 @@
 package ;
-import js.RegExp;
+import js.Error;
 import js.html.Storage;
 import js.html.Window;
 import js.html.XMLHttpRequest;
+import js.RegExp;
 
 /**
  * Глобальный класс, содержит шоткаты на часто используемые классы и методы.
@@ -33,8 +34,12 @@ class G {
 
   inline public static function and2<A, T>(a: A, b: A -> T): T return untyped __js__('({0} && {1})', a, b(a));
 
+  public static function error(message: String): Void {
+    throw new Error(message);
+  }
+
   public static function require(v: Bool, error: String = null): Void {
-    if (!v) throw (error == null ? "Requirement failed" : error);
+    if (!v) throw new Error(error == null ? "Requirement failed" : error);
   }
 
   // ------------------------------- Browser methods -------------------------------

@@ -1,15 +1,169 @@
 package js.form.field;
 
 import js.form.field.Field.FieldProps;
+import js.form.Form.FormProps;
+
+using goog.string.GoogString;
 
 class FormListField extends Field {
   static public var REG = 'formList';
 
+  // ------------------------------- Events -------------------------------
+
+  public static inline var AddFormEvent = 'add-form';
+  public static inline var AddRemoveEvent = 'add-remove';
+
+  // ------------------------------- Class -------------------------------
+
+  var subProps: FormProps;
+  var defaultItems: Int;
+  var minItems: Null<Int>;
+  var maxItems: Null<Int>;
+  var uniqueBy: Array<String>;
+
+  var lastSubId: Int = 1;
+
   public var forms(default, null): Array<Form> = [];
+
+  var templateTag: Tag;
+  var listTag: Tag;
+  var adders: Array<Tag>;
 
   public function new(form: Form, props: FormListFieldProps) {
     super(form, props);
-    // TODO:
+    subProps = props.sub;
+    defaultItems = G.or(props.defaultItems, function() return 0);
+    minItems = props.minItems;
+    maxItems = props.maxItems;
+    uniqueBy = props.uniqueBy;
+
+    templateTag = Tag.find('#' + templateId());
+    G.require(templateTag != null, 'Subform template "#${templateId()}" not found"');
+
+    var topForm = form; // Вычислить самую верхнюю форму
+    while (topForm.parentForm != null) topForm = topForm.parentForm;
+
+    listTag = topForm.tag.fnd('#' + listId());
+    G.require(listTag != null, 'Subform list placeholder "topForm #${listId()}" not found');
+
+    adders = topForm.tag.fndAll('#' + addId());
+    for (adder in adders) adder.onClick(function(): Bool {
+      addForm(true);
+      return false;
+    });
+  }
+
+  // ------------------------------- All id functions -------------------------------
+
+  public function makeId(suffix: String): String return
+    id + '-' + suffix + (form.subId != null ? '-' + form.subId : '');
+
+  public function templateId(): String return id + '-template';
+
+  public function listId(): String return makeId('list');
+
+  public function addId(): String return makeId('add');
+
+  public function removeId(): String return 'form__remove';
+
+  // ------------------------------- Field methods -------------------------------
+
+  override public function initTag(): Tag return form.tag.fnd('#' + listId());
+
+  override public function resetError() {
+    super.resetError();
+    for (form in forms) form.resetErrors();
+  }
+
+  override public function setValueEl(value: Null<Dynamic>) {
+    setValueEl2(value);
+  }
+
+  public function setValueEl2(value: Null<Array<External>>) {
+    forms = [];
+    listTag.removeChildren();
+    if (value != null && value.length > 0) {
+      for (formValue in value) {
+        var form = addForm(true, true, true);
+        form.fill(formValue);
+      }
+    } else {
+      for (idx in 0...defaultItems) {
+        addForm(true);
+      }
+    }
+  }
+
+  override public function value(): Dynamic return value2();
+
+  public function value2(): Array<External> {
+    var ret: Array<External> = [];
+    for (idx in 0...forms.length) {
+      var form = forms[idx];
+      if ((minItems != 0 && idx < minItems) || !form.isInitialEmpty()) {
+        // Условие непустой формы !form.isInitialEmpty() работает только для необязательных подформ (индекс которых больше чем minItems).
+        ret.push(form.value());
+      }
+    }
+    return ret;
+  }
+
+  function makeSubFormId(subId: Int): String return id + '-' + subId;
+
+  /*
+  Создать новую подформу через клонирование шаблона
+   */
+  function newFormEl(subId: Int, vis: Bool): Tag {
+    var subFormId = makeSubFormId(subId);
+    var formTag = templateTag.clone(true).id(subFormId);
+    if (vis) formTag.clsOff(form.config.hiddenClass);
+    for (t in formTag.fndAll('*')) {
+      updateSubFormChildTag(t, subFormId);
+    }
+    return formTag;
+  }
+
+  function updateSubFormChildTag(t: Tag, subFormId: String) {
+    var id = t.getId();
+    if (G.toBool(id) && id.startsWith(form.config.subformHtmlId)) {
+      var id = subFormId + id.substr(form.config.subformHtmlId.length);
+      t.id(id);
+      t.attr('name', id);
+      t.on('focus', function() {
+        // TODO: rr.form.field.FormListField.superClass_.resetError.apply(self)
+//          resetError();
+      });
+    }
+//      if el.htmlFor
+//        el.htmlFor = el.htmlFor + '-' + subId
+//      if el.getAttribute('data-target')
+//        el.setAttribute('data-target', el.getAttribute('data-target') + '-' + subId)
+    //////
+  }
+
+  /*
+  Create and add a subform.
+  When `maxItems` is defined and subform count exceeds the `maxItems` value, then subform will not be added.
+  @return object Form, if subform was added, null otherwise
+   */
+  public function addForm(vis: Bool, ?showOptionalFields: Bool, ?ignoreAddCheck: Bool): Null<Form> {
+    if (!ignoreAddCheck && !canAddForm()) return null;
+    var subId: Int = lastSubId++;
+    var t: Tag = newFormEl(subId, vis);
+    t.addTo(listTag); // addTo() надо делать ДО создания объекта Form (иначе не работает Field.findFormBlock)
+    var form = new Form(subProps, t, subId, this);
+    dispatchEvent({
+      type: AddFormEvent,
+      form: form
+    });
+    form.init();
+    form.showOptionalFields(showOptionalFields);
+    form.triggerRules();
+
+    for (tag in getRemoveTags(form)) tag.onClick(function(): Bool {removeForm(form); return false;});
+    forms.push(form);
+    updateAddRemoveEls();
+    return form;
   }
 
   /*
@@ -17,154 +171,58 @@ class FormListField extends Field {
   This method works only when no subform exists.
   */
   public function addDefaultForm(opt_count: Int = 1) {
-    // TODO:
+    for (idx in 0...opt_count) {
+      if (forms.length == 0) addForm(true, false);
+    }
   }
 
-  public function removeForm(form: Form) {
-    // TODO:
+  /*
+  Removes the subform.
+  @return true on success, false otherwise.
+   */
+  public function removeForm(form: Form): Bool {
+    if (!canRemoveForm()) return false; // Нельзя удалять элементы, если их количество меньше minItems
+    for (i in 0...forms.length) {
+      if (form == forms[i]) {
+        forms.splice(i, 1);
+        form.tag.remove();
+        updateAddRemoveEls();
+        return true;
+      }
+    }
+    throw "Cannot remove subform";
   }
+
+  public function canAddForm(): Bool return maxItems == 0 || forms.length < maxItems;
+
+  public function canRemoveForm(): Bool return minItems == 0 || forms.length > minItems;
+
+  function updateAddRemoveEls() {
+    var canAdd = canAddForm();
+    for (adder in adders) adder.setCls(form.config.hiddenClass, !canAdd);
+
+    var canRemove = canRemoveForm();
+    for (form in forms) {
+      for (tag in getRemoveTags(form)) {
+        tag.setCls(form.config.hiddenClass, !canRemove);
+      }
+    }
+
+    dispatchEvent({type: AddRemoveEvent});
+  }
+
+  /*
+  Вернуть элементы удаления для подформы
+   */
+  function getRemoveTags(form: Form): Array<Tag> return form.tag.fndAll('#' + removeId());
 }
-/*
-class rr.form.field.FormListField extends rr.form.field.BaseField
-  ### @const ###
-  addFormEvent: 'add-form'
-  ### @const ###
-  addRemoveEvent: 'add-remove'
 
-  constructor: (form, props) ->
-    super(form, props)
-    self = @
-    @subProps = props['sub']
-    @defaultItems = props['defaultItems'] || 0
-    @minItems = props['minItems']
-    @maxItems = props['maxItems']
-    @uniqueBy = props['uniqueBy']
-    @lastSubId = 1
-    @forms = []
-
-    @$template = $('#' + @templateId())
-    topForm = @form # Вычислить самую верхнюю форму
-    topForm = topForm.parentForm while topForm.parentForm
-    if !@$template.length then throw "Template for subform '#{@id}' not found"
-    @$list = $('#' + @listId(), topForm.$el)
-    if !@$list.length then throw "List placeholder for subform '#{@id}' not found"
-
-    @$adder = $('#' + @addId(), topForm.$el).click ->
-      self.addForm(true, false)
-      false
-
-  # --------- Все id в одном месте ---------
-
-  makeId: (suffix) -> @name + '-' + suffix + (if @form.subId then '-' + @form.subId else '')
-  templateId: -> @name + '-template'
-  listId: -> @makeId('list')
-  addId: -> @makeId('add')
-  removeId: (subId)-> 'remove-' + subId
-
-  # --------------- Error handling methods ---------------
-
-  resetError: ->
-    super
-    form.resetErrors() for form in @forms
-
-  # ----------------------------------------
-
-  setValueEl: (value) ->
-    @forms = []
-    @$list.empty()
-    if value && value.length > 0
-      for formValue in value
-        form = @addForm(true, true, true)
-        form.fill(formValue)
-    else
-      @addForm(true, false) for idx in [0...@defaultItems]
-
-  value: ->
-    ret = []
-    for form, idx in @forms
-      if idx < @minItems || !form.isInitialEmpty()
-        # Условие непустой формы !form.isInitialEmpty() работает только для необязательных подформ (индекс которых больше чем @minItems).
-        ret.push(form.value())
-    ret
-
-  initEl: -> $('#' + @listId(), @form.$el)
-
-  ###
-  Создать новую подформу через клонирование шаблона
-  ###
-  newFormEl: (subId, vis)->
-    self = @
-    $form = @$template.clone()
-    if vis then $form.removeClass('hide')
-    $form[0].id = @id + '-' + subId
-    for el in $form.find('*')
-      if el.id
-        el.id = el.id + '-' + subId
-        el.name = el.name + '-' + subId
-        $(el).focus(-> rr.form.field.FormListField.superClass_.resetError.apply(self))
-      if el.htmlFor
-        el.htmlFor = el.htmlFor + '-' + subId
-      if el.getAttribute('data-target')
-        el.setAttribute('data-target', el.getAttribute('data-target') + '-' + subId)
-    $form
-
-  ###
-  Создать и добавить подформу.
-  Если указан @maxItems и количество подформ превысит это значение, то подформа не добавится.
-  @return объект rr.form.Form, если подформа была добавлена, иначе null
-  ###
-  addForm: (vis, showOptionalFields, ignoreAddCheck) ->
-    self = @
-    if !ignoreAddCheck && !@canAddForm() then return null
-    subId = @lastSubId++
-    $el = @newFormEl(subId, vis)
-    $el.appendTo(@$list) # appendTo() надо делать ДО создания объекта rr.form.Form (иначе не работает BaseField.findFormBlock)
-    form = new rr.form.Form($el, @subProps, subId, @)
-    @dispatchEvent({type: @addFormEvent, form: form})
-    form.init()
-    form.showOptionalFields(showOptionalFields)
-    form.triggerRules()
-
-    @getRemoveEl(form).click -> self.removeForm(form)
-    @forms.push(form)
-    @updateAddRemoveEls()
-    form
-
-  ###
-  Добавить дефолтную одну или несколько дефолтных подформ.
-  Этот метод работает только если нет ни одной подформы.
-  ###
-  addDefaultForm: (opt_count) ->
-    for idx in [0...(opt_count || 1)]
-      if @forms.length == 0 then @addForm(true, false)
-
-  removeForm: (form) ->
-    if !@canRemoveForm() then return false # Нельзя удалять элементы, если их количество меньше @minItems
-    for curItem, i in @forms
-      if form == curItem
-        @forms.splice(i, 1)
-        form.$el.remove()
-        @updateAddRemoveEls()
-        return false
-    throw "Cannot remove subform"
-
-  canAddForm: -> !@maxItems || @forms.length < @maxItems
-  canRemoveForm: -> !@minItems || @forms.length > @minItems
-
-  updateAddRemoveEls: ->
-    @$adder.toggle(@canAddForm())
-    canRemove = @canRemoveForm()
-    @getRemoveEl(form).toggle(canRemove) for form in @forms
-    @dispatchEvent({type: @addRemoveEvent})
-
-  ###
-  Вернуть элемент удаления для подформы
-  ###
-  getRemoveEl: (form) -> $('#' + @removeId(form.subId), form.$el)
-
-*/
 
 @:build(macros.ExternalFieldsMacro.build())
 class FormListFieldProps extends FieldProps {
-  // TODO:
+  public var defaultItems: Int;
+  @:optional public var minItems: Int;
+  @:optional public var maxItems: Int;
+  @:optional public var uniqueBy: Array<String>;
+  public var sub: FormProps;
 }

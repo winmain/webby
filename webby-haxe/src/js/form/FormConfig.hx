@@ -33,6 +33,10 @@ class FormConfig {
 
   public var withErrorClass = 'with-error';
 
+  // ------------------------------- Variables -------------------------------
+
+  public var subformHtmlId = "$subform$";
+
   // ------------------------------- Functions -------------------------------
 
   public function findSubmitButtons(form: Form): Array<Tag> return form.tag.fndAll('button[type=submit]');

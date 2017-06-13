@@ -52,10 +52,15 @@ class Form extends EventTarget {
   public var finished(default, null): Bool;
   public var onPostSuccessFn(default, null): Null<External -> Void>;
 
-  public function new(props: FormProps, ?subId: Null<Int>, ?parentField: Null<Field>) {
+  public function new(props: FormProps, ?overrideTag: Null<Tag>, ?subId: Null<Int>, ?parentField: Null<Field>) {
     super();
-    htmlId = props.htmlId;
-    tag = Tag.find('#' + htmlId);
+    if (overrideTag == null) {
+      htmlId = props.htmlId;
+      tag = Tag.find('#' + htmlId);
+    } else {
+      tag = overrideTag;
+      htmlId = overrideTag.getId();
+    }
     if (tag == null) throw new Error('Form tag id:${htmlId} not found');
     this.props = props;
     this.subId = subId;

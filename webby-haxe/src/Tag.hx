@@ -318,6 +318,10 @@ class Tag {
 
   public function next(): Null<Tag> return wrap(el.nextElementSibling);
 
+  // ------------------------------- Misc -------------------------------
+
+  public function clone(?deep: Bool): Tag return wrap(cast el.cloneNode(deep));
+
   // ------------------------------- Events -------------------------------
 
   public function on(type: String, handler: Function, ?options: Dynamic): Tag {

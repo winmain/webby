@@ -17,7 +17,7 @@ import scala.collection.mutable
 import scala.util.control.ControlThrowable
 
 /**
-  * Trait для описания форм
+  * Trait to describe the forms
   */
 trait Form extends StdFormFields with StdFormJsRules {self =>
   type B <: BaseForms
@@ -28,7 +28,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     * IMPORTANT! To override this field you should do it before any field declarations occur.
     * Because every field initializes it [[Field.htmlId]] value in constructor.
     */
-  val htmlId: String = "form"
+  val htmlId: String = base.formId
 
   /**
     * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.
