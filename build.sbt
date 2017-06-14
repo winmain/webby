@@ -3,7 +3,7 @@ import sbt.Keys._
 import sbt._
 
 val buildScalaVersion = "2.12.2"
-val buildCrossScalaVersions = Seq("2.11.11", "2.12.2")
+val buildCrossScalaVersions = Seq(buildScalaVersion) // Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",

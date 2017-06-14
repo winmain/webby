@@ -13,6 +13,7 @@ import org.elasticsearch.index.query._
 import org.elasticsearch.search.{SearchHit, SearchHits}
 import querio.{DbEnum, ScalaDbEnum, ScalaDbEnumCls}
 
+// for Scala 2.11: import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 /**
