@@ -20,4 +20,12 @@ interface FormStrings {
   function notEarlierThanError(min: String): String;
 
   function noLaterThanError(max: String): String;
+
+  // --- UploadField ---
+
+  function oldBrowserHtml(): String;
+
+  function errorUploadTitle(): String;
+
+  function unexpectedError(): String;
 }

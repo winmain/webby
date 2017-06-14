@@ -42,9 +42,11 @@ class Field extends EventTarget {
     shortId = props.shortId;
     htmlId = form.htmlId + '-' + props.shortId;
     tag = initTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
-    if (tag == null) throw new Error('Field node #${htmlId} not found');
+    if (tag == null) throw new Error('Field tag #${htmlId} not found');
 //    @$el = @initEl().prop('field', @)
-    box = initBoxTag().cls(form.config.fieldBoxClass);
+    box = initBoxTag();
+    if (box == null) throw new Error('Field box for "${htmlId}" not found');
+    box.cls(form.config.fieldBoxClass);
 
     required = G.toBool(props.required);
     updateRequired();
@@ -134,7 +136,7 @@ class Field extends EventTarget {
     } else {
       t = box;
     }
-    t.setCls(form.config.hiddenClass, !v);
+    showHide(t, v);
   }
 
   /*
@@ -266,10 +268,10 @@ class Field extends EventTarget {
   public function updateErrorTag() {
     box.setCls(form.config.fieldBoxErrorClass, error != null || emptyError).setCls(form.config.fieldBoxWithMsgClass, error != null);
     if (error != null) {
-      errorTag.setHtml(error).clsOff(form.config.hiddenClass);
+      showHide(errorTag.setHtml(error), true);
       positionErrorTag();
     } else {
-      errorTag.cls(form.config.hiddenClass);
+      showHide(errorTag, false);
     }
   }
 
@@ -287,6 +289,15 @@ class Field extends EventTarget {
 
   private function blockSetError() {
     if (block != null) block.error.setError(this);
+  }
+
+  // ------------------------------- Protected utility methods -------------------------------
+
+  @:protected function showHide(tag: Null<Tag>, v: Bool): Null<Tag> return tag == null ? null : tag.setCls(form.config.hiddenClass, !v);
+
+  @:protected function showHideMany(tags: Array<Tag>, v: Bool): Array<Tag> {
+    for (tag in tags) showHide(tag, v);
+    return tags;
   }
 }
 

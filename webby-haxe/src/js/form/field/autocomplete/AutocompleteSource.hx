@@ -1,4 +1,4 @@
-package js.form.field;
+package js.form.field.autocomplete;
 
 import goog.ui.ac.AutoComplete.Matcher;
 

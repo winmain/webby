@@ -1,6 +1,7 @@
 package goog.string;
 
 import haxe.extern.Rest;
+
 @:jsRequire('goog.string')
 extern class GoogString {
 /**

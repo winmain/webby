@@ -1,7 +1,7 @@
-package js.form.field;
+package js.form.field.autocomplete;
 
 import goog.ui.ac.AutoComplete.RowEvent;
-import js.form.field.AbstractAutocompleteField.AutocompleteFieldProps;
+import js.form.field.autocomplete.AbstractAutocompleteField.AutocompleteFieldProps;
 
 class AutocompleteListField extends AbstractAutocompleteField {
   static public var REG = 'autocompleteList';

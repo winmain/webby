@@ -137,10 +137,10 @@ class FormListField extends Field {
 
     processAttr('id');
     if (processAttr('name')) {
-      t.on('focus', function() {
-        // TODO: rr.form.field.FormListField.superClass_.resetError.apply(self)
+//      t.on('focus', function() {
+//        // TODO: rr.form.field.FormListField.superClass_.resetError.apply(self)
 //          resetError();
-      });
+//      });
     }
     processAttr('for');
     processAttr('data-target');

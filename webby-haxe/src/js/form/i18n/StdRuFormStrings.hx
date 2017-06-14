@@ -21,4 +21,14 @@ class StdRuFormStrings implements FormStrings {
   public function notEarlierThanError(min: String): String return "Не ранее " + min;
 
   public function noLaterThanError(max: String): String return "Не позднее " + max;
+
+  // --- UploadField ---
+
+  public function oldBrowserHtml(): String return
+    'Вы используете устаревшую версию браузера. ' +
+    'Чтобы загружать файлы вам нужно <a href="http://phpbbex.com/oldies/ru.html">сменить браузер</a>.';
+
+  public function errorUploadTitle(): String return 'Ошибка загрузки файла';
+
+  public function unexpectedError(): String return 'Произошла непредвиденная ошибка';
 }

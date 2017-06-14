@@ -1,4 +1,4 @@
-package js.form.field;
+package js.form.field.autocomplete;
 
 import js.form.field.Field.FieldProps;
 import goog.ui.ac.InputHandler;

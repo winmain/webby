@@ -1,8 +1,9 @@
 package js.form;
 
-import js.form.field.AutocompleteSource;
+import js.form.field.autocomplete.AutocompleteSource;
 import js.form.field.Field;
 import js.form.field.RichSelectConfig;
+import js.form.field.upload.UploadConfig;
 import js.form.i18n.FormStrings;
 import js.html.XMLHttpRequest;
 
@@ -76,4 +77,6 @@ class FormConfig {
   public var selectConfig: RichSelectConfig;
 
   public var autocompleteSource: AutocompleteSource;
+
+  public var uploadConfig: UploadConfig;
 }
