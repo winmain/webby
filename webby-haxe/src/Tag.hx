@@ -1,4 +1,5 @@
 package ;
+import js.lib.EventUtils;
 import goog.Goog;
 import haxe.Constraints.Function;
 import haxe.extern.EitherType;
@@ -324,39 +325,34 @@ class Tag {
 
   // ------------------------------- Events -------------------------------
 
-  public function on(type: String, handler: Function, ?options: Dynamic): Tag {
-    el.addEventListener(type, handler, options);
+  public function on(eventName: String, handler: Function, ?options: Dynamic): Tag {
+    el.addEventListener(eventName, handler, options);
     return this;
   }
 
-  public function onMulti(types: Array<String>, handler: Function, ?options: Dynamic): Tag {
-    for (type in types) {
-      el.addEventListener(type, handler, options);
+  public function onMulti(eventNames: Array<String>, handler: Function, ?options: Dynamic): Tag {
+    for (name in eventNames) {
+      el.addEventListener(name, handler, options);
     }
     return this;
   }
 
-  public function off(type: String, handler: Function, ?options: Dynamic): Tag {
-    el.removeEventListener(type, handler, options);
+  public function off(eventName: String, handler: Function, ?options: Dynamic): Tag {
+    el.removeEventListener(eventName, handler, options);
     return this;
   }
 
-  public function offMulti(types: Array<String>, handler: Function, ?options: Dynamic): Tag {
-    for (type in types) {
-      el.removeEventListener(type, handler, options);
+  public function offMulti(eventNames: Array<String>, handler: Function, ?options: Dynamic): Tag {
+    for (eventName in eventNames) {
+      el.removeEventListener(eventName, handler, options);
     }
     return this;
   }
 
-  /*
-  from http://youmightnotneedjquery.com/#trigger_native
-   */
-//  public function triggerNative(type: String) {
-//    // For a full list of event types: https://developer.mozilla.org/en-US/docs/Web/API/document.createEvent
-//    var event = G.document.createEvent('HTMLEvents');
-//    event.initEvent(type, true, false);
-//    el.dispatchEvent(event);
-//  }
+  public function trigger(eventName: String): Tag {
+    EventUtils.fireEvent(el, eventName);
+    return this;
+  }
 
   // MouseEvent
   public function onClick(handler: Function): Tag return on('click', untyped handler);

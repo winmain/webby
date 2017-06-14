@@ -39,8 +39,9 @@ class G {
     throw new Error(message);
   }
 
-  public static function require(v: Bool, error: String = null): Void {
-    if (!v) throw new Error(error == null ? "Requirement failed" : error);
+  public static function require<T>(v: T, error: String = null): T {
+    if (untyped !v) throw new Error(error == null ? "Requirement failed" : error);
+    return v;
   }
 
   // ------------------------------- Browser methods -------------------------------
