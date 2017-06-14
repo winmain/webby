@@ -25,8 +25,8 @@ class Field extends EventTarget {
   public var vis(default, null): Bool = true;
 
   public var field(default, null): String;
-  public var name(default, null): String;
-  public var id(default, null): String;
+  public var shortId(default, null): String;
+  public var htmlId(default, null): String;
   public var required: Bool;
 
   public var tag(default, null): Tag;
@@ -39,11 +39,10 @@ class Field extends EventTarget {
     this.form = form;
     this.props = props;
     field = props.field;
-    // TODO: не очень хорошая логика с name и id. Надо бы сделать более простую/прямолинейную логику.
-    name = G.or(props.name, function() return props.shortId);
-    id = form.htmlId + '-' + props.shortId;
+    shortId = props.shortId;
+    htmlId = form.htmlId + '-' + props.shortId;
     tag = initTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
-    if (tag == null) throw new Error('Field node #${id} not found');
+    if (tag == null) throw new Error('Field node #${htmlId} not found');
 //    @$el = @initEl().prop('field', @)
     box = initBoxTag().cls(form.config.fieldBoxClass);
 
@@ -108,7 +107,7 @@ class Field extends EventTarget {
     box.setCls(form.config.fieldBoxRequiredClass, required);
   }
 
-  public function initTag(): Tag return form.tag.fnd('#' + id);
+  public function initTag(): Tag return form.tag.fnd('#' + htmlId);
 
   /*
   Найти и вернуть rr.form.FormBlock, в который вложено это поле; либо null, если такого не существует.
@@ -219,7 +218,7 @@ class Field extends EventTarget {
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
    */
   public function createErrorTag(): Tag return
-    Tag.labelFor(id).cls(form.config.fieldErrorClass).cls(form.config.hiddenClass).addAfter(box);
+    Tag.labelFor(htmlId).cls(form.config.fieldErrorClass).cls(form.config.hiddenClass).addAfter(box);
 
   public function resetError() {
     emptyError = false;

@@ -57,7 +57,7 @@ class RichSelectField extends Field {
     box.setCls(form.config.selectConfig.disabledCls, !en);
   }
 
-  override public function initTag(): Tag return form.tag.fnd('#' + id + ' > select');
+  override public function initTag(): Tag return form.tag.fnd('#' + htmlId + ' > select');
 
   override public function initBoxTag(): Tag return tag.parent();
 }

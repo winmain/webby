@@ -2,6 +2,7 @@ package js.form.field;
 
 import js.form.field.Field.FieldProps;
 import js.form.Form.FormProps;
+import js.html.Event;
 
 using goog.string.GoogString;
 
@@ -47,18 +48,18 @@ class FormListField extends Field {
     G.require(listTag != null, 'Subform list placeholder "topForm #${listId()}" not found');
 
     adders = topForm.tag.fndAll('#' + addId());
-    for (adder in adders) adder.onClick(function(): Bool {
+    for (adder in adders) adder.onClick(function(e: Event) {
       addForm(true);
-      return false;
+      e.preventDefault();
     });
   }
 
   // ------------------------------- All id functions -------------------------------
 
   public function makeId(suffix: String): String return
-    id + '-' + suffix + (form.subId != null ? '-' + form.subId : '');
+    htmlId + '-' + suffix + (form.subId != null ? '-' + form.subId : '');
 
-  public function templateId(): String return id + '-template';
+  public function templateId(): String return htmlId + '-template';
 
   public function listId(): String return makeId('list');
 
@@ -108,7 +109,7 @@ class FormListField extends Field {
     return ret;
   }
 
-  function makeSubFormId(subId: Int): String return id + '-' + subId;
+  function makeSubFormId(subId: Int): String return htmlId + '-' + subId;
 
   /*
   Создать новую подформу через клонирование шаблона
@@ -124,21 +125,25 @@ class FormListField extends Field {
   }
 
   function updateSubFormChildTag(t: Tag, subFormId: String) {
-    var id = t.getId();
-    if (G.toBool(id) && id.startsWith(form.config.subformHtmlId)) {
-      var id = subFormId + id.substr(form.config.subformHtmlId.length);
-      t.id(id);
-      t.attr('name', id);
+    function processAttr(attrName: String): Bool {
+      var v = t.getAttr(attrName);
+      if (G.toBool(v) && v.startsWith(form.config.subformHtmlId)) {
+        v = subFormId + v.substr(form.config.subformHtmlId.length);
+        t.attr(attrName, v);
+        return true;
+      }
+      return false;
+    }
+
+    processAttr('id');
+    if (processAttr('name')) {
       t.on('focus', function() {
         // TODO: rr.form.field.FormListField.superClass_.resetError.apply(self)
 //          resetError();
       });
     }
-//      if el.htmlFor
-//        el.htmlFor = el.htmlFor + '-' + subId
-//      if el.getAttribute('data-target')
-//        el.setAttribute('data-target', el.getAttribute('data-target') + '-' + subId)
-    //////
+    processAttr('for');
+    processAttr('data-target');
   }
 
   /*

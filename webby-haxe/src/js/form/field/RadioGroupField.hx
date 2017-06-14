@@ -25,7 +25,7 @@ class RadioGroupField extends Field {
         var el: InputElement = cast radio.el;
         el.checked = true;
       } else {
-        throw 'Invalid value "$value" for radio group id:$id';
+        throw 'Invalid value "$value" for radio group id:$htmlId';
       }
     }
   }

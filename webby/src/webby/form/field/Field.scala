@@ -26,9 +26,6 @@ trait Field[T] {self =>
 
   val htmlId: String = form.base.makeFieldHtmlId(this)
 
-  /** Имя элемента (input name="$name") */
-  @Nullable def name: String = shortId
-
   private var _value: T = nullValue
   def get: T = _value
   def set(v: T): Unit = setValue(v)
@@ -225,10 +222,6 @@ trait Field[T] {self =>
   @JsonInclude(JsonInclude.Include.NON_ABSENT)
   class BaseJsProps {
     val shortId: String = self.shortId
-    val name: String = self.name match {
-      case n if n == self.shortId => null
-      case n => n
-    }
     val jsField: String = self.jsField
     val required = boolFalse(self.required)
     val enabled = boolTrue(self.enabled)

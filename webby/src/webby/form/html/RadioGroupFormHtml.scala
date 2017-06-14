@@ -16,7 +16,7 @@ trait RadioGroupFormHtml {self: StdFormHtml =>
       val firstIdx = if (field.emptyTitle.isDefined) -1 else 0
       val lastIdx = field.items.size - 1
       def renderItem(idx: Int, elId: String, value: String, title: String): Unit = {
-        view.inputRadio.id(elId).name(field.name).valueSafe(value)
+        view.inputRadio.id(elId).name(field.htmlId).valueSafe(value)
         view.label.forId(elId).cls(labelCls).clsIf(idx == firstIdx, radioGroupFirstLabelCls).clsIf(idx == lastIdx, radioGroupLastLabelCls) ~ title
       }
       field.emptyTitle.foreach(title => renderItem(-1, field.htmlId + "-", "", title))
@@ -37,7 +37,7 @@ trait RadioGroupFormHtml {self: StdFormHtml =>
     case class Item(item: T) {
       val value: String = field.valueFn(item)
       val elId: String = field.htmlId + "-" + value
-      def inputRadio: StdInputCheckedTag = view.inputRadio.id(elId).name(field.name).valueSafe(value)
+      def inputRadio: StdInputCheckedTag = view.inputRadio.id(elId).name(field.htmlId).valueSafe(value)
       def label: StdLabelTag = view.label.forId(elId).cls(labelCls)
     }
     def withItem(fieldItem: T)(body: Item => Any): Unit = body(Item(fieldItem))

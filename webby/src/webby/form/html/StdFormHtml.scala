@@ -27,7 +27,7 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
   def labelSimple(field: Field[_]): StdLabelTag = view.label.forId(field.htmlId)
 
   def wrapField[T <: CommonTag with NamedTag](field: Field[_], tag: T): T = {
-    tag.id(field.htmlId).name(field.name).cls(form.base.fieldCls)
+    tag.id(field.htmlId).cls(form.base.fieldCls)
   }
 
   def wrapFieldPH[T <: CommonTag with NamedTag with PlaceholderTag](field: PlaceholderField[_], tag: T): T = {
@@ -99,7 +99,6 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
     val selectConf = if (selectConfig != null) selectConfig else form.base.selectConfig
     RichSelectHtml(selectConf)
       .outerSpan(span => outerSpan(span.id(field.htmlId).cls(form.base.fieldCls)))
-      .innerSelect(_.name(field.name))
       .render {
         field.emptyTitle.foreach(title => view.option.value("") ~ title)
         for (item <- field.items) {

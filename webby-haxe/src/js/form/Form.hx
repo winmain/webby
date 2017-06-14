@@ -169,7 +169,7 @@ class Form extends EventTarget {
 
     var field: Field = fieldReg.constructor(this, fieldProps);
     field.init(fieldProps);
-    fields.set(field.name, field);
+    fields.set(field.shortId, field);
   }
 
   /*
@@ -226,10 +226,10 @@ class Form extends EventTarget {
     function showTags(tags: Array<Tag>, show: Bool) {
       for (tag in tags) tag.setCls(config.hiddenClass, !show);
     }
-    function showFields(): Dynamic {
+    function showFields(?e: Event) {
       showTags(showOptTags, false);
       showTags(optFieldsTags, true);
-      return false;
+      G.and(e, function() {e.preventDefault();});
     }
     if (show) showFields();
     else {
@@ -251,7 +251,7 @@ class Form extends EventTarget {
   public function fieldPath(subPath: External): External {
     if (parentField != null) {
       var path: External = {};
-      path[parentField.name] = subPath;
+      path[parentField.shortId] = subPath;
       return parentForm.fieldPath(path);
     } else {
       return subPath;
@@ -307,7 +307,7 @@ class Form extends EventTarget {
     var data: External = {'_key': key};
     for (field_ in fields) {
       var field: Field = field_;
-      data.set(field.name, field.value());
+      data.set(field.shortId, field.value());
     }
     return data;
   }

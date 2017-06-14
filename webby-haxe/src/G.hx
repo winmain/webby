@@ -1,4 +1,5 @@
 package ;
+import haxe.extern.EitherType;
 import js.Error;
 import js.html.Storage;
 import js.html.Window;
@@ -28,9 +29,9 @@ class G {
 
   inline public static function floatToFixed(f: Float, numbers: Int): String return untyped __js__('{0}.toFixed({1})', f, numbers);
 
-  inline public static function or<T>(a: T, b: Void -> T): T return untyped __js__('({0} || {1})', a, b());
+  inline public static function or<A, T>(a: A, b: Void -> T): EitherType<A, T> return untyped __js__('({0} || {1})', a, b());
 
-  inline public static function and<T>(a: T, b: Void -> T): T return untyped __js__('({0} && {1})', a, b());
+  inline public static function and<T>(a: Any, b: Void -> T): T return untyped __js__('({0} && {1})', a, b());
 
   inline public static function and2<A, T>(a: A, b: A -> T): T return untyped __js__('({0} && {1})', a, b(a));
 

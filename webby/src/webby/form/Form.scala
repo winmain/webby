@@ -287,7 +287,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     val onUnloadConfirm: java.lang.Boolean = trueOrNull(self.onUnloadConfirm)
     val hidden: java.lang.Boolean = trueOrNull(self.hidden)
     val initialFilled: java.lang.Boolean = trueOrNull(self.initialFilled)
-    val focusField: String = if (self.focusField == null) null else self.focusField.name
+    val focusField: String = if (self.focusField == null) null else self.focusField.shortId
     val submitAfterInit: java.lang.Boolean = trueOrNull(self.submitAfterInit)
 
     private def trueOrNull(bool: Boolean): java.lang.Boolean = if (bool) java.lang.Boolean.TRUE else null
