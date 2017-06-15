@@ -5,49 +5,53 @@ import js.html.Event;
 import js.lib.TestUpload;
 import js.ui.Drag;
 
+@:allow(js.form.field.upload.UploadFieldApiAccess)
 class UploadField extends Field {
   static public var REG = 'upload';
 
-  var uploadServer: String;
-  var fileBaseUrl: String;
+  public var fileBaseUrl(default, null): String;
   var onUpload: Null<OnUploadProps>;
   var onUploadAddForm: Null<FormListField>;
   var onUploadToFieldId: Null<String>;
-  var showType: Bool;
+  var onUploadFormAdded: Null<Form>;
+  public var showType(default, null): Bool;
 
   // Таймаут хранения файла во временном хранилище файлового сервера
   var tempTimeout: Int;
-  var tempTimer: Dynamic;////////////////
+  var tempTimer: Int;
 
   var newContainerTag: Tag;
   var editContainerTags: Array<Tag>;
   var progressContainerTag: Null<Tag>;
   var previewBlockTags: Array<Tag>;
-  var uploadFilenameBlockTags: Array<Tag>;
 
   var api: UploadFieldApi;
+  var apiAccess: UploadFieldApiAccess;
   var progress: Null<UploadFieldProgress>;
+  var preview: Null<UploadFieldPreview>;
   var drag: Drag;
 
   var val: Dynamic;
-  var valueBeforeUpload: Dynamic;
 
   public function new(form: Form, props: UploadFieldProps) {
     super(form, props);
     var uc: UploadConfig = G.require(form.config.uploadConfig, "UploadConfig is not configured");
 
-    uploadServer = props.uploadServer[G.location.protocol == 'https:' ? 1 : 0];
+    apiAccess = new UploadFieldApiAccess(this);
+
+    apiAccess.uploadServer = props.uploadServer[G.location.protocol == 'https:' ? 1 : 0];
     fileBaseUrl = props.fileBaseUrl;
     onUpload = props.onUpload;
     if (onUpload != null) {
       onUploadAddForm = G.require(cast form.fields.get(onUpload.addForm), 'OnUpload addForm "' + onUpload.addForm + '" not found');
-//      onUploadAddForm.listen(FormListField.AddRemoveEvent, function() {newContainerTags.setCls(form.config.hiddenClass, onUploadAddForm.canAddForm());});
+      onUploadAddForm.listen(FormListField.AddRemoveEvent, function() {newContainerTag.setCls(form.config.hiddenClass, onUploadAddForm.canAddForm());});
       onUploadToFieldId = onUpload.toField;
     }
     showType = props.showType;
     tempTimeout = initTempTimeout(uc);
     api = G.require(initApi(uc), "No UploadFieldApi configured");
-    progress = initUploadFieldProgress(uc);
+    progress = initProgress(uc);
+    preview = initPreview(uc);
 
     function findTags(cls: String): Array<Tag> return form.tag.fndAll('.' + cls + '[data-target=' + htmlId + ']');
     newContainerTag = showHide(findTags(uc.uploadNewCls)[0], false);
@@ -55,7 +59,7 @@ class UploadField extends Field {
     progressContainerTag = findTags(uc.uploadProgressCls)[0];
     if (progressContainerTag != null) showHide(progressContainerTag, false);
     previewBlockTags = findTags(uc.uploadPreviewBlockCls);
-    uploadFilenameBlockTags = findTags(uc.uploadFilenameCls);
+    apiAccess.uploadFilenameBlockTags = findTags(uc.uploadFilenameCls);
 
     if (initUploader()) {
       function openFileChooser(e: Event) {
@@ -72,11 +76,13 @@ class UploadField extends Field {
     }
   }
 
-  function initApi(c: UploadConfig): UploadFieldApi return c.api();
-
   function initTempTimeout(c: UploadConfig): Int return c.tempTimeout;
 
-  function initUploadFieldProgress(c: UploadConfig): Null<UploadFieldProgress> return c.uploadFieldProgress();
+  function initApi(c: UploadConfig): UploadFieldApi return c.api();
+
+  function initProgress(c: UploadConfig): Null<UploadFieldProgress> return c.uploadFieldProgress();
+
+  function initPreview(c: UploadConfig): Null<UploadFieldPreview> return c.uploadFieldPreview();
 
   function initUploader(): Bool {
     if (!TestUpload.testUpload()) {
@@ -135,9 +141,9 @@ class UploadField extends Field {
 */
     drag = new Drag(newContainerTag);
     drag.hoverClass(newContainerTag, form.config.uploadConfig.dragOverCls);
-//    drag.listen(Drag.DropEvent, function(e: Event) {startUpload(e.dataTransfer.files);});
+    drag.listen(Drag.DropEvent, function(e: Event) {api.startUpload(apiAccess, untyped e.dataTransfer.files);});
 
-//    tag.on('change', function() {startUpload(untyped tag.el.files)});
+    tag.on('change', function() {api.startUpload(apiAccess, untyped tag.el.files);});
     return true;
   }
 
@@ -145,14 +151,15 @@ class UploadField extends Field {
     for (t in newContainerTag) t.setHtml(form.config.strings.oldBrowserHtml());
   }
 
-  function showError(error:String) {
+  public function showError(error: String) {
     form.config.uploadConfig.showErrorMessage(form.config, error);
-    setValue(valueBeforeUpload);
+    setValue(apiAccess.valueBeforeUpload);
     drag.onCancelDrag();
   }
 
-//  function showUnexpectedError()  -> showError('Произошла непредвиденная ошибка')
-
+  public function showUnexpectedError() {
+    showError(form.config.strings.unexpectedError());
+  }
 
   function initProgressContainer() {
     if (progressContainerTag != null && progress != null) {
@@ -183,7 +190,17 @@ class UploadField extends Field {
     val = value;
     stopTempTimer();
     if (value != null) {
-      ///////////
+      if (onUploadAddForm != null) {
+        onUploadFormAdded = onUploadAddForm.addForm(true);
+        onUploadFormAdded.fields.get(onUploadToFieldId).setValue(value);
+        val = null;
+      } else {
+        if (preview != null) {
+          for (t in previewBlockTags) {
+            preview.managePreview(this, t, value);
+          }
+        }
+      }
     }
 
     showHide(progressContainerTag, false);
@@ -192,81 +209,54 @@ class UploadField extends Field {
     tag.setVal(null);
   }
 
-  // TODO: вынести логику @$previewBlocks.each в отдельный класс или функцию
-/*
-  setValueEl: (@val) ->
-    self = @
-    @stopTempTimer()
-    if val
-      if @onUploadAddForm
-        @onUploadFormAdded = form = @onUploadAddForm.addForm(true)
-        form.fields[@onUploadToFieldId].setValue(val)
-        @val = val = null
-      else
-        @$previewBlocks.each (idx, block) ->
-          $block = $(block)
-          $typeEl = $block.find('.upload-preview-type')
-          tnParams = $block.attr('tn-params')
-          tnAsJpeg = $block.is('[tn-asjpeg]')
-          $img = $block.find('.upload-preview')
-          img = $img[0]
-          ext = rr.util.FileType.fromName(val)
-          imgSrc = rr.util.FileType.getImageForType(ext)
-          if imgSrc
-            # Мы определили, что загруженный файл не является растровой картинкой, поэтому нужно сделать заглушку для него.
-            [width, height] = tnParams.split('~', 1)[0].split('x')
-            img.style.width = width + 'px'
-            img.style.height = height + 'px'
-          else
-            # Загруженный файл является растровой картинкой. Показать превью.
-            previewPath = val.replace(/(\.[^.]+)$/, '~' + tnParams + (if tnAsJpeg then '.jpg' else '$1'))
-            imgSrc = self.fileBaseUrl + previewPath
-            if !$img.attr('width') then img.style.width = img.style.height = 'inherit'
-          img.src = imgSrc
-          $block[0].href = self.fileBaseUrl + val
-
-          if self.showType
-            $typeEl.html('.' + ext).css('margin', '').show()
-          else
-            $typeEl.hide()
-
-    @$progressContainer.hide()
-    @$newContainer.toggle(if @onUploadAddForm then @onUploadAddForm.canAddForm() else !val)
-    @$editContainer.toggle(!!val)
-    @$el.val(null)
-*/
-
   function stopTempTimer() {
-    // TODO:
+    if (tempTimer != null) {
+      G.window.clearTimeout(tempTimer);
+      tempTimer = null;
+    }
   }
-
-/*
-  stopTempTimer: ->
-    if @tempTimer then clearTimeout(@tempTimer)
-    @tempTimer
-*/
 
   function startTempTimer() {
-    // TODO:
+    var addedForm: Null<Form> = onUploadAddForm != null ? onUploadFormAdded : null;
+    stopTempTimer();
+    tempTimer = G.window.setTimeout(function() {
+      if (addedForm != null) onUploadAddForm.removeForm(addedForm);
+      else setValue(null);
+      tempTimer = null;
+      form.config.uploadConfig.showErrorMessage(form.config, form.config.strings.unableToUploadFile(apiAccess.uploadedFilename));
+    }, tempTimeout);
   }
-/*
-  startTempTimer: ->
-    self = @
-    addedForm = if @onUploadAddForm then @onUploadFormAdded else null
-    @stopTempTimer()
-    @tempTimer = setTimeout( ->
-      if addedForm then self.onUploadAddForm.removeForm(addedForm)
-      else self.setValue(null)
-      self.tempTimer = null
-      rr.window.Message.show({
-        title: 'Внимание!',
-        text: 'Нам не удалось принять файл ' + self.uploadedFilename + ', который вы пытались загрузить. Пожалуйста, попробуйте ещё раз.'
-      })
-    , @tempTimeout)
-*/
 
   override public function value(): Dynamic return val;
 }
+
+
+/*
+Interface to access private vars and functions of UploadField class.
+Also contains some vars mainly needed by UploadFieldApi.
+ */
+class UploadFieldApiAccess {
+
+  // ------------------------------- Config -------------------------------
+
+  public var field: UploadField;
+  public var uploadServer: String;
+  public var uploadFilenameBlockTags: Array<Tag>;
+
+  // ------------------------------- Vars -------------------------------
+
+  public var valueBeforeUpload: Dynamic;
+  public var uploadedFilename: String;
+
+  public function new(field: UploadField) {
+    this.field = field;
+  }
+
+  inline public function showProgressContainer(): Void {field.showProgressContainer(); }
+
+  inline public function startTempTimer(): Void {field.startTempTimer(); }
+}
+
 
 @:build(macros.ExternalFieldsMacro.build())
 class UploadFieldProps extends FieldProps {

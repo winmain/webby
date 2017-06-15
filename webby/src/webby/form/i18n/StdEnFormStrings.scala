@@ -22,6 +22,8 @@ class StdEnFormStrings extends FormStrings {
   override def urlMustContainDomain(domain: String): String = "Url must contain a domain " + domain
   override def urlMustContainOneOfDomains(domains: String): String = "Url must contain one of this domains: " + domains
 
+  override def storageServerIsUnavailable: String = "File server is unavailable. Please try again later."
+
   // ------------------------------- Field placeholders -------------------------------
 
   override def datePlaceholder: String = "dd.mm.yyyy"

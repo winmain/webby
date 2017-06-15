@@ -31,4 +31,7 @@ class StdRuFormStrings implements FormStrings {
   public function errorUploadTitle(): String return 'Ошибка загрузки файла';
 
   public function unexpectedError(): String return 'Произошла непредвиденная ошибка';
+
+  public function unableToUploadFile(file: String): String return
+    'Нам не удалось принять файл ' + file + ', который вы пытались загрузить. Пожалуйста, попробуйте ещё раз.';
 }

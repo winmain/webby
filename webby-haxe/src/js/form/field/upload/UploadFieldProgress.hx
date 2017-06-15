@@ -16,12 +16,19 @@ interface UploadFieldProgress {
 Default implementation of UploadFieldProgress
  */
 class CommonUploadFieldProgress implements UploadFieldProgress {
+
+  // ------------------------------- Config and styles -------------------------------
+
   public var progressBarCls = 'progress-bar';
   public var progressBarHeight = 17;
   public var valueCls = 'progress-bar__value';
   public var textCls = 'progress-bar__text';
 
+  // ------------------------------- Text -------------------------------
+
   public var loadingText = 'Загрузка';
+
+  // ------------------------------- Vars -------------------------------
 
   public var containerTag: Tag;
   public var progressBarTag: Tag;

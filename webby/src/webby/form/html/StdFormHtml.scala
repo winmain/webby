@@ -2,6 +2,7 @@ package webby.form.html
 
 import webby.form.Form
 import webby.form.field._
+import webby.form.field.autocomplete.{AutocompleteField, AutocompleteListField, AutocompleteTextField}
 import webby.html._
 import webby.html.elements.{RichSelectConfig, RichSelectHtml}
 

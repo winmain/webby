@@ -5,6 +5,7 @@ import js.form.Form;
 import js.html.Event;
 import js.html.InputElement;
 import js.html.KeyboardEvent;
+import js.lib.XhrUtils;
 
 @:autoBuild(macros.KeepConstructorMacro.build())
 class Field extends EventTarget {
@@ -164,17 +165,18 @@ class Field extends EventTarget {
     tag.on('focus', onFocus);
   }
 
-//  fieldPath: -> @form.fieldPath(@name)
-//
-//  ###
-//  Выполнить специальное действие для этого поля на сервере.
-//  В data передаются данные, которые будут прочитаны методом Field.connectedAction() на сервере.
-//  В callback придёт json result.
-//  ###
-//  connectedAction: (data, callback) ->
-//    topForm = @form.topForm()
-//    data['field'] = @fieldPath()
-//    $.jsonPost(topForm.formAction(), data, callback)
+  public function fieldPath(): External return form.fieldPath(shortId);
+
+  /*
+  Выполнить специальное действие для этого поля на сервере.
+  В data передаются данные, которые будут прочитаны методом Field.connectedAction() на сервере.
+  В callback придёт json result.
+   */
+  public function connectedAction(data: External, callback: External -> Void) {
+    var topForm = form.topForm();
+    data.set('field', fieldPath());
+    XhrUtils.jsonPost(topForm.formAction(), data, callback);
+  }
 
   /*
   Подавлять нажатие enter'а в этом поле, чтобы форма не делала submit?

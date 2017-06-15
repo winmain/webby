@@ -1,6 +1,8 @@
-package webby.form.field
+package webby.form.field.autocomplete
+
 import com.fasterxml.jackson.databind.JsonNode
 import webby.commons.text.Plural
+import webby.form.field.{IterableField, PlaceholderField, ValueField}
 import webby.form.{Form, Invalid, Valid, ValidationResult}
 
 import scala.collection.JavaConverters._

@@ -22,6 +22,8 @@ trait FormStrings {
   def urlMustContainDomain(domain: String): String
   def urlMustContainOneOfDomains(domains: String): String
 
+  def storageServerIsUnavailable: String
+
   // ------------------------------- Field placeholders -------------------------------
 
   def datePlaceholder: String

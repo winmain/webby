@@ -28,4 +28,6 @@ interface FormStrings {
   function errorUploadTitle(): String;
 
   function unexpectedError(): String;
+
+  function unableToUploadFile(file: String): String;
 }

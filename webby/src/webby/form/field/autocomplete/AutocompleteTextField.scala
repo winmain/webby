@@ -1,5 +1,7 @@
-package webby.form.field
+package webby.form.field.autocomplete
+
 import webby.form.Form
+import webby.form.field.TextField
 
 /**
  * Текстовое поле, аналогичное TextField, но с поддержкой необязательного автокомплита.

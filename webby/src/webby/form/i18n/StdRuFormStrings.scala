@@ -22,6 +22,8 @@ class StdRuFormStrings extends FormStrings {
   override def urlMustContainDomain(domain: String): String = "Ссылка должна содержать домен " + domain
   override def urlMustContainOneOfDomains(domains: String): String = "Ссылка должна содержать один из доменов: " + domains
 
+  override def storageServerIsUnavailable: String = "Файловый сервер сейчас недоступен. Пожалуйста, повторите попытку позднее."
+
   // ------------------------------- Field placeholders -------------------------------
 
   override def datePlaceholder: String = "дд.мм.гггг"

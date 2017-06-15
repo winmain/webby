@@ -172,6 +172,8 @@ class Tag {
 
   public function getAttr(key: String): String return el.getAttribute(key);
 
+  public function hasAttr(key: String): Bool return el.hasAttribute(key);
+
   public function getId(): String return el.id;
 
   public function equals(other: Tag): Bool return el == other.el;

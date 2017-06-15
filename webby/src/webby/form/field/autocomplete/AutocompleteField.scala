@@ -1,6 +1,8 @@
-package webby.form.field
+package webby.form.field.autocomplete
+
 import com.fasterxml.jackson.databind.JsonNode
 import webby.form.Form
+import webby.form.field.{PlaceholderField, ValueField}
 
 /**
   * Обычный автокомплит, состоящий из одного поля типа input type=text.

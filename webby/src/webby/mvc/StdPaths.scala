@@ -38,6 +38,9 @@ object StdPaths extends OverridableObject {
     def jsGccAssetType = AssetType("js-gcc")
     def jsSimpleAssetType = AssetType("js-simple")
 
+    val haxeModule = root / "app-js"
+    val haxeMainSrc = haxeModule / "src"
+
     // ------------------------------- convenience java.nio.file.Paths methods -------------------------------
 
     def get(first: String, more: String*): Path = java.nio.file.Paths.get(first, more: _*)

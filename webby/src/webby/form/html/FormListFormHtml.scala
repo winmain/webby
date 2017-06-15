@@ -3,7 +3,7 @@ import webby.form.{Form, SubForm}
 import webby.form.field.FormListField
 import webby.html.{CommonTag, HtmlBase}
 
-trait FormListHtml {self: StdFormHtml =>
+trait FormListFormHtml {self: StdFormHtml =>
 
   // ------------------------------- CSS styles -------------------------------
 

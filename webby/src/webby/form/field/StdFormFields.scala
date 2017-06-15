@@ -1,6 +1,7 @@
 package webby.form.field
 import querio._
 import webby.commons.text.Plural
+import webby.form.field.autocomplete.{AutocompleteField, AutocompleteListField, AutocompleteTextField}
 import webby.form.{Form, FormWithDb, SubForm}
 
 /**

@@ -25,7 +25,9 @@ class UploadConfig {
 
   public var tempTimeout: Int = 3 * 3600 * 1000; // Таймаут хранения файла во временном хранилище файлового сервера
 
-  public function uploadFieldProgress(): Null<UploadFieldProgress> return new UploadFieldProgress.CommonUploadFieldProgress();
+  public function uploadFieldProgress(): Null<UploadFieldProgress> return null;
+
+  public function uploadFieldPreview(): Null<UploadFieldPreview> return null;
 
   public function showErrorMessage(formConfig: FormConfig, text: String): Void {
     formConfig.showFormErrorDialog(formConfig.strings.errorUploadTitle() + "<br>" + text);
