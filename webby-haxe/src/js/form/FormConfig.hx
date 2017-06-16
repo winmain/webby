@@ -1,5 +1,6 @@
 package js.form;
 
+import js.form.field.autocomplete.AutocompleteListConfig;
 import js.form.field.autocomplete.AutocompleteSource;
 import js.form.field.Field;
 import js.form.field.RichSelectConfig;
@@ -81,4 +82,6 @@ class FormConfig {
   public var autocompleteSource: AutocompleteSource;
 
   public var uploadConfig: UploadConfig;
+
+  public var acListConfig: AutocompleteListConfig;
 }

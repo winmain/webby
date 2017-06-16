@@ -25,6 +25,8 @@ class G {
 
   inline public static function toBool(any: Dynamic): Bool return untyped __js__('!!({0})', any);
 
+  inline public static function asBool(any: Dynamic): Bool return any;
+
   inline public static function regexp(s: String): RegExp return new RegExp(s);
 
   inline public static function floatToFixed(f: Float, numbers: Int): String return untyped __js__('{0}.toFixed({1})', f, numbers);

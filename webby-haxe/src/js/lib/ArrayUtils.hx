@@ -110,4 +110,11 @@ class ArrayUtils {
     }
     return ret;
   }
+
+  /*
+  Like original Array.splice but with additional `item` to add to `array` at position `pos`.
+   */
+  inline public static function splice1<T>(array: Array<T>, pos: Int, len: Int, item: T): Array<T> {
+    return untyped __js__('{0}.splice({1}, {2}, {3})', array, pos, len, item);
+  }
 }

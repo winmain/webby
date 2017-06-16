@@ -1,21 +1,20 @@
 package js.form.field.autocomplete;
 
-import js.form.field.Field.FieldProps;
-import goog.ui.ac.InputHandler;
-import goog.ui.ac.RusRenderer;
-import goog.ui.ac.Renderer;
 import goog.ui.ac.AutoComplete;
+import goog.ui.ac.InputHandler;
+import goog.ui.ac.Renderer;
+import goog.ui.ac.RusRenderer;
+import js.form.field.Field.FieldProps;
 
 class AbstractAutocompleteField extends Field {
   var source: AutocompleteSource;
+  var matcher: Matcher;
   var autoComplete: AutoComplete;
 
   public function new(form: Form, props: AutocompleteFieldProps) {
     super(form, props);
-    source = form.config.autocompleteSource;
-    G.require(source != null, "AutocompleteSource not configured in FormConfig");
-    var matcher = source.getMatcher(props.sourceFn, props.sourceArg);
-    G.require(matcher != null, 'No matcher for ${props.sourceFn}, ${props.sourceArg}');
+    source = G.require(form.config.autocompleteSource, "AutocompleteSource not configured in FormConfig");
+    matcher = G.require(source.getMatcher(props.sourceFn, props.sourceArg), 'No matcher for ${props.sourceFn}, ${props.sourceArg}');
     var renderer = makeRenderer();
     var addRendererCls = props.addRendererCls;
     if (addRendererCls != null) {

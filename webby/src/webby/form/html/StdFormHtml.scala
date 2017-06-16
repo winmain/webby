@@ -71,10 +71,14 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
   def inputText(field: RuDateField): StdInputTag = wrapFieldPH(field, view.inputTel).cls(form.base.dateFieldCls)
   def inputText(field: RuMonthYearField): StdInputTag = wrapFieldPH(field, view.inputTel).cls(form.base.monthYearFieldCls)
 
-  def inputTextInDiv(field: AutocompleteListField[_], itemsTag: CommonTag => CommonTag = a => a, inputTag: StdInputTag => StdInputTag = a => a): HtmlBase = {
+  // ------------------------------- Autocomplete List -------------------------------
+
+  def inputTextInDiv(field: AutocompleteListField[_],
+                     itemsTag: CommonTag => CommonTag = a => a,
+                     inputTag: StdInputTag => StdInputTag = a => a): HtmlBase = {
     view.div.cls(form.base.autocompleteListFieldCls) {
-      itemsTag(view.div.cls("ac-items clearfix"))
-      inputTag(wrapFieldPH(field, view.inputText).attr("autocomplete", "off"))
+      itemsTag(view.div.cls(form.base.autocompleteListItemsCls))
+      inputTag(wrapFieldPH(field, view.inputText).autocompleteOff)
     }
   }
 

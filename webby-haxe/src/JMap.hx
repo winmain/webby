@@ -3,6 +3,8 @@ extern class JMap<K, V> {
 
   inline static function create<K, V>(): JMap<K, V> return untyped __js__('{}');
 
+  inline static function wrap<K, V>(object: Dynamic): JMap<K, V> return object;
+
   inline function set(key: K, value: V): V {
     return untyped this[cast key] = value;
   }

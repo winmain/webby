@@ -53,6 +53,7 @@ abstract class BaseForms {self =>
 
   def checkboxLeftCls = "checkbox-left"
   def autocompleteListFieldCls = "autocomplete-list-field"
+  def autocompleteListItemsCls = "autocomplete-list__items"
   def dateFieldCls = "date-field"
   def monthYearFieldCls = "month-year-field"
 

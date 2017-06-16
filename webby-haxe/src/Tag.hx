@@ -1,5 +1,4 @@
 package ;
-import js.lib.EventUtils;
 import goog.Goog;
 import haxe.Constraints.Function;
 import haxe.extern.EitherType;
@@ -7,6 +6,7 @@ import js.html.Element;
 import js.html.Node;
 import js.html.NodeList;
 import js.html.TemplateElement;
+import js.lib.EventUtils;
 
 /*
 Html element wrapper
@@ -192,6 +192,14 @@ class Tag {
       el.appendChild(v);
     }
     return this;
+  }
+
+  /*
+  Add nullable child to element.
+  If this child is null simple ignore it.
+   */
+  public function add2(v: Null<EitherType<String, EitherType<Tag, Node>>>): Tag {
+    return v == null ? this : add(v);
   }
 
   /*

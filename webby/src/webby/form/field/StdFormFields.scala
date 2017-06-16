@@ -67,8 +67,8 @@ trait StdFormFields {self: Form =>
 
   protected def autocompleteField[T](id: String, jsSourceFunction: String, jsSourceArg: Any = null, toJs: T => Int, fromJs: Int => Option[T], addRendererCls: String = null) =
     addField(new AutocompleteField[T](this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg, toJs = toJs, fromJs = fromJs, addRendererCls = addRendererCls))
-  protected def autocompleteListField[T](id: String, jsSourceFunction: String, jsSourceArg: Any = null, toJs: T => Int, fromJs: Int => Option[T], plural: Plural = base.recordRPlural) =
-    addField(new AutocompleteListField[T](this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg, toJs = toJs, fromJs = fromJs, plural))
+  protected def autocompleteListField[T](id: String, jsSourceFunction: String, jsSourceArg: Any = null, toJs: T => Int, fromJs: Int => Option[T], recordPlural: Plural = base.recordRPlural) =
+    addField(new AutocompleteListField[T](this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg, toJs = toJs, fromJs = fromJs, recordPlural))
   protected def autocompleteTextField(id: String, jsSourceFunction: String, jsSourceArg: Any = null) =
     addField(new AutocompleteTextField(this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg))
 }
