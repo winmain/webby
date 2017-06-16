@@ -115,7 +115,6 @@ class AutocompleteListField extends AbstractAutocompleteField {
 }
 
 
-@:build(macros.ExternalFieldsMacro.build())
 class AutocompleteListFieldProps extends AutocompleteFieldProps {
   @:optional public var maxItems: Int;
 }

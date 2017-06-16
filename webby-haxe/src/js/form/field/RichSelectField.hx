@@ -62,7 +62,6 @@ class RichSelectField extends Field {
   override public function initBoxTag(): Tag return tag.parent();
 }
 
-@:build(macros.ExternalFieldsMacro.build())
 class RichSelectFieldProps extends FieldProps {
   public var values: Array<String>;
   public var placeholder(default, null): Null<String>;

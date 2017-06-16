@@ -41,7 +41,6 @@ class AbstractAutocompleteField extends Field {
 }
 
 
-@:build(macros.ExternalFieldsMacro.build())
 class AutocompleteFieldProps extends FieldProps {
   public var sourceFn: String;
   @:optional public var sourceArg: Dynamic;

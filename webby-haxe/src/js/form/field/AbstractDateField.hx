@@ -59,7 +59,6 @@ class AbstractDateField extends Field {
 }
 
 
-@:build(macros.ExternalFieldsMacro.build())
 class DateFieldProps extends FieldProps {
   public var minDate: Null<String>;
   public var maxDate: Null<String>;

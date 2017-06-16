@@ -32,7 +32,6 @@ class NumberField extends Field {
 }
 
 
-@:build(macros.ExternalFieldsMacro.build())
 class NumberFieldProps extends FieldProps {
   public var nullValue: Null<Float>;
   public var minValue: Null<Float>;

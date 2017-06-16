@@ -1,5 +1,6 @@
 package js.form;
 
+import macros.ExternalFields;
 import goog.events.EventTarget;
 import js.form.field.Field;
 import js.form.field.FormListField;
@@ -487,8 +488,7 @@ class Form extends EventTarget {
 /*
 Свойства формы
  */
-@:build(macros.ExternalFieldsMacro.build())
-class FormProps {
+class FormProps implements ExternalFields {
   // Form htmlId
   public var htmlId: String;
 
@@ -532,8 +532,7 @@ class FormProps {
 /*
 Form errors structure
  */
-@:build(macros.ExternalFieldsMacro.build())
-class FormErrors {
+class FormErrors implements ExternalFields {
   // Имя подформы (только для ошибок в подформах)
   public var name: Null<String>;
 
@@ -556,8 +555,7 @@ class FormErrors {
 /*
 Form success structure
  */
-@:build(macros.ExternalFieldsMacro.build())
-class FormSuccess {
+class FormSuccess implements ExternalFields {
   // Always true
   public var success: Bool;
 

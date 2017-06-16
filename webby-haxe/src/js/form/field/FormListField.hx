@@ -223,7 +223,6 @@ class FormListField extends Field {
 }
 
 
-@:build(macros.ExternalFieldsMacro.build())
 class FormListFieldProps extends FieldProps {
   public var defaultItems: Int;
   @:optional public var minItems: Int;

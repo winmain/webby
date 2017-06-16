@@ -44,8 +44,10 @@ class FormConfig {
 
   public function findFieldRow(field: Field): Null<Tag> return field.tag.fndParent(function(t: Tag) return t.hasCls(formRowClass));
 
-  public function showFormErrorDialog(text: String) {
-    G.window.alert(text);
+  public function showFormErrorDialog(text: String, ?title: String) {
+    var s = text.replace(new RegExp('<br>', 'gi'), "\n");
+    if (title != null) s = title + "\n\n" + s;
+    G.window.alert(s);
   }
 
   // Do on resize actions after form shown

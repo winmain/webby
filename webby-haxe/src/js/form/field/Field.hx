@@ -1,5 +1,6 @@
 package js.form.field;
 
+import macros.ExternalFields;
 import goog.events.EventTarget;
 import js.form.Form;
 import js.html.Event;
@@ -303,8 +304,7 @@ class Field extends EventTarget {
   }
 }
 
-@:build(macros.ExternalFieldsMacro.build())
-class FieldProps {
+class FieldProps implements ExternalFields {
   public var shortId: String;
   public var jsField: String;
   public var field: String;

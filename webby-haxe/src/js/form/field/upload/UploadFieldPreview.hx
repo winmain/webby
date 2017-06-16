@@ -6,7 +6,7 @@ import js.html.Image;
 Managing previews of uploaded files and pictures for UploadField
  */
 interface UploadFieldPreview {
-  function managePreview(field: UploadField, previewBlockTag: Tag, fileName: String): Void;
+  function managePreviews(field: UploadField, findTags: String -> Array<Tag>, fileName: String): Void;
 }
 
 
@@ -26,11 +26,17 @@ class CommonUploadFieldPreview implements UploadFieldPreview {
     this.fileType = fileType;
   }
 
-  public function managePreview(field: UploadField, previewBlockTag: Tag, fileName: String): Void {
+  public function managePreviews(field: UploadField, findTags: String -> Array<Tag>, fileName: String): Void {
+    for (t in findTags(uploadPreviewCls)) {
+      managePreview(field, t, fileName);
+    }
+  }
+
+  function managePreview(field: UploadField, previewBlockTag: Tag, fileName: String): Void {
     var typeTag = previewBlockTag.fnd('.' + uploadPreviewTypeCls);
     var tnParams = previewBlockTag.getAttr('tn-params');
     var tnAsJpeg = G.toBool(previewBlockTag.getAttr('[tn-asjpeg]'));
-    var imgTag: Tag = G.require(previewBlockTag.fnd('.' + uploadPreviewImgCls), "No " + uploadPreviewImgCls);
+    var imgTag: Tag = G.require(previewBlockTag.fnd('.' + uploadPreviewImgCls), "No ." + uploadPreviewImgCls);
     var imgEl: Image = cast imgTag.el;
     var ext = fileType.fromName(fileName);
     var imgSrc = fileType.getImageForType(ext);
@@ -47,7 +53,7 @@ class CommonUploadFieldPreview implements UploadFieldPreview {
     } else {
       // Загруженный файл является растровой картинкой. Показать превью.
       var previewPath = fileName.replace(new RegExp('(\\.[^.]+)$'), '~' + tnParams + (tnAsJpeg ? '.jpg' : '$1'));
-      var imgSrc = field.fileBaseUrl + previewPath;
+      imgSrc = field.fileBaseUrl + previewPath;
       if (!imgTag.hasAttr('width')) {
         setImgSize('inherit', 'inherit');
       }

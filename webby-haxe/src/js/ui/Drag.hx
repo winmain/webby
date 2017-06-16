@@ -26,7 +26,7 @@ class Drag extends EventTarget {
 
   public function new(tag: Tag) {
     super();
-    this.tag = tag;
+    this.tag = G.require(tag, "Drag tag is null");
     initOnce();
     var timeout = -1;
     all.push(this);

@@ -29,6 +29,21 @@ class XhrUtils {
 
 
   /*
+  Simple JSON GET request
+   */
+  public static function jsonGet(url: String, onSuccess: External -> Void, ?onFail: XMLHttpRequest -> Void): Void {
+    var xhr = new XMLHttpRequest();
+    bind(xhr, function() {
+      onSuccess(xhr.response);
+    }, function() {
+      if (onFail != null) onFail(xhr);
+    });
+    xhr.open('GET', url, true);
+    setJsonResponseType(xhr);
+    xhr.send();
+  }
+
+  /*
   Simple JSON POST request
    */
   public static function jsonPost(url: String, postData: External, onSuccess: External -> Void, ?onFail: XMLHttpRequest -> Void): Void {

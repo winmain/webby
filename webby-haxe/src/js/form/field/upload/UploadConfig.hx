@@ -9,8 +9,6 @@ class UploadConfig {
   public var uploadNewCls = 'upload-new';
   public var uploadEditCls = 'upload-edit';
   public var uploadProgressCls = 'upload-progress';
-  public var uploadPreviewBlockCls = 'upload-preview-block';
-  public var uploadPreviewTypeCls = 'upload-preview-type';
   public var uploadFilenameCls = 'upload-filename';
   public var uploadOpenCls = 'upload-open';
   public var uploadClearCls = 'upload-clear';
@@ -30,6 +28,6 @@ class UploadConfig {
   public function uploadFieldPreview(): Null<UploadFieldPreview> return null;
 
   public function showErrorMessage(formConfig: FormConfig, text: String): Void {
-    formConfig.showFormErrorDialog(formConfig.strings.errorUploadTitle() + "<br>" + text);
+    formConfig.showFormErrorDialog(text, formConfig.strings.errorUploadTitle());
   }
 }

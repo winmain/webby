@@ -62,7 +62,6 @@ class RadioGroupField extends Field {
   }
 }
 
-@:build(macros.ExternalFieldsMacro.build())
 class RadioGroupFieldProps extends FieldProps {
   public var values: Array<String>;
 }

@@ -20,10 +20,9 @@ class UploadField extends Field {
   var tempTimeout: Int;
   var tempTimer: Int;
 
-  var newContainerTag: Tag;
+  var newContainerTags: Array<Tag>;
   var editContainerTags: Array<Tag>;
   var progressContainerTag: Null<Tag>;
-  var previewBlockTags: Array<Tag>;
 
   var api: UploadFieldApi;
   var apiAccess: UploadFieldApiAccess;
@@ -44,7 +43,7 @@ class UploadField extends Field {
     onUpload = props.onUpload;
     if (onUpload != null) {
       onUploadAddForm = G.require(cast form.fields.get(onUpload.addForm), 'OnUpload addForm "' + onUpload.addForm + '" not found');
-      onUploadAddForm.listen(FormListField.AddRemoveEvent, function() {newContainerTag.setCls(form.config.hiddenClass, onUploadAddForm.canAddForm());});
+      onUploadAddForm.listen(FormListField.AddRemoveEvent, function() {showHideMany(newContainerTags, onUploadAddForm.canAddForm());});
       onUploadToFieldId = onUpload.toField;
     }
     showType = props.showType;
@@ -53,12 +52,10 @@ class UploadField extends Field {
     progress = initProgress(uc);
     preview = initPreview(uc);
 
-    function findTags(cls: String): Array<Tag> return form.tag.fndAll('.' + cls + '[data-target=' + htmlId + ']');
-    newContainerTag = showHide(findTags(uc.uploadNewCls)[0], false);
+    newContainerTags = showHideMany(findTags(uc.uploadNewCls), false);
     editContainerTags = showHideMany(findTags(uc.uploadEditCls), false);
     progressContainerTag = findTags(uc.uploadProgressCls)[0];
     if (progressContainerTag != null) showHide(progressContainerTag, false);
-    previewBlockTags = findTags(uc.uploadPreviewBlockCls);
     apiAccess.uploadFilenameBlockTags = findTags(uc.uploadFilenameCls);
 
     if (initUploader()) {
@@ -68,13 +65,15 @@ class UploadField extends Field {
           e.preventDefault();
         }
       }
-      newContainerTag.onClick(openFileChooser);
+      for (t in newContainerTags) t.onClick(openFileChooser);
       for (t in findTags(uc.uploadOpenCls)) t.onClick(openFileChooser);
       for (t in findTags(uc.uploadClearCls)) t.onClick(function(e: Event) {setValue(null); e.preventDefault();});
 
       initProgressContainer();
     }
   }
+
+  function findTags(cls: String): Array<Tag> return form.tag.fndAll('.' + cls + '[data-target=' + htmlId + ']');
 
   function initTempTimeout(c: UploadConfig): Int return c.tempTimeout;
 
@@ -89,75 +88,28 @@ class UploadField extends Field {
       onOldBrowser();
       return false;
     }
-/*
-    getToken = (tokenIdCallback) ->
-      self.connectedAction {'getToken': true}, (result) ->
-        if result['error'] then showError(result['error'])
-        else if (!result['id']) then showUnexpectedError()
-        else tokenIdCallback(result['id'])
 
-    uploadFile = (formData, tokenId, onSuccess) ->
-      xhr = new XMLHttpRequest()
-      xhr.open('POST', self.uploadServer + '/upload-temp?' + tokenId, true)
-      xhr.onreadystatechange = ->
-        if xhr.readyState == 4
-          if xhr.status == 200
-            resp = JSON.parse(xhr.responseText)
-            if resp['error'] then showError(resp['error'])
-            else onSuccess(resp['filename'])
-          else
-            showUnexpectedError()
-
-      if rr.util.testUpload.progress()
-        xhr.upload.onprogress = (event) ->
-          if event.lengthComputable
-            self.progressValue(event.loaded / event.total * 100 | 0)
-      xhr.send(formData)
-
-    waitFinish = (tokenId, onComplete) ->
-      check = ->
-        $.jsonGet(self.uploadServer + '/info?' + tokenId, null, (result) ->
-          if result['error']
-            showError(result['error'])
-          else if !result['completed']
-            window.setTimeout(check, 500)
-          else
-            onComplete(result['path'])
-        )
-      check()
-
-    startUpload = (files) ->
-      self.showProgressContainer()
-      self.valueBeforeUpload = self.value()
-      formData = new FormData()
-      formData.append('file', files[0])
-      getToken (tokenId) ->
-        uploadFile formData, tokenId, (filename) ->
-          waitFinish tokenId, (path) ->
-            self.setValue(path)
-            self.uploadedFilename = filename
-            self.$uploadFilenameBlocks.html(filename)
-            self.startTempTimer()
-*/
-    drag = new Drag(newContainerTag);
-    drag.hoverClass(newContainerTag, form.config.uploadConfig.dragOverCls);
-    drag.listen(Drag.DropEvent, function(e: Event) {api.startUpload(apiAccess, untyped e.dataTransfer.files);});
+    for (newContainerTag in newContainerTags) {
+      drag = new Drag(newContainerTag);
+      drag.hoverClass(newContainerTag, form.config.uploadConfig.dragOverCls);
+      drag.listen(Drag.DropEvent, function(e: Event) {api.startUpload(apiAccess, untyped e.dataTransfer.files);});
+    }
 
     tag.on('change', function() {api.startUpload(apiAccess, untyped tag.el.files);});
     return true;
   }
 
   function onOldBrowser() {
-    for (t in newContainerTag) t.setHtml(form.config.strings.oldBrowserHtml());
+    for (t in newContainerTags) t.setHtml(form.config.strings.oldBrowserHtml());
   }
 
-  public function showError(error: String) {
+  function showError(error: String) {
     form.config.uploadConfig.showErrorMessage(form.config, error);
     setValue(apiAccess.valueBeforeUpload);
     drag.onCancelDrag();
   }
 
-  public function showUnexpectedError() {
+  function showUnexpectedError() {
     showError(form.config.strings.unexpectedError());
   }
 
@@ -168,7 +120,7 @@ class UploadField extends Field {
   }
 
   function showProgressContainer() {
-    showHide(newContainerTag, false);
+    showHideMany(newContainerTags, false);
     showHideMany(editContainerTags, false);
     showHide(progressContainerTag, true);
     if (progress != null) {
@@ -196,15 +148,13 @@ class UploadField extends Field {
         val = null;
       } else {
         if (preview != null) {
-          for (t in previewBlockTags) {
-            preview.managePreview(this, t, value);
-          }
+          preview.managePreviews(this, findTags, value);
         }
       }
     }
 
     showHide(progressContainerTag, false);
-    showHide(newContainerTag, onUploadAddForm != null ? onUploadAddForm.canAddForm() : !value);
+    showHideMany(newContainerTags, onUploadAddForm != null ? onUploadAddForm.canAddForm() : !value);
     showHideMany(editContainerTags, G.toBool(value));
     tag.setVal(null);
   }
@@ -252,9 +202,15 @@ class UploadFieldApiAccess {
     this.field = field;
   }
 
+  inline public function showUnexpectedError() {field.showUnexpectedError();}
+
+  inline public function showError(error: String) {field.showError(error);}
+
   inline public function showProgressContainer(): Void {field.showProgressContainer(); }
 
   inline public function startTempTimer(): Void {field.startTempTimer(); }
+
+  inline public function progressValue(percent: Float): Void {field.progressValue(percent);}
 }
 
 

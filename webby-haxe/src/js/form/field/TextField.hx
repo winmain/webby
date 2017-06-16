@@ -47,7 +47,6 @@ class TextField extends Field {
    */
 }
 
-@:build(macros.ExternalFieldsMacro.build())
 class TextFieldProps extends FieldProps {
   public var minLength: Null<Int>;
   public var maxLength: Null<Int>;
