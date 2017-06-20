@@ -71,6 +71,13 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
   def inputText(field: RuDateField): StdInputTag = wrapFieldPH(field, view.inputTel).cls(form.base.dateFieldCls)
   def inputText(field: RuMonthYearField): StdInputTag = wrapFieldPH(field, view.inputTel).cls(form.base.monthYearFieldCls)
 
+  def placeholderInput[TInput <: StdInputTag](field: PlaceholderField[_], _input: => TInput): TInput = {
+    val input = _input.id(field.htmlId)
+    if (field.placeholder != null) input.placeholder(field.placeholder)
+    input
+  }
+
+
   // ------------------------------- Autocomplete List -------------------------------
 
   def inputTextInDiv(field: AutocompleteListField[_],

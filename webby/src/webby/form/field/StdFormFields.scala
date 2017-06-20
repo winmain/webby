@@ -13,7 +13,7 @@ trait StdFormFields {self: Form =>
 
   // ----------- !!! Все методы, возвращающие конструкторы полей должны быть обрамлены в addField() !!!
 
-  protected def formList[F <: SubForm](id: String, factory: () => F) = addField(new FormListField(this, id, factory, base.recordRPlural))
+  protected def formList[F <: SubForm](id: String, factory: => F) = addField(new FormListField(this, id, () => factory, base.recordRPlural))
 
   protected def formListWithDbLinked[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Int]) =
