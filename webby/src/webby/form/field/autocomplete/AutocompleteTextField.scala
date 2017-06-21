@@ -13,7 +13,7 @@ class AutocompleteTextField(form: Form,
 
   // ------------------------------- Reading data & js properties -------------------------------
   class AutocompleteJsProps extends JsProps {
-    val source = self.jsSourceFunction
+    val sourceFn = self.jsSourceFunction
     val sourceArg = self.jsSourceArg
   }
   override def jsProps = new AutocompleteJsProps

@@ -8,14 +8,14 @@ trait FormListFormHtml {self: StdFormHtml =>
   // ------------------------------- CSS styles -------------------------------
 
   /** id для html элемента удаления записи */
-  protected def formListRemoveId: String = "form__remove"
+  def formListRemoveId: String = "form__remove"
 
-  protected def formSubFormCls = "form__subform"
+  def formSubFormCls = "form__subform"
 
-  protected def formSmallAddCls = "form__small-add"
-  protected def formSmallRemoveCls = "form__small-remove"
-  protected def formBlockAddCls = "form__block-add"
-  protected def formBlockRemoveCls = "form__block-remove"
+  def formSmallAddCls = "form__small-add"
+  def formSmallRemoveCls = "form__small-remove"
+  def formBlockAddCls = "form__block-add"
+  def formBlockRemoveCls = "form__block-remove"
 
   // ------------------------------- Html methods -------------------------------
 

@@ -3,6 +3,10 @@ package js.form.field.autocomplete;
 import goog.ui.ac.AutoComplete;
 import js.form.field.autocomplete.AbstractAutocompleteField.AutocompleteFieldProps;
 
+/*
+Common autocomplete field.
+Only values from the source allowed.
+ */
 class AutocompleteField extends AbstractAutocompleteField {
   static public var REG = 'autocomplete';
 

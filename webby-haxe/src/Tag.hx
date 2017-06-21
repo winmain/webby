@@ -1,8 +1,24 @@
 package ;
+import js.html.TableElement;
+import js.html.svg.ScriptElement;
+import js.html.ProgressElement;
+import js.html.OptionElement;
+import js.html.OptGroupElement;
+import js.html.ObjectElement;
+import js.html.LabelElement;
+import js.html.svg.ImageElement;
+import js.html.HtmlElement;
+import js.html.BodyElement;
+import js.html.FormElement;
+import js.html.AnchorElement;
+import js.html.SelectElement;
+import js.html.TextAreaElement;
 import goog.Goog;
 import haxe.Constraints.Function;
 import haxe.extern.EitherType;
+import js.html.ButtonElement;
 import js.html.Element;
+import js.html.InputElement;
 import js.html.Node;
 import js.html.NodeList;
 import js.html.TemplateElement;
@@ -161,6 +177,40 @@ class Tag {
   public function new(el: Element) {
     this.el = el;
   }
+
+  // ------------------------------- Element getters -------------------------------
+
+  inline public function anchorElement(): AnchorElement return cast el;
+
+  inline public function bodyElement(): BodyElement return cast el;
+
+  inline public function buttonElement(): ButtonElement return cast el;
+
+  inline public function formElement(): FormElement return cast el;
+
+  inline public function htmlElement(): HtmlElement return cast el;
+
+  inline public function imageElement(): ImageElement return cast el;
+
+  inline public function inputElement(): InputElement return cast el;
+
+  inline public function labelElement(): LabelElement return cast el;
+
+  inline public function objectElement(): ObjectElement return cast el;
+
+  inline public function optGroupElement(): OptGroupElement return cast el;
+
+  inline public function optionElement(): OptionElement return cast el;
+
+  inline public function progressElement(): ProgressElement return cast el;
+
+  inline public function scriptElement(): ScriptElement return cast el;
+
+  inline public function selectElement(): SelectElement return cast el;
+
+  inline public function tableElement(): TableElement return cast el;
+
+  inline public function textAreaElement(): TextAreaElement return cast el;
 
   // ------------------------------- Getters -------------------------------
 

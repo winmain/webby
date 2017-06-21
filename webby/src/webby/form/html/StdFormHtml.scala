@@ -103,7 +103,7 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
 
   def inputHidden(field: CheckField): StdInputTag = wrapField(field, view.inputHidden)
 
-  // ------------------------------- Radio & select fields -------------------------------
+  // ------------------------------- Select fields -------------------------------
 
   def richSelect[T](field: RichSelectField[T],
                     outerSpan: CommonTag => CommonTag = a => a,
@@ -118,26 +118,5 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
           view.option.valueSafe(v) ~ field.titleFn(item)
         }
       }(view)
-  }
-
-  // ------------------------------- CheckListField -------------------------------
-
-  def checkboxList[T](field: CheckListField[T], tag: String = "div", rowWrapper: StdHtmlView => CommonTag = _.div)(implicit view: StdHtmlView): HtmlBase = {
-    // TODO: вынести css классы отсюда
-    view.tag(tag).id(field.htmlId).cls(form.base.fieldCls).cls("check-list-field") {
-      for {item <- field.items
-           value = field.valueFn(item)
-      } {
-        rowWrapper(view) {
-          val htmlId = field.htmlId + "-" + value
-          view.inputCheckbox.id(htmlId).valueSafe(value)
-          view.label.forId(htmlId).cls(form.base.checkboxLeftCls) ~ field.titleFn(item)
-          if (field.commentFn != null) {
-            val comment: String = field.commentFn(item)
-            if (comment != null && !comment.isEmpty) view.div.cls("checkbox-comment") ~ comment
-          }
-        }
-      }
-    }
   }
 }
