@@ -28,7 +28,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     * IMPORTANT! To override this field you should do it before any field declarations occur.
     * Because every field initializes it [[Field.htmlId]] value in constructor.
     */
-  val htmlId: String = base.formId
+  def htmlId: String = base.formId
 
   /**
     * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.
