@@ -24,10 +24,7 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   def base: B
   def initLocale: Locale
 
-  /** Form tag id. Used in rendering html form. Also it is prefix for field ids, see [[BaseForms.makeFieldHtmlId()]].
-    * IMPORTANT! To override this field you should do it before any field declarations occur.
-    * Because every field initializes it [[Field.htmlId]] value in constructor.
-    */
+  /** Form tag id. Used in rendering html form. Also it is prefix for field ids, see [[BaseForms.makeFieldHtmlId()]]. */
   def htmlId: String = base.formId
 
   /**
