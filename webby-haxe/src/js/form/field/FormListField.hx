@@ -165,7 +165,7 @@ class FormListField extends Field {
     form.showOptionalFields(showOptionalFields);
     form.triggerRules();
 
-    for (tag in getRemoveTags(form)) tag.onClick(function(): Bool {removeForm(form); return false;});
+    for (tag in getRemoveTags(form)) tag.onClick(function(e: Event) {removeForm(form); e.preventDefault();});
     forms.push(form);
     updateAddRemoveEls();
     return form;
@@ -198,9 +198,9 @@ class FormListField extends Field {
     throw "Cannot remove subform";
   }
 
-  public function canAddForm(): Bool return maxItems == 0 || forms.length < maxItems;
+  public function canAddForm(): Bool return !G.asBool(maxItems) || forms.length < maxItems;
 
-  public function canRemoveForm(): Bool return minItems == 0 || forms.length > minItems;
+  public function canRemoveForm(): Bool return !G.asBool(minItems) || forms.length > minItems;
 
   function updateAddRemoveEls() {
     var canAdd = canAddForm();
