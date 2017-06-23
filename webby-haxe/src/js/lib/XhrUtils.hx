@@ -6,6 +6,21 @@ import js.html.XMLHttpRequest;
 import js.html.XMLHttpRequestResponseType;
 
 class XhrUtils {
+  /**
+	 * Creates an XMLHttpRequest, with a fallback to ActiveXObject for ancient versions of Internet
+	 * Explorer.
+	 */
+  public static function createXMLHttpRequest(): XMLHttpRequest {
+    if (untyped __js__("typeof XMLHttpRequest") != "undefined") {
+      return new XMLHttpRequest();
+    }
+    if (untyped __js__("typeof ActiveXObject") != "undefined") {
+      return untyped __new__("ActiveXObject", "Microsoft.XMLHTTP");
+    }
+    throw "Unable to create XMLHttpRequest object.";
+  }
+
+
   public static function bind(xhr: XMLHttpRequest, onSuccess: Function, ?onFail: Function): Void {
     xhr.onload = function() {
       if (xhr.status == 200) {

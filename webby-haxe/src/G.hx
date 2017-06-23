@@ -3,7 +3,6 @@ import haxe.extern.EitherType;
 import js.Error;
 import js.html.Storage;
 import js.html.Window;
-import js.html.XMLHttpRequest;
 import js.RegExp;
 
 /**
@@ -120,56 +119,9 @@ class G {
   }
 
   /**
-	 * Creates an XMLHttpRequest, with a fallback to ActiveXObject for ancient versions of Internet
-	 * Explorer.
-	 */
-
-  public static function createXMLHttpRequest(): XMLHttpRequest {
-    if (untyped __js__("typeof XMLHttpRequest") != "undefined") {
-      return new XMLHttpRequest();
-    }
-    if (untyped __js__("typeof ActiveXObject") != "undefined") {
-      return untyped __new__("ActiveXObject", "Microsoft.XMLHTTP");
-    }
-    throw "Unable to create XMLHttpRequest object.";
-  }
-
-  /**
 		Display an alert message box containing the given message. See also `Window.alert()`.
 	 */
-
   inline public static function alert(v: Dynamic) {
     @:privateAccess window.alert(cast v);
   }
-
-  // ------------------------------- core-script.js methods -------------------------------
-
-  /**
-   * Добавить функцию на выполнение после загрузки всех jsParts.
-   * Если все jsParts загружены, то функция будет выполнена немедленно.
-   */
-  inline public static function jsOnLoad(exec: Void -> Void): Void return untyped __js__('jsOnLoad({0})', exec);
-
-  /**
-   * Загрузка jsPart только если он не был загружен.
-   * @param name Имя части, как он записан в jsParts
-   * @param url Урл для подгрузки
-   */
-  inline public static function jsPartLoad(name: String, url: String): Void return untyped __js__('jsPartLoad({0}, {1})', name, url);
-
-  /**
-   * Выполнить код #exec только после загрузки части #partName.
-   * Если #partName уже загружен, то код будет тут же выполнен.
-   * @export
-   */
-  inline public static function jsPartExec(partName: String, exec: Void -> Void): Void return untyped __js__('jsPartExec({0}, {1})', partName, exec);
-
-  /**
-   * Выполнить код после подгрузки _rest.js файла. Если же RestPart не задан, то код будет выполнен сразу же.
-   * @param that this для execOnRest
-   * @param execOnRest Код, выполняемый после подгрузки rest файла.
-   * @return {boolean}
-   * @export
-   */
-  inline public static function Rest(that: Dynamic, execOnRest: Void -> Void): Void return untyped __js__('Rest({0}, {1})', that, execOnRest);
 }
