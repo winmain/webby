@@ -1,27 +1,27 @@
 package ;
-import js.html.TableElement;
-import js.html.svg.ScriptElement;
-import js.html.ProgressElement;
-import js.html.OptionElement;
-import js.html.OptGroupElement;
-import js.html.ObjectElement;
-import js.html.LabelElement;
-import js.html.svg.ImageElement;
-import js.html.HtmlElement;
-import js.html.BodyElement;
-import js.html.FormElement;
-import js.html.AnchorElement;
-import js.html.SelectElement;
-import js.html.TextAreaElement;
 import goog.Goog;
 import haxe.Constraints.Function;
 import haxe.extern.EitherType;
+import js.html.AnchorElement;
+import js.html.BodyElement;
 import js.html.ButtonElement;
 import js.html.Element;
+import js.html.FormElement;
+import js.html.HtmlElement;
 import js.html.InputElement;
+import js.html.LabelElement;
 import js.html.Node;
 import js.html.NodeList;
+import js.html.ObjectElement;
+import js.html.OptGroupElement;
+import js.html.OptionElement;
+import js.html.ProgressElement;
+import js.html.SelectElement;
+import js.html.svg.ImageElement;
+import js.html.svg.ScriptElement;
+import js.html.TableElement;
 import js.html.TemplateElement;
+import js.html.TextAreaElement;
 import js.lib.EventUtils;
 
 /*
@@ -44,6 +44,8 @@ class Tag {
   @:keep
   @:expose('Tag.find')
   public static function find(selectors: String): Null<Tag> return find2(G.document, selectors);
+
+  public static function findById(id: String): Null<Tag> return wrap(G.document.getElementById(id));
 
   public static function findAll(selectors: String): Array<Tag> return findAll2(G.document, selectors);
 

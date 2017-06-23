@@ -14,24 +14,23 @@ class FormErrorBlock {
   private var config: FormConfig;
   private var parent: Null<FormErrorBlock>;
   private var parentTag: Tag;
-  private var errorTag: Null<Tag>;
+  private var errorTags: Array<Tag>;
 
   private var errors: Array<EitherType<Field, FormErrorBlock>> = [];
   private var selfErrors: Array<String> = [];
   private var target: Null<Field> = null;
 
-  public function new(config: FormConfig, parent: Null<FormErrorBlock>, parentTag: Tag, errorTag: Null<Tag>) {
+  public function new(config: FormConfig, parent: Null<FormErrorBlock>, parentTag: Tag, errorTags: Array<Tag>) {
     this.config = config;
     this.parent = parent;
     this.parentTag = parentTag;
-    this.errorTag = errorTag;
+    this.errorTags = errorTags;
     // Это действие нужно, чтобы срабатывал "фокус" на поля без инпутов (пример: RadioGroupField)
 
-    if (errorTag != null) {
-      errorTag
-      .on('mouseover', function() {if (target != null) target.box.cls(config.hoverClass); })
+    for (t in errorTags) {
+      t.on('mouseover', function() {if (target != null) target.box.cls(config.hoverClass); })
       .on('mouseout', function() {if (target != null) target.box.clsOff(config.hoverClass); })
-      .onClick(function() {
+      .on('click', function() {
         if (target != null) {
           // This error block linked with field, so focus on the field.
           target.box.clsOff(config.hoverClass);
@@ -49,7 +48,7 @@ class FormErrorBlock {
   public function resetErrors() {
     errors = [];
     selfErrors = [];
-    if (errorTag != null) errorTag.setHtml('').cls(config.hiddenClass);
+    for (t in errorTags) t.setHtml('').cls(config.hiddenClass);
     updateErrorTag();
     if (parent != null) parent.clearError(this);
   }
@@ -80,16 +79,18 @@ class FormErrorBlock {
     var hasErrors: Bool = errors.length > 0;
     if (selfErrors.length > 0) {
       var text: String = selfErrors.join('<br>');
-      if (errorTag != null) {
-        if (errorTag.html() != text) {
-          errorTag.setHtml(text).clsOff(config.hiddenClass);
+      if (errorTags.nonEmpty()) {
+        if (errorTags[0].html() != text) {
+          for (t in errorTags) t.setHtml(text).clsOff(config.hiddenClass);
         }
       } else { // В некоторых формах бывает так, что нет блока с ошибками, а саму ошибку показать надо.
         config.showFormErrorDialog(text);
       }
-    } else if (errorTag != null) {
-      if (hasErrors) errorTag.setHtml(config.strings.someFieldsHasErrorText);
-      errorTag.setCls(config.hiddenClass, !hasErrors);
+    } else {
+      for (t in errorTags) {
+        if (hasErrors) t.setHtml(config.strings.someFieldsHasErrorText);
+        t.setCls(config.hiddenClass, !hasErrors);
+      }
     }
     if (hasErrors) target = getFirstError();
     parentTag.setCls(config.withErrorClass, hasErrors);

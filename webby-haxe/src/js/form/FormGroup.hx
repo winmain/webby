@@ -13,12 +13,12 @@ class FormGroup {
     this.form = form;
     this.tag = tag;
 //    @$el.data('block', @)
-    error = new FormErrorBlock(form.config, form.errorBlock, tag, createErrorTag());
+    error = new FormErrorBlock(form.config, form.errorBlock, tag, createErrorTags());
     error.resetErrors();
   }
 
   /*
   Создать и вернуть, или просто вернуть элемент, который будет показывать ошибку этого поля.
    */
-  function createErrorTag(): Tag return Tag.label.cls(form.config.formGroupErrorClass).cls(form.config.hiddenClass).addTo(tag);
+  function createErrorTags(): Array<Tag> return [Tag.label.cls(form.config.formGroupErrorClass).cls(form.config.hiddenClass).addTo(tag)];
 }

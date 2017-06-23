@@ -1,6 +1,5 @@
 package js.form;
 
-import macros.ExternalFields;
 import goog.events.EventTarget;
 import js.form.field.Field;
 import js.form.field.FormListField;
@@ -10,6 +9,7 @@ import js.html.Event;
 import js.html.FormElement;
 import js.html.XMLHttpRequest;
 import js.lib.XhrUtils;
+import macros.ExternalFields;
 
 using js.lib.ArrayUtils;
 
@@ -40,7 +40,7 @@ class Form extends EventTarget {
   inline private function get_formEl(): FormElement return cast tag.el;
 
   public var controller(default, null): Null<Dynamic>;
-  public var formErrorsTag(default, null): Null<Tag>;
+  public var formErrorTags(default, null): Array<Tag>;
   public var errorBlock(default, null): FormErrorBlock;
 
   public var blocks(default, null): Array<FormGroup>;
@@ -96,8 +96,8 @@ class Form extends EventTarget {
 
     controller = props.controller != null ? props.controller(this) : null;
 
-    formErrorsTag = getFormErrorsTag();
-    errorBlock = new FormErrorBlock(config, parentForm != null ? parentForm.errorBlock : null, tag, formErrorsTag);
+    formErrorTags = getFormErrorTags();
+    errorBlock = new FormErrorBlock(config, parentForm != null ? parentForm.errorBlock : null, tag, formErrorTags);
     if (tag.hasCls(config.formGroupClass)) {
       blocks = [new FormGroup(this, tag)]; // Сама форма является блоком, поэтому блок тут один
     } else {
@@ -156,7 +156,7 @@ class Form extends EventTarget {
     deregisterForm(this);
   }
 
-  public function getFormErrorsTag(): Null<Tag> return tag.fnd('.' + config.formErrorsBlockClass);
+  public function getFormErrorTags(): Array<Tag> return tag.fndAll('.' + config.formErrorsBlockClass);
 
 
   /*
@@ -186,8 +186,6 @@ class Form extends EventTarget {
     }
   }
 
-  @:keep
-  @:expose('Form.fill')
   public function fill(valueMap: External) {
     for (rule in rules) {
       rule.allowFocusChange(false);
@@ -205,6 +203,12 @@ class Form extends EventTarget {
     originalValue = value();
     initialFilled = false;
     triggerRules();
+  }
+
+  @:keep
+  @:expose('Form.fill')
+  public static function fillExt(formHtmlId: String, valueMap: External): Void {
+    fromTag(Tag.findById(formHtmlId)).fill(valueMap);
   }
 
   /*
