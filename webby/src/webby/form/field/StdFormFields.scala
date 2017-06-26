@@ -1,7 +1,9 @@
 package webby.form.field
 import querio._
+import webby.api.mvc.RequestHeader
 import webby.commons.text.Plural
 import webby.form.field.autocomplete.{AutocompleteField, AutocompleteListField, AutocompleteTextField}
+import webby.form.field.recaptcha.{ReCaptcha, ReCaptchaField}
 import webby.form.{Form, FormWithDb, SubForm}
 
 /**
@@ -71,4 +73,6 @@ trait StdFormFields {self: Form =>
     addField(new AutocompleteListField[T](this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg, toJs = toJs, fromJs = fromJs, recordPlural))
   protected def autocompleteTextField(id: String, jsSourceFunction: String, jsSourceArg: Any = null) =
     addField(new AutocompleteTextField(this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg))
+
+  protected def reCaptchaField(reCaptcha: ReCaptcha)(implicit rh: RequestHeader) = addField(new ReCaptchaField(this, reCaptcha)(rh))
 }

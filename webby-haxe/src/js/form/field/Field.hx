@@ -1,12 +1,12 @@
 package js.form.field;
 
-import macros.ExternalFields;
 import goog.events.EventTarget;
 import js.form.Form;
 import js.html.Event;
 import js.html.InputElement;
 import js.html.KeyboardEvent;
 import js.lib.XhrUtils;
+import macros.ExternalFields;
 
 @:autoBuild(macros.KeepConstructorMacro.build())
 class Field extends EventTarget {
@@ -42,7 +42,7 @@ class Field extends EventTarget {
     this.props = props;
     field = props.field;
     shortId = props.shortId;
-    htmlId = form.htmlId + '-' + props.shortId;
+    htmlId = initHtmlId(props);
     tag = initTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
     if (tag == null) throw new Error('Field tag #${htmlId} not found');
 //    @$el = @initEl().prop('field', @)
@@ -110,6 +110,8 @@ class Field extends EventTarget {
   public function updateRequired() {
     box.setCls(form.config.fieldBoxRequiredClass, required);
   }
+
+  function initHtmlId(props: FieldProps): String return form.htmlId + '-' + props.shortId;
 
   public function initTag(): Tag return form.tag.fnd('#' + htmlId);
 

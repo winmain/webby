@@ -70,6 +70,12 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     */
   val constraints = mutable.Buffer[Form => FormResult]()
 
+  /**
+    * Список ограничений и проверок формы, который отрабатывает последним, и
+    * только в том случае, если до этого форма прошла без ошибок.
+    */
+  var lastConstraints: List[Form => FormResult] = Nil
+
   def addConstraint(c: Form => FormResult): Unit = constraints += c
   def addConstraint(c: => FormResult): Unit = constraints += {_ => c}
   def addErrorIf(errorCondition: => Boolean, onConditionFailed: => FormErrors): Unit =
@@ -197,9 +203,17 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     }
 
     // Проверить все ограничения формы. Проверки идут только если других ошибок в форме нет.
-    if (formErrors.isEmpty) constraints.foreach(constraint => formErrors ++= constraint(this))
-    // Вычислить и проверить дополнительные значения.
-    if (formErrors.isEmpty) try computed = makeComputed catch {case e: ErrorStopException => formErrors ++= e.errors}
+    if (formErrors.isEmpty) {
+      constraints.foreach(constraint => formErrors ++= constraint(this))
+
+      // Проверить последние ограничения формы. Проверки идут только если других ошибок в форме нет.
+      if (formErrors.isEmpty) {
+        lastConstraints.foreach(constraint => formErrors ++= constraint(this))
+
+        // Вычислить и проверить дополнительные значения.
+        if (formErrors.isEmpty) try computed = makeComputed catch {case e: ErrorStopException => formErrors ++= e.errors}
+      }
+    }
     formErrors.orSuccess
   }
 

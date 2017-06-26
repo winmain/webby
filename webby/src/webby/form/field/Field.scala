@@ -114,13 +114,13 @@ trait Field[T] {self =>
   def hideWithRow(v: Boolean = true): this.type = hideWithRow(Some(v))
 
   /**
-   * Список ограничений и проверок, накладываемых на это поле.
-   */
-  val constraints: mutable.Buffer[Constraint[T]] = mutable.Buffer[Constraint[T]]()
+    * Список ограничений и проверок, накладываемых на это поле.
+    */
+  val constraints: mutable.Buffer[Constraint[T]] = mutable.Buffer.empty[Constraint[T]]
 
   /**
-   * Проверить значение поля, прогнав все ограничения constraints.
-   */
+    * Проверить значение поля, прогнав все ограничения constraints.
+    */
   def validateConstraints: ValidationResult = {
     constraints.foreach(_.check(_value) match {
       case invalid: Invalid => return invalid

@@ -3,6 +3,7 @@ package webby.form.html
 import webby.form.Form
 import webby.form.field._
 import webby.form.field.autocomplete.{AutocompleteField, AutocompleteListField, AutocompleteTextField}
+import webby.form.field.recaptcha.ReCaptchaField
 import webby.html._
 import webby.html.elements.{RichSelectConfig, RichSelectHtml}
 
@@ -112,5 +113,13 @@ class StdFormHtml(protected val form: Form)(implicit protected val view: StdHtml
           view.option.valueSafe(v) ~ field.titleFn(item)
         }
       }(view)
+  }
+
+  // ------------------------------- ReCaptcha -------------------------------
+
+  def reCaptchaDiv(field: ReCaptchaField)(implicit page: WebbyPage): CommonTag = {
+    val config = field.reCaptcha.config
+    page.scripts.addExternalScriptOnce(config.scriptUrl)
+    config.divHtml
   }
 }
