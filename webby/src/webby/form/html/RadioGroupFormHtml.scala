@@ -28,9 +28,9 @@ trait RadioGroupFormHtml {self: StdFormHtml =>
     }
   }
 
-  class RadioGroupRenderer(field: RadioGroupField[_], topElemCls: String, labelCls: String) {
-    def main(topTag: CommonTag = view.div)(body: RadioGroupInnerRenderer[_] => Any): HtmlBase =
-      topTag.id(field.htmlId).cls(topElemCls) < body(new RadioGroupInnerRenderer(field, labelCls))
+  class RadioGroupRenderer[T](field: RadioGroupField[T], topElemCls: String, labelCls: String) {
+    def main(topTag: CommonTag = view.div)(body: RadioGroupInnerRenderer[T] => Any): HtmlBase =
+      topTag.id(field.htmlId).cls(form.base.fieldCls).cls(topElemCls) < body(new RadioGroupInnerRenderer(field, labelCls))
   }
 
   class RadioGroupInnerRenderer[T](field: RadioGroupField[T], labelCls: String) {
@@ -51,6 +51,6 @@ trait RadioGroupFormHtml {self: StdFormHtml =>
     * @param topElemCls Класс внешнего элемента, задаёт общий стиль. Например: "radio-group-list", "radio-group-stripe"
     * @param labelCls   Класс каждого внутреннего label. Обычно это "radio-label"
     */
-  def radioGroupRenderer(field: RadioGroupField[_], topElemCls: String, labelCls: String): RadioGroupRenderer =
+  def radioGroupRenderer[T](field: RadioGroupField[T], topElemCls: String, labelCls: String): RadioGroupRenderer[T] =
     new RadioGroupRenderer(field, topElemCls, labelCls)
 }
