@@ -477,7 +477,7 @@ class Form extends EventTarget {
   }
 
   /*
-  Получить зарегистрированную форму по тегу
+  Получить зарегистрированную форму по HTML элементу
    */
   public static function fromEl(el: Element): Null<Form> {
     for (form in registeredForms) {
@@ -486,7 +486,20 @@ class Form extends EventTarget {
     return null;
   }
 
+  /*
+  Получить зарегистрированную форму по тегу
+   */
   public inline static function fromTag(tag: Tag): Null<Form> return fromEl(tag.el);
+
+  /*
+  Получить зарегистрированную форму по id
+   */
+  public static function fromHtmlId(htmlId: String): Null<Form> {
+    for (form in registeredForms) {
+      if (form.htmlId == htmlId) return form;
+    }
+    return null;
+  }
 }
 
 /*
