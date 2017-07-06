@@ -208,7 +208,7 @@ class Form extends EventTarget {
   @:keep
   @:expose('Form.fill')
   public static function fillExt(formHtmlId: String, valueMap: External): Void {
-    fromTag(Tag.findById(formHtmlId)).fill(valueMap);
+    fromHtmlId(formHtmlId).fill(valueMap);
   }
 
   /*
@@ -263,8 +263,6 @@ class Form extends EventTarget {
     }
   }
 
-  @:keep
-  @:expose('Form.submit')
   public function submit() {
     if (finished) return;
     dispatchEvent(BeforeSubmitEvent);
@@ -304,6 +302,12 @@ class Form extends EventTarget {
     XhrUtils.setJsonContentType(xhr);
     XhrUtils.setJsonResponseType(xhr);
     xhr.withCredentials = true;
+  }
+
+  @:keep
+  @:expose('Form.submit')
+  public static function submitExt(formHtmlId: String): Void {
+    fromHtmlId(formHtmlId).submit();
   }
 
   @:keep
