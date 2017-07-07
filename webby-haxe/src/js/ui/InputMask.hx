@@ -48,6 +48,7 @@ class InputMask {
       placeholder = placeholder.replace(new RegExp(def, 'g'), placeholderSymbol);
     }
 
+    // TODO: сделать защиту от повторного вызова applyOn на том же элементе
     tag.on('input', function() {
       var original: String = tag.val();
 

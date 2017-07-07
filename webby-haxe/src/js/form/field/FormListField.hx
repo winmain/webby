@@ -38,8 +38,8 @@ class FormListField extends Field {
     maxItems = props.maxItems;
     uniqueBy = props.uniqueBy;
 
-    templateTag = Tag.find('#' + templateId());
-    G.require(templateTag != null, 'Subform template "#${templateId()}" not found"');
+    templateTag = Tag.find('#' + templateId(props));
+    G.require(templateTag != null, 'Subform template "#${templateId(props)}" not found"');
 
     var topForm = form; // Вычислить самую верхнюю форму
     while (topForm.parentForm != null) topForm = topForm.parentForm;
@@ -57,9 +57,9 @@ class FormListField extends Field {
   // ------------------------------- All id functions -------------------------------
 
   public function makeId(suffix: String): String return
-    htmlId + '-' + suffix + (form.subId != null ? '-' + form.subId : '');
+    htmlId + '-' + suffix; // + (form.subId != null ? '-' + form.subId : '');
 
-  public function templateId(): String return htmlId + '-template';
+  public function templateId(props: FormListFieldProps): String return props.templateId != null ? props.templateId : htmlId + '-template';
 
   public function listId(): String return makeId('list');
 
@@ -229,4 +229,5 @@ class FormListFieldProps extends FieldProps {
   @:optional public var maxItems: Int;
   @:optional public var uniqueBy: Array<String>;
   public var sub: FormProps;
+  @:optional public var templateId: String;
 }

@@ -44,7 +44,7 @@ class Field extends EventTarget {
     shortId = props.shortId;
     htmlId = initHtmlId(props);
     tag = initTag(); // TODO: неплохо бы добавить свойство элемента 'field', которое будет ссылаться на this
-    if (tag == null) throw new Error('Field tag #${htmlId} not found');
+    if (tag == null) throw new Error('Field tag "${htmlId}" not found');
 //    @$el = @initEl().prop('field', @)
     box = initBoxTag();
     if (box == null) throw new Error('Field box for "${htmlId}" not found');

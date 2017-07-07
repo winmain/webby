@@ -246,7 +246,13 @@ class Form extends EventTarget {
     }
   }
 
-  public function formAction(): String return tag.getAttr('action');
+  public function formAction(): String {
+    var action: String = tag.getAttr('action');
+    if (!G.asBool(action)) {
+      action = G.location.href.replace(new RegExp("#.*$"), '');
+    }
+    return action;
+  }
 
   /*
   Returns top-most form. Can return self for top-most form.

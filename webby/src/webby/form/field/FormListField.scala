@@ -12,14 +12,15 @@ import scala.collection.mutable
 class FormListField[F <: SubForm](val form: Form, val shortId: String, var factory: () => F, var recordPlural: Plural)
   extends Field[Vector[F]] {self =>
 
-  val htmlTemplateId = htmlId + "-template"
-  val htmlListId = htmlId + "-list"
-  val htmlAddId = htmlId + "-add"
+  def htmlTemplateId: String = customTemplateId.getOrElse(htmlId + "-template")
+  def htmlListId: String = htmlId + "-list"
+  def htmlAddId: String = htmlId + "-add"
 
   var defaultItems: Int = 0
   var minItems: Option[Int] = None
   var maxItems: Option[Int] = None
   var uniqueBy: Option[(F => Field[_], String)] = None
+  var customTemplateId: Option[String] = None
 
   /** Специальная карта старых подформ, которые оказались неиспользованы после получения новых значений. Их следует удалить из БД. */
   var removeOldForms: mutable.Map[Int, F] = mutable.Map.empty[Int, F]
@@ -59,6 +60,7 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
     val maxItems = self.maxItems
     val uniqueBy = self.uniqueBy.map {case (fn, msg) => fn(f).shortId -> msg}
     val sub = f.jsProps
+    val templateId = customTemplateId
   }
   override def jsProps = new JsProps
   override def jsField: String = "formList"
@@ -135,6 +137,8 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
   def fixedItems(v: Int): this.type = {defaultItems = v; minItems = Some(v); maxItems = Some(v); this}
   /** Каждая подформа должна иметь уникальное значение этого поля. */
   def uniqueBy(v: F => Field[_], errorMessage: String): this.type = {uniqueBy = Some((v, errorMessage)); this}
+  /** Явно заданный templateId. Полезно для подформ в подформах. */
+  def templateId(v: String): this.type = {customTemplateId = Some(v); this}
 
   /**
     * Проверки, специфичные для конкретной реализации Field.
