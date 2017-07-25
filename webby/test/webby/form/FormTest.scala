@@ -5,13 +5,14 @@ import webby.commons.io.StdJs
 
 class FormTest extends FreeSpec with Matchers with Inside {
   "subform keys" - {
+    val mapper = new StdJs.Value().mapper
+
     case class _TestSubForm() extends StubForms.Common with SubForm
     class _TestForm extends StubForms.Common {
       val subForm = formList("subform", _TestSubForm())
     }
 
     "validate js setValue" in {
-      val mapper = StdJs.get.mapper
       def setJs(js: String) = new _TestForm().subForm.setJsValueAndValidate(mapper.readTree(js))
       setJs( """[]""") shouldBe a[FormSuccess.type]
       setJs( """[{}, {}, {"_key":0}, {"_key":0}]""") shouldBe a[FormSuccess.type]
@@ -31,7 +32,7 @@ class FormTest extends FreeSpec with Matchers with Inside {
       val subForm9 = form.subForm.get.apply(2)
       subForm9.key shouldEqual 9
 
-      val tree: JsonNode = StdJs.get.mapper.readTree( """[{}, {"_key":9}, {"_key":3}]""")
+      val tree: JsonNode = mapper.readTree( """[{}, {"_key":9}, {"_key":3}]""")
       form.subForm.setJsValueAndValidate(tree) shouldBe a[FormSuccess.type]
 
       val list: Vector[_TestSubForm] = form.subForm.get
