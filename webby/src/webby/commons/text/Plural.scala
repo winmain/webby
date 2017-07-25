@@ -32,6 +32,12 @@ trait Plural {
   def apply(num: Int): Builder = new Builder(num)
 }
 
+
+case class EnPlural(single: String, multiple: String) extends Plural {
+  override def form(num: Int): String = if (num == 1) single else multiple
+}
+
+
 /**
   * Класс, описывающий 3 формы множественного числа для Русского языка.
   *

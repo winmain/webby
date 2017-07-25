@@ -15,22 +15,22 @@ trait StdFormFields {self: Form =>
 
   // ----------- !!! Все методы, возвращающие конструкторы полей должны быть обрамлены в addField() !!!
 
-  protected def formList[F <: SubForm](id: String, factory: => F) = addField(new FormListField(this, id, () => factory, base.recordRPlural))
+  protected def formList[F <: SubForm](id: String, factory: => F) = addField(new FormListField(this, id, () => factory, strings.recordRPlural))
 
   protected def formListWithDbLinked[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Int]) =
     addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Int]](
-      this, id, () => factory, parentField, _.set(_, _), base.recordRPlural))
+      this, id, () => factory, parentField, _.set(_, _), strings.recordRPlural))
 
   protected def formListWithDbLinkedOpt[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Option[Int]]) =
     addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Option[Int]]](
-      this, id, () => factory, parentField, (f, r, p) => f.set(r, Some(p)), base.recordRPlural))
+      this, id, () => factory, parentField, (f, r, p) => f.set(r, Some(p)), strings.recordRPlural))
 
   protected def formListWithDbStandalone[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
   (table: Table[TR, MTR])(id: String, factory: => F) =
     addFormFieldWithDb(new FormListFieldWithDbStandalone[F, TR, MTR](
-      this, id, () => factory, base.recordRPlural))
+      this, id, () => factory, strings.recordRPlural))
 
   protected def textField(id: String) = addField(new TextField(this, id))
   protected def checkField(name: String, makeUniqueInputId: Boolean = false) = addField(new CheckField(this, name, makeUniqueInputId))
@@ -69,7 +69,7 @@ trait StdFormFields {self: Form =>
 
   protected def autocompleteField[T](id: String, jsSourceFunction: String, jsSourceArg: Any = null, toJs: T => Int, fromJs: Int => Option[T], addRendererCls: String = null) =
     addField(new AutocompleteField[T](this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg, toJs = toJs, fromJs = fromJs, addRendererCls = addRendererCls))
-  protected def autocompleteListField[T](id: String, jsSourceFunction: String, jsSourceArg: Any = null, toJs: T => Int, fromJs: Int => Option[T], recordPlural: Plural = base.recordRPlural) =
+  protected def autocompleteListField[T](id: String, jsSourceFunction: String, jsSourceArg: Any = null, toJs: T => Int, fromJs: Int => Option[T], recordPlural: Plural = strings.recordRPlural) =
     addField(new AutocompleteListField[T](this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg, toJs = toJs, fromJs = fromJs, recordPlural))
   protected def autocompleteTextField(id: String, jsSourceFunction: String, jsSourceArg: Any = null) =
     addField(new AutocompleteTextField(this, id, jsSourceFunction = jsSourceFunction, jsSourceArg = jsSourceArg))

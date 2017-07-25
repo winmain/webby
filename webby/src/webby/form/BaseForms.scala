@@ -12,9 +12,6 @@ import webby.html.elements.RichSelectConfig
 abstract class BaseForms {self =>
   def db: DbTrait
 
-  def recordPlural: Plural
-  def recordRPlural: Plural
-
   def strings(locale: Locale): FormStrings
 
   def maybeChangedFieldsDao: Option[ChangedFieldsDao] = None

@@ -1,7 +1,11 @@
 package webby.form.i18n
+import webby.commons.text.Plural
 
 trait FormStrings {
   // ------------------------------- Form -------------------------------
+
+  def recordPlural: Plural
+  def recordRPlural: Plural
 
   // ------------------------------- Field texts -------------------------------
 

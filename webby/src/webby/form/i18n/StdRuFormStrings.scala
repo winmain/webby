@@ -1,7 +1,11 @@
 package webby.form.i18n
+import webby.commons.text.{Plural, RusPlural}
 
 class StdRuFormStrings extends FormStrings {
   // ------------------------------- Form -------------------------------
+
+  override def recordPlural: Plural = RusPlural("запись", "записи", "записей")
+  override def recordRPlural: Plural = RusPlural("записи", "записей", "записей")
 
   // ------------------------------- Field texts -------------------------------
 
