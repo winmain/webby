@@ -1,15 +1,17 @@
 package js.form.field.autocomplete;
 
-import js.lib.ArrayUtils;
+import goog.ui.ac.AutoComplete;
 import goog.ui.ac.ArrayMatcher;
-import goog.ui.ac.AutoComplete.RowEvent;
 import js.form.field.autocomplete.AbstractAutocompleteField.AutocompleteFieldProps;
 import js.html.Event;
+import js.lib.ArrayUtils;
 
 class AutocompleteListField extends AbstractAutocompleteField {
   static public var REG = 'autocompleteList';
 
   var arrayMatcher: ArrayMatcher<Dynamic>;
+  var sourceFn: String;
+  var sourceArg: Dynamic;
 
   public var itemsBox(default, null): Tag;
 
@@ -22,8 +24,9 @@ class AutocompleteListField extends AbstractAutocompleteField {
     var ac = form.config.acListConfig;
     G.require(ac, "AutocompleteListConfig is not defined");
     super(form, props);
-    G.require(Std.is(matcher, ArrayMatcher), matcher + " is not ArrayMatcher");
-    arrayMatcher = cast matcher;
+    setMatcher(matcher);
+    sourceFn = props.sourceFn;
+    sourceArg = props.sourceArg;
     maxItems = props.maxItems;
 
     itemsBox = G.require(box.fnd('.' + ac.autocompleteListItemsCls), "No autocomplete items found");
@@ -43,7 +46,7 @@ class AutocompleteListField extends AbstractAutocompleteField {
   public function setValueEl2(value: Null<Array<String>>): Void {
     reset();
     if (value != null) {
-      for (id in values) {
+      for (id in value) {
         for (row in rows) {
           if (source.getRowId(row) == id) {
             addItem(row, false);
@@ -57,12 +60,6 @@ class AutocompleteListField extends AbstractAutocompleteField {
 
   // Прочитать все строки, используя настройки source
   public function readRows() {
-//    allRows = [];
-//    var rawRows = source. rr.form.field.AutocompleteSource.get(@source[0], @source[1])
-//    if rawRows
-//      for row in rawRows
-//        @allRows.push {id: row[0], title: row[1], toString: -> @title}
-//    @reset()
     allRows = arrayMatcher.rows_.copy();
     reset();
   }
@@ -126,21 +123,31 @@ class AutocompleteListField extends AbstractAutocompleteField {
     updateTagVisibility();
   }
 
-/*
-  ###
-    Установить/сменить настройки исходных данных.
-    Если новые настройки не совпадают со старыми, то происходит переинициализация автокомплита, и все выбранные значения очищаются.
-    Если новые настройки совпадают со старыми, то ничего не происходит.
-  ###
-  setSource: (source, sourceArg) ->
-    if @source[0] != source || @source[1] != sourceArg
-      @source = [source, sourceArg]
-      @readRows()
 
-  setSourceArg: (sourceArg) -> @setSource(@source[0], sourceArg)
+  public function setMatcher(matcher: Matcher) {
+    G.require(matcher, 'No matcher defined');
+    G.require(Std.is(matcher, ArrayMatcher), matcher + " is not ArrayMatcher");
+    this.matcher = matcher;
+    arrayMatcher = cast matcher;
+  }
 
-  # --------------- Error & event handling methods ---------------
+  /*
+  Установить/сменить настройки исходных данных.
+  Если новые настройки не совпадают со старыми, то происходит переинициализация автокомплита, и все выбранные значения очищаются.
+  Если новые настройки совпадают со старыми, то ничего не происходит.
    */
+  public function setSource(sourceFn: String, sourceArg: Dynamic) {
+    if (this.sourceFn != sourceFn || this.sourceArg != sourceArg) {
+      setMatcher(source.getMatcher(sourceFn, sourceArg));
+      this.sourceFn = sourceFn;
+      this.sourceArg = sourceArg;
+      readRows();
+    }
+  }
+
+  public function setSourceArg(sourceArg: Dynamic): Void {
+    setSource(sourceFn, sourceArg);
+  }
 
   override function onUpdate(e: RowEvent) {
     addItem(e.row);

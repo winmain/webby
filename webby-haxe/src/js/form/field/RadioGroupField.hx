@@ -18,7 +18,7 @@ class RadioGroupField extends Field {
 
   override public function setValueEl(value: Null<Dynamic>) {
     if (value == null) {
-      for (radio in radios) radio.attr('checked', false);
+      for (radio in radios) radio.inputElement().checked = false;
     } else {
       var radio = findRadio(value);
       if (radio != null) {
