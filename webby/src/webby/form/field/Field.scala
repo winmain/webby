@@ -100,6 +100,8 @@ trait Field[T] {self =>
   var ignored: Boolean = false
   def ignore: this.type = ignore(v = true)
   def ignore(v: Boolean): this.type = { ignored = v; this }
+  def used: Boolean = !ignored
+  def use(v: Boolean): this.type = ignore(!v)
 
   /**
    * При нажатии на enter в этом поле форма сабмитится?

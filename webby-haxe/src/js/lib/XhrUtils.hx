@@ -73,4 +73,19 @@ class XhrUtils {
     setJsonResponseType(xhr);
     xhr.send(Json.stringify(postData));
   }
+
+  /*
+  Simple text GET request
+   */
+  public static function textGet(url: String, onSuccess: String -> Void, ?onFail: XMLHttpRequest -> Void): Void {
+    var xhr = new XMLHttpRequest();
+    bind(xhr, function() {
+      onSuccess(xhr.responseText);
+    }, function() {
+      if (onFail != null) onFail(xhr);
+    });
+    xhr.open('GET', url, true);
+    xhr.responseType = XMLHttpRequestResponseType.TEXT;
+    xhr.send();
+  }
 }

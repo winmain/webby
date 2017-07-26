@@ -1,6 +1,6 @@
 package webby.form
 import querio._
-import webby.api.mvc.{ResultException, Results}
+import webby.api.mvc.{Result, ResultException, Results}
 import webby.form.field.{DbConnector, Field}
 
 import scala.collection.mutable
@@ -100,15 +100,11 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
     afterLoadRecord2.foreach(_ (AfterLoadRecordCtx(record, conn)))
   }
 
-  //  def loadOrNotFoundAct(id: Int)(implicit conn: Conn, act: Act) {
-  //    if (!load(id)) throw ResultException(Results.NotFoundAct)
-  //  }
-  //  def loadOrNotFoundPage(id: Int)(implicit conn: Conn, page: Page) {
-  //    if (!load(id)) throw ResultException(Results.NotFoundPage)
-  //  }
-  def loadOrNotFoundRaw(id: Int)(implicit conn: Conn): Unit = {
-    if (!load(id)) throw ResultException(Results.NotFoundRaw)
+  def loadOrResult(id: Int)(orResult: => Result)(implicit conn: Conn): Unit = {
+    if (!load(id)) throw ResultException(orResult)
   }
+
+  def loadOrNotFoundRaw(id: Int)(implicit conn: Conn): Unit = loadOrResult(id)(Results.NotFoundRaw)
 
   def save()(implicit dt: DataTr): MTR =
     innerSave(None)
