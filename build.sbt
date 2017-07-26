@@ -116,20 +116,20 @@ lazy val webby: Project = Project(
     libraryDependencies := {
       val deps = Seq.newBuilder[ModuleID]
       deps ++= commonDependencies
-      deps += "org.slf4j" % "jul-to-slf4j" % "1.7.24"
-      deps += "org.slf4j" % "jcl-over-slf4j" % "1.7.24"
+      deps += "org.slf4j" % "jul-to-slf4j" % "1.7.25"
+      deps += "org.slf4j" % "jcl-over-slf4j" % "1.7.25"
 
-      deps += "io.netty" % "netty-all" % "4.1.2.Final"
+      deps += "io.netty" % "netty-all" % "4.1.13.Final"
 
-      deps += "com.typesafe" % "config" % "1.3.0"
+      deps += "com.typesafe" % "config" % "1.3.1"
 
       // Важно! Нельзя повышать версию модуля jackson-module-scala на ветку 2.5, 2.6, 2.7.
       // Это приводит к смене поведения при сериализации. Например, webby.form.jsrule.JsRule
       // перестаёт сериализовывать свойства cond, actions несмотря на аннотации @JsonProperty.
       // Если же не ставить @JsonAutoDetect(getterVisibility = NONE), то сериализация работает, хотя
       // появляются лишние поля.
-      deps += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.7" // Работа с json
-      deps += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.7" exclude("com.google.guava", "guava") exclude("com.google.code.findbugs", "jsr305") // Работа с json
+      deps += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.9" // Работа с json
+      deps += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.9" exclude("com.google.guava", "guava") exclude("com.google.code.findbugs", "jsr305") // Работа с json
       deps += "com.intellij" % "annotations" % "12.0" // для интеграции IDEA language injection
 
       // Optional dependencies
@@ -137,19 +137,19 @@ lazy val webby: Project = Project(
       deps += "com.typesafe.akka" %% "akka-actor" % "2.4.17" % "optional" // Used in webby.api.libs.concurrent.Akka
       deps += "com.typesafe.akka" %% "akka-slf4j" % "2.4.17" % "optional"
       deps += "org.scala-stm" %% "scala-stm" % "0.8" % "optional" // Used in webby.api.libs.concurrent.Promise
-      deps += "com.zaxxer" % "HikariCP" % "2.6.1" % "optional" // Database connector, used in webby.api.db.HikariCPPlugin
-      deps += "org.jsoup" % "jsoup" % "1.6.3" % "optional" // Html parsing, used in webby.commons.text.StdStrHtmlJsoup
+      deps += "com.zaxxer" % "HikariCP" % "2.6.3" % "optional" // Database connector, used in webby.api.db.HikariCPPlugin
+      deps += "org.jsoup" % "jsoup" % "1.10.3" % "optional" // Html parsing, used in webby.commons.text.StdStrHtmlJsoup
       deps += "org.zeroturnaround" % "jr-sdk" % "6.4.6" % "optional" // JRebel SDK (class reloader), used in webby.commons.system.JRebelUtils
       deps += "uk.co.caprica" % "juds" % "0.94.1" % "optional" // Unix socket support, used in webby.commons.system.SdDaemon
       deps += "javax.servlet" % "javax.servlet-api" % "3.1.0" % "optional" // Servlet api for dump Sentry client
-      deps += "com.getsentry.raven" % "raven-logback" % "7.3.0" % "optional" exclude("com.google.guava", "guava") // Sentry plugin for log processing. Guava excluded because of old version 18 used by raven. Used in webby.commons.system.log.SentryFilteredAppender
-      deps += "commons-validator" % "commons-validator" % "1.5.1" % "optional" intransitive() // Email validation, used in webby.commons.text.validator.EmailValidator
+      deps += "com.getsentry.raven" % "raven-logback" % "7.8.6" % "optional" exclude("com.google.guava", "guava") // Sentry plugin for log processing. Guava excluded because of old version 18 used by raven. Used in webby.commons.system.log.SentryFilteredAppender
+      deps += "commons-validator" % "commons-validator" % "1.6" % "optional" intransitive() // Email validation, used in webby.commons.text.validator.EmailValidator
       deps += "org.apache.commons" % "commons-email" % "1.4" % "optional" // Email classes, used in webby.commons.text.validator.EmailValidator
       deps += "org.quartz-scheduler" % "quartz" % "2.2.3" % "optional" exclude("c3p0", "c3p0") // Cron, used in webby.commons.system.cron.BaseQuartzPlugin
       deps += "commons-codec" % "commons-codec" % "1.10" % "optional"
       deps += "net.sf.ehcache" % "ehcache-core" % "2.6.11" % "optional" // Cache, used in webby.commons.cache.CachePlugin
       deps += "com.esotericsoftware.kryo" % "kryo" % "2.24.0" % "optional" // For serializing objects in cache, used in webby.commons.cache.KryoNamedCache
-      deps += "com.carrotsearch" % "hppc" % "0.7.1" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
+      deps += "com.carrotsearch" % "hppc" % "0.7.2" % "optional" // High Performance Primitive Collections, used in ElasticSearch & in webby.commons.cache.IntIntPositiveValueMap
       deps += "com.google.javascript" % "closure-compiler" % "v20170124" % "optional" exclude("com.google.guava", "guava") // Google Closure Compiler
       deps += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" % "optional" // Google Closure Library
       deps += "org.glassfish.external" % "opendmk_jmxremote_optional_jar" % "1.0-b01-ea" % "optional" // JMXMP - better replacement for RMI

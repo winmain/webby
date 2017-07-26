@@ -4,9 +4,9 @@ import org.scalatest._
 import webby.commons.io.StdJs
 
 class FormTest extends FreeSpec with Matchers with Inside {
-  "subform keys" - {
-    val mapper = new StdJs.Value().mapper
+  val mapper = StdJs.defaultMapper
 
+  "subform keys" - {
     case class _TestSubForm() extends StubForms.Common with SubForm
     class _TestForm extends StubForms.Common {
       val subForm = formList("subform", _TestSubForm())

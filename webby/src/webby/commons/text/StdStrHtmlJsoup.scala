@@ -27,7 +27,11 @@ trait StdStrHtmlJsoup extends StdStrHtml {
   def stripHtmlTagsPreserveLineBreaks(str: String): String = {
     val replacedLi = StringUtils.replace(str, "<li>", "<br>• ") // Добавить точки к <li>, и заменить их на <br>
     StringUtils.replace(
-      StringUtils.replace(Jsoup.clean(replacedLi, StdStrHtmlJsoup.WhitelistBr), "<br />", ""), "\n ", "\n")
+      StringUtils.replace(
+        StringUtils.replace(Jsoup.clean(replacedLi, StdStrHtmlJsoup.WhitelistBr),
+          "<br />", ""),
+        "<br>", ""),
+      "\n ", "\n")
   }
 
   /**

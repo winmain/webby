@@ -19,8 +19,7 @@ object StdJs extends OverridableObject {
   class Value extends Base {
     val mapper: ObjectMapper = newMapper
 
-    def newMapper: ObjectMapper = new ObjectMapper()
-      .registerModule(DefaultScalaModule)
+    def newMapper: ObjectMapper = defaultMapper
 
     def toJson(o: AnyRef): String = mapper.writeValueAsString(o)
 
@@ -64,4 +63,10 @@ object StdJs extends OverridableObject {
   }
 
   override protected def default = new Value
+
+  /**
+    * Default [[ObjectMapper]], useful for tests.
+    */
+  def defaultMapper = new ObjectMapper()
+    .registerModule(DefaultScalaModule)
 }
