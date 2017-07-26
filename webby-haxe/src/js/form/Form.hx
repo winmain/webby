@@ -453,29 +453,6 @@ class Form extends EventTarget {
     defaultConfig = config;
   }
 
-  /*
-  Сопоставление типа поля с его классом
-  (функция здесь нужна потому, что google closure не успевает проинициализировать нужные классы на момент создания объекта)
-   */
-  // TODO: очистить список ниже по мере реализации перечисленных типов полей
-//  'check': rr.form.field.CheckField
-//  'date': rr.form.field.DateField
-//  'monthYear': rr.form.field.MonthYearField
-//  'radioGroup': rr.form.field.RadioGroupField
-//  'pager': rr.form.field.PagerField
-//  'select': rr.form.field.SelectField
-//  'checkList': rr.form.field.CheckListField
-//  'autocomplete': rr.form.field.AutocompleteField
-//  'autocompleteList': rr.form.field.AutocompleteListField
-//  'autocompleteText': rr.form.field.AutocompleteTextField
-//  'phone': rr.form.field.PhoneField
-//  'masked': rr.form.field.MaskedField
-//  'fio': rr.form.field.FioField
-//  'upload': rr.form.field.UploadField
-//  'hidden': rr.form.field.BaseField
-//  'reCaptcha': rr.form.field.ReCaptchaField
-//
-
   private static var registeredForms: Array<Form> = [];
 
   private static function registerForm(form: Form) {
