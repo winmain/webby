@@ -20,7 +20,7 @@ class EmailField(val form: Form, val shortId: String) extends ValueField[String]
   override def validateFieldOnly: ValidationResult = {
     if (get.length > MaxLength) Invalid(form.strings.noMoreThanCharsError(MaxLength))
     else {
-      if (EmailValidator.isValid(get)) Valid
+      if (EmailValidator.isValidFast(get)) Valid
       else Invalid(form.strings.invalidEmail)
     }
   }
