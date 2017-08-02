@@ -70,23 +70,24 @@ class ScriptMinifier(dirPrefix: String,
       def minifyDir(subDir: String): Unit = {
         val sourceDir = makeSourcePath(subDir, subDir)
         val targetDir = makeTargetPath(subDir, subDir)
-        Files.walk(sourceDir).forEach(new Consumer[Path] {
-          override def accept(path: Path): Unit = {
-            if (Files.isRegularFile(path) && path.getFileName.toString.endsWith(fileEnding)) {
-              executor.execute {
-                println("Minify: " + path)
-                val targetPath: Path = targetDir.resolve(sourceDir.relativize(path))
-                minifier(IOUtils.readString(path)) match {
-                  case Left(errors) =>
-                    System.err.println(errors)
-                    sys.error("Error minifying " + path)
-                  case Right(code) =>
-                    saveMinified(path, targetPath, code)
+        if (Files.isDirectory(sourceDir))
+          Files.walk(sourceDir).forEach(new Consumer[Path] {
+            override def accept(path: Path): Unit = {
+              if (Files.isRegularFile(path) && path.getFileName.toString.endsWith(fileEnding)) {
+                executor.execute {
+                  println("Minify: " + path)
+                  val targetPath: Path = targetDir.resolve(sourceDir.relativize(path))
+                  minifier(IOUtils.readString(path)) match {
+                    case Left(errors) =>
+                      System.err.println(errors)
+                      sys.error("Error minifying " + path)
+                    case Right(code) =>
+                      saveMinified(path, targetPath, code)
+                  }
                 }
               }
             }
-          }
-        })
+          })
       }
 
       if (Files.exists(baseTargetPath)) FileUtils.deleteDirectory(baseTargetPath.toFile)
