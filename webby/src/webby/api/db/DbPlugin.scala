@@ -4,9 +4,9 @@ import java.sql.Connection
 import webby.api.Plugin
 
 /**
- * Generic DBPlugin interface
+ * Generic DbPlugin interface
  */
-trait DBPlugin extends Plugin {
+trait DbPlugin extends Plugin {
 
   def getConnection: Connection
 

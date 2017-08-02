@@ -16,7 +16,7 @@ import scala.util.Try
   * deps += "com.zaxxer" % "HikariCP" % "2.4.7"
   * }}}
   */
-abstract class HikariCPPlugin extends DBPlugin {
+abstract class HikariCPPlugin extends DbPlugin {
   private var ds: HikariDataSource = _
 
   override def onStart() {

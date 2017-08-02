@@ -48,6 +48,15 @@ import webby.route.v2.Route
   *   override def loginTitle: String = "My admin"
   * }
   * }}}
+  *
+  * :: 5. Add task to your Quartz configuration to weed staff sessions:
+  * {{{
+  * class Quartz ... {
+  *   ...
+  *   s(hourly(10), job("weed", "Adm.staffSessContainer.weed()", c => Adm.staffSessContainer.weed()))
+  *   ...
+  * }
+  * }}}
   */
 trait AdmTrait extends StdStaffCaches { adm =>
   // Staff table
