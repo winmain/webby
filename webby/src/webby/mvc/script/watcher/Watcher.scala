@@ -2,6 +2,7 @@ package webby.mvc.script.watcher
 
 import java.nio.file.{Files, Path, WatchKey, WatchService}
 
+import webby.commons.collection.Empty
 import webby.commons.io.Using
 
 import scala.collection.JavaConverters._
@@ -42,17 +43,21 @@ class WideWatcher(watchDirs: Seq[Path]) extends Watcher {
       })
       time
     }
-    watchDirs.map(maxModifyTime).max
+    watchDirs.withFilter(Files.isDirectory(_)).map(maxModifyTime) match {
+      case Empty() => 0
+      case dirs => dirs.max
+    }
   }
 
   private val watcher: WatchService = watchDirs.head.getFileSystem.newWatchService()
 
   private def regDir(dirPath: Path) {
-    dirPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
-    Using(Files.newDirectoryStream(dirPath))(_.asScala.foreach {subPath =>
-      if (Files.isDirectory(subPath))
+    if (Files.isDirectory(dirPath)) {
+      dirPath.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
+      Using(Files.newDirectoryStream(dirPath))(_.asScala.foreach {subPath =>
         regDir(subPath)
-    })
+      })
+    }
   }
   watchDirs.foreach(regDir)
 

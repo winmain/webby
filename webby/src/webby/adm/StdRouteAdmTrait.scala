@@ -37,6 +37,7 @@ trait StdRouteAdmTrait[R] extends BaseRoute[R] {
 trait StdRouteAdmHandlers extends StdRouteAdmTrait[Handler] {
   protected def adm: AdmTrait
 
+  override def main2: Handler = main
   override def login: Handler = adm.loginAction
   override def loginPost: Handler = adm.loginPostAction
   override def logout: Handler = adm.logoutAction

@@ -67,9 +67,11 @@ class WebbyDbEvolutions(createRootDbPlugin: => DbPlugin,
       val idx: Int = name.indexOf('.')
       if (idx == -1) sys.error("Invalid db evolution name: " + name)
       val number = name.substring(0, idx).toInt
-      if (numbers.contains(number)) sys.error("Duplicate db evolution number: " + name)
-      numbers = numbers.updated(number, Unit)
-      if (number > currentVersion) newEvolutions += 1
+      if (number > 0) {
+        if (numbers.contains(number)) sys.error("Duplicate db evolution number: " + name)
+        numbers = numbers.updated(number, Unit)
+        if (number > currentVersion) newEvolutions += 1
+      }
     }
     if (newEvolutions > 0) log.info(s"::: There are $newEvolutions new ${if (newEvolutions == 1) "evolution" else "evolutions"}.")
   }
@@ -80,7 +82,7 @@ class WebbyDbEvolutions(createRootDbPlugin: => DbPlugin,
   def updateEvolutions(): Boolean = {
     val toUpdateEvolutions = getNewEvolutions(vm.getCurrentVersion)
 
-    // IntMap всегда выдаёт записи, сортированные по ключу
+    // IntMap always sort records by key
     if (toUpdateEvolutions.nonEmpty) {
       val uniquePattern = "\uffff\ufffe\ufff0"
       for ((num, evFile) <- toUpdateEvolutions) {
@@ -132,7 +134,7 @@ class WebbyDbEvolutions(createRootDbPlugin: => DbPlugin,
   private def getEvolutionFiles: Seq[String] = evolutionsDir.list.view.filter(name => !name.startsWith("-") && name.endsWith(".sql"))
 
   /**
-    * При запуске из командной строки делаем обновление.
+    * For commandline run execute evolution update.
     */
   def main(args: Array[String]) {
     AppStub.withAppNoPluginsDev {
@@ -144,9 +146,9 @@ class WebbyDbEvolutions(createRootDbPlugin: => DbPlugin,
   // ------------------------------- EvolutionsPlugin -------------------------------
 
   /**
-    * Поддержка эволюций БД.
-    * Для локалки: производим некоторые проверки в именах файлов эволюций
-    * Для jenkins: производим эволюцию БД, т.е., выполняем запросы
+    * Evolution support plugin.
+    * For dev profile: some checks in evolution filenames
+    * For jenkins and production profile (if autoExecuteInProd flag is set): execute database evolution, i.e. execute queries
     */
   class EvolutionsPlugin(app: Application) extends Plugin {
     override def enabled: Boolean = !app.profile.isTest
@@ -161,6 +163,13 @@ class WebbyDbEvolutions(createRootDbPlugin: => DbPlugin,
   }
 }
 
+/**
+  * Bindings to site infrastructure.
+  *
+  * @param applyWrapper         Handler wrapper with necessary permissions, for example: `Act.adm(Permission.DbEvolutions)`
+  * @param admMainUrl           Url to admin main page
+  * @param evolutionApplyNewUrl Url to apply new evolutions
+  */
 case class DbEvolutionsAdmConf(applyWrapper: (WebbyPage => Resultable) => Action,
                                admMainUrl: Url,
                                evolutionApplyNewUrl: Url)
