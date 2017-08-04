@@ -154,6 +154,7 @@ lazy val webby: Project = Project(
       deps += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" % "optional" // Google Closure Library
       deps += "org.glassfish.external" % "opendmk_jmxremote_optional_jar" % "1.0-b01-ea" % "optional" // JMXMP - better replacement for RMI
       deps += "org.apache.httpcomponents" % "httpclient" % "4.5.3" % "optional" // Used in ReCaptcha
+      deps += "io.bit3" % "jsass" % "5.5.3" % "optional" // Used in webby.mvc.script.compiler.LibSassCompiler
       deps.result()
     },
     javacOptions ++= Seq("-XDenableSunApiLintControl"),

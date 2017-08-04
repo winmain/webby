@@ -27,6 +27,7 @@ trait StdRouteAssetsTrait[R] extends BaseRoute[R] {
 
 /**
   * Обрабочики для роутов [[StdRouteAssetsTrait]].
+  * Но без _assetsCss метода, который следует выбрать в одном из наследников этого трейта.
   *
   * Пример использования:
   * {{{
@@ -40,10 +41,35 @@ trait StdRouteAssetsHandlers extends StdRouteAssetsTrait[Handler] {
   def RouteUtils: StdScriptRouteUtils
 
   // ----- Dev static -----
-  override def _assetsCss(file: String): Handler = RouteUtils.lessServer(file)
   override def _assetsJs(file: String): Handler = RouteUtils.jsServer(file)
   override def _assetsJsSimple(file: String): Handler = RouteUtils.jsSimpleServer(file)
   override def _assetsJsGcc(file: String): Handler = RouteUtils.jsGccServer(file)
   override def _assetsProfile(file: String): Handler = StaticCtl.at("/app/assets/profiles", file)
   override def _public(file: String): Handler = StaticCtl.at("public", file)
+}
+
+/**
+  * Example usage:
+  * {{{
+  *   object HandlersMain extends RouteHandlers with RouteMainTrait[Handler] with StdRouteAssetsUseSassHandlers {
+  *     override object RouteUtils extends StdScriptRouteUtils(Paths, GoogleClosureServers.builder(_).build)
+  *     ...
+  *   }
+  * }}}
+  */
+trait StdRouteAssetsUseSassHandlers extends StdRouteAssetsHandlers {
+  override def _assetsCss(file: String): Handler = RouteUtils.sassServer(file)
+}
+
+/**
+  * Example usage:
+  * {{{
+  *   object HandlersMain extends RouteHandlers with RouteMainTrait[Handler] with StdRouteAssetsUseLessHandlers {
+  *     override object RouteUtils extends StdScriptRouteUtils(Paths, GoogleClosureServers.builder(_).build)
+  *     ...
+  *   }
+  * }}}
+  */
+trait StdRouteAssetsUseLessHandlers extends StdRouteAssetsHandlers {
+  override def _assetsCss(file: String): Handler = RouteUtils.lessServer(file)
 }

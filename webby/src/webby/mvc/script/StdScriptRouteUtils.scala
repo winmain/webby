@@ -1,6 +1,6 @@
 package webby.mvc.script
 
-import compiler.{ExternalCoffeeScriptCompiler, ExternalLessCompiler}
+import compiler.{ExternalCoffeeScriptCompiler, ExternalLessCompiler, LibSassCompiler}
 import watcher.{SeparateWatcher, WideWatcher}
 import webby.api.mvc.{Action, Results, SimpleAction}
 import webby.api.{App, Profile}
@@ -19,6 +19,11 @@ import webby.mvc.StdPaths
   *                      из примера использования [[GoogleClosureServer]].
   */
 class StdScriptRouteUtils(paths: StdPaths.Value, gccForProfile: String => GoogleClosureServer) {
+  val sassServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
+    ScriptServer(paths, paths.cssAssetType, List(
+      LibSassCompiler(includePaths = Seq(paths.assetsProfile(App.profile.name).toString))), new WideWatcher(_))
+  }
+
   val lessServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
     ScriptServer(paths, paths.cssAssetType, List(
       ExternalLessCompiler(includePaths = Seq(paths.assetsProfile(App.profile.name).toString))), new WideWatcher(_))
