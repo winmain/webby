@@ -40,13 +40,15 @@ object GoogleClosure {
     *   }
     * }}}
     */
-  def runAdvancedCompiler(builder: => GoogleClosureServerBuilder,
+  def runAdvancedCompiler(appPaths: => StdPaths.Value,
+                          builder: => GoogleClosureServerBuilder,
                           compileModules: Seq[String]): Unit = {
     println("--- Google Closure Compiler step ---")
     val t0 = System.currentTimeMillis()
     AppStub.withAppNoPluginsDev {
+      val paths = appPaths
       val server = builder
-        .targetGccDir(StdPaths.get.root.resolve("target/assets-release/js"))
+        .targetGccDir(paths.root.resolve("target/assets-release/js"))
         .build
       server.compileClosure(compileModules)
     }

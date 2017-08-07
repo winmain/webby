@@ -1,6 +1,7 @@
 package webby.mvc.script
 
 import webby.commons.io.Resources
+import webby.mvc.script.minifier.StdJsMinifierResourceHolder
 
 /**
   * Трейт, позволяющий контроллеру хранить js-код с таким же именем, как и контроллер, который добавляется в тело самого контроллера.
@@ -12,5 +13,5 @@ import webby.commons.io.Resources
 trait JsClassHolder {
   implicit protected def _jsClassHolder: JsClassHolder = this
 
-  val jsResHolder = StdResourceHolder.get.jsMin(Resources.nameForClass(getClass, ".js"))
+  val jsResHolder = StdJsMinifierResourceHolder.get.jsMin(Resources.nameForClass(getClass, ".js"))
 }

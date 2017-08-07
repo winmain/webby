@@ -4,7 +4,7 @@ import webby.api.App
 import webby.commons.collection.IterableWrapper.wrapIterable
 import webby.commons.text.SB
 import webby.html.PageScripts.JsPart
-import webby.mvc.script.StdJsMinifier
+import webby.mvc.script.minifier.StdJsMinifier
 
 import scala.collection.mutable.ArrayBuffer
 

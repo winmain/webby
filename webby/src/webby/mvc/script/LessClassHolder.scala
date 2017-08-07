@@ -1,6 +1,7 @@
 package webby.mvc.script
 
 import webby.commons.io.Resources
+import webby.mvc.script.minifier.StdLessMinifierResourceHolder
 
 /**
   * Подключение CSS файла с таким же именем, как и сам контроллер.
@@ -12,5 +13,5 @@ import webby.commons.io.Resources
 trait LessClassHolder {
   implicit protected def _lessClassHolder: LessClassHolder = this
 
-  val lessResHolder = StdResourceHolder.get.lessMin(Resources.nameForClass(getClass, ".less"))
+  val lessResHolder = StdLessMinifierResourceHolder.get.lessMin(Resources.nameForClass(getClass, ".less"))
 }

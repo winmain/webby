@@ -5,7 +5,7 @@ import com.google.common.net.HttpHeaders
 import webby.commons.text.SB
 import webby.commons.time.StdDates
 import webby.mvc.ActTrait
-import webby.mvc.script.{JsClassHolder, LessClassHolder}
+import webby.mvc.script.{JsClassHolder, LessClassHolder, SassClassHolder}
 
 import scala.util.Try
 import scala.util.matching.Regex
@@ -19,6 +19,7 @@ trait WebbyPage extends ActTrait {
   val headTags: SB = new SB()
 
   def addClassLess()(implicit holder: LessClassHolder): Unit = headTags + "<style>" + holder.lessResHolder.get + "</style>"
+  def addClassSass()(implicit holder: SassClassHolder): Unit = headTags + "<style>" + holder.sassResHolder.get + "</style>"
   def addClassJsToScripts()(implicit holder: JsClassHolder): Unit = scripts.addCode(holder.jsResHolder.get)
 
   def mobile: Boolean

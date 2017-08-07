@@ -9,3 +9,7 @@ class FileExtTransform(toExtension: String) {
     }
   }
 }
+
+object AsIsFileExtTransform extends FileExtTransform(null) {
+  override def transform(path: String): String = path
+}
