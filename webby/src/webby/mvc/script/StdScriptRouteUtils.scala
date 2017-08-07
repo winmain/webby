@@ -19,27 +19,30 @@ import webby.mvc.StdPaths
   *                      из примера использования [[GoogleClosureServer]].
   */
 class StdScriptRouteUtils(paths: StdPaths.Value, gccForProfile: String => GoogleClosureServer) {
-  val sassServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
+  // lazy prefixes here to avoid creating unused servers that use unresolved optional dependencies
+  // for example, sassServer uses jsass library
+
+  lazy val sassServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
     ScriptServer(paths, paths.cssAssetType, List(
       LibSassCompiler(includePaths = Seq(paths.assetsProfile(App.profile.name).toString))), new WideWatcher(_))
   }
 
-  val lessServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
+  lazy val lessServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
     ScriptServer(paths, paths.cssAssetType, List(
       ExternalLessCompiler(includePaths = Seq(paths.assetsProfile(App.profile.name).toString))), new WideWatcher(_))
   }
 
-  val jsServer: (String) => Action = magicServer(Some(StdPaths.get.jsAssetType)) {
+  lazy val jsServer: (String) => Action = magicServer(Some(StdPaths.get.jsAssetType)) {
     val googleClosureServer = gccForProfile("dev")
     (path: String) => SimpleAction {implicit req => PageLog.noLog(); googleClosureServer.serveDev(path)}
   }
 
-  val jsGccServer: (String) => Action = magicServer(None) {
+  lazy val jsGccServer: (String) => Action = magicServer(None) {
     val googleClosureServer = gccForProfile("dev_closure")
     (path: String) => SimpleAction {implicit req => PageLog.noLog(); googleClosureServer.serveClosureCompiled(path)}
   }
 
-  val jsSimpleServer: (String) => Action = magicServer(Some(paths.jsSimpleAssetType)) {
+  lazy val jsSimpleServer: (String) => Action = magicServer(Some(paths.jsSimpleAssetType)) {
     ScriptServer(paths, paths.jsSimpleAssetType, List(ExternalCoffeeScriptCompiler()), _ => SeparateWatcher)
   }
 
