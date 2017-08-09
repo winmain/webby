@@ -120,6 +120,7 @@ class ScriptMinifierForStage(dirPrefix: String,
   extends ScriptMinifier(dirPrefix, sourceFileEnding, minifier, Seq(subDir)) {
 
   override protected def baseTargetDir: String = "target/assets-release"
+  override protected def makeTargetPath(pathFromApp: String): Path = baseTargetPath
 
   /**
     * Minify specified files only.

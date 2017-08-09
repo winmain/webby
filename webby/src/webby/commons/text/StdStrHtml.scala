@@ -1,6 +1,7 @@
 package webby.commons.text
 import com.google.common.base.CharMatcher
-import org.apache.commons.lang3.{StringEscapeUtils, StringUtils}
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.StringEscapeUtils
 
 import scala.annotation.tailrec
 

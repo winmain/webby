@@ -2,7 +2,7 @@ package webby.html
 
 import javax.annotation.Nullable
 
-import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.intellij.lang.annotations.Language
 import webby.commons.io.Url
 

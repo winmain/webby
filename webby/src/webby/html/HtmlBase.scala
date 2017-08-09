@@ -1,6 +1,6 @@
 package webby.html
 
-import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.intellij.lang.annotations.Language
 import webby.api.mvc.{PlainResult, Results}
 import webby.commons.io.Url

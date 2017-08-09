@@ -2,7 +2,8 @@ package webby.commons.text
 import java.io.{File, PrintWriter}
 import java.util.regex.{Matcher, Pattern}
 
-import org.apache.commons.lang3.{StringEscapeUtils, StringUtils => SU}
+import org.apache.commons.lang3.{StringUtils => SU}
+import org.apache.commons.text.StringEscapeUtils
 import webby.commons.io.UrlEncoder
 import webby.commons.time.StdDateFmt
 
