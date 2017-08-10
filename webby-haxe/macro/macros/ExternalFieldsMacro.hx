@@ -11,6 +11,21 @@ import haxe.macro.Type;
 
 Суть этого макроса в том, чтобы сохранить названия полей в этом классе после прохода Google Closure Compiler
 в режиме Advanced.
+
+---
+Example usage:
+---
+@:build(macros.ExternalFieldsMacro.build())
+class FieldProps {
+  public var shortId: String;
+  public var jsField: String;
+  public var field: String;
+  public var name: Null<String>;
+  public var required: Null<Bool>;
+  public var enabled: Null<Bool>;
+  public var enterKeySubmit: Null<Bool>;
+  public var hideWithRow: Null<Bool>;
+}
  */
 class ExternalFieldsMacro {
   public static function build(): Array<Field> {
