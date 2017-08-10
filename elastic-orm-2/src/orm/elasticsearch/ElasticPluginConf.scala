@@ -49,3 +49,11 @@ trait ElasticPluginConf extends webby.api.Plugin {
       .addTransportAddress(new InetSocketTransportAddress(httpHost, transportPort))
   }
 }
+
+
+class ElasticPlugin(override val app: Application) extends ElasticPluginConf {
+  val clusterName = app.configuration.getString("elastic.clusterName").getOrElse(sys.error("No elastic.clusterName defined"))
+  val httpHost = InetAddress.getByName(app.configuration.getString("elastic.httpHost").getOrElse("127.0.0.1"))
+  val httpPort = app.configuration.getInt("elastic.httpPort").getOrElse(9200)
+  override val transportPort: Int = app.configuration.getInt("elastic.transportPort").getOrElse(9300)
+}

@@ -15,7 +15,7 @@ val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
     Resolver.bintrayRepo("citrum", "maven") // Repo for querio
   ),
 
-  sources in doc in Compile := List(), // Выключить генерацию JavaDoc, ScalaDoc
+  sources in doc in Compile := List(), // Disable generation JavaDoc, ScalaDoc
   mainClass in Compile := None,
   ivyLoggingLevel := UpdateLogging.DownloadOnly,
 
@@ -37,15 +37,15 @@ val commonSettings = baseSettings ++ Seq(
   ivyScala := ivyScala.value.map(_.copy(overrideScalaVersion = true)) // forcing scala version
 )
 
-// Минимальный набор зависимостей
+// Minimal dependencies
 val commonDependencies = {
   val deps = Seq.newBuilder[ModuleID]
-  deps += "ch.qos.logback" % "logback-classic" % "1.2.1" // Логирование
+  deps += "ch.qos.logback" % "logback-classic" % "1.2.3" // Logging
   deps += "org.apache.commons" % "commons-lang3" % "3.6"
   deps += "org.apache.commons" % "commons-text" % "1.1"
   deps += "com.google.guava" % "guava" % "21.0"
   deps += "com.google.code.findbugs" % "jsr305" % "3.0.1" // @Nonnull, @Nullable annotation support
-  deps += "commons-io" % "commons-io" % "2.5" // Содержит полезные классы типа FileUtils
+  deps += "commons-io" % "commons-io" % "2.5" // Contains useful classes like FileUtils
 
   // Tests
   deps += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
@@ -74,14 +74,26 @@ def runScala(classPath: Seq[File], className: String, arguments: Seq[String] = N
   if (ret != 0) sys.error("Trouble with code generator")
 }
 
-// ------------------------------ elastic-orm project ------------------------------
+// ------------------------------ elastic-orm projects ------------------------------
 
-lazy val elasticOrm: Project = Project(
-  "elastic-orm",
-  file("elastic-orm"),
+// Legacy elastic-orm for Elastic v2.x
+lazy val elasticOrm2: Project = Project(
+  "elastic-orm-2",
+  file("elastic-orm-2"),
   settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
     libraryDependencies ++= commonDependencies,
     libraryDependencies += "org.elasticsearch" % "elasticsearch" % "2.4.5" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок), exclude guava нужен потому что эластик использует более старую версию 18
+    libraryDependencies += querio
+  )).dependsOn(webby)
+
+// Elastic-orm for Elastic v5.x
+lazy val elasticOrm5: Project = Project(
+  "elastic-orm-5",
+  file("elastic-orm-5"),
+  settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
+    libraryDependencies ++= commonDependencies,
+    libraryDependencies += "org.elasticsearch.client" % "transport" % "5.5.1" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок)
+    libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.8.2",   // fixes bug https://discuss.elastic.co/t/issue-with-elastic-search-5-0-0-noclassdeffounderror-org-apache-logging-log4j-logger/64262
     libraryDependencies += querio
   )).dependsOn(webby)
 
@@ -166,7 +178,7 @@ lazy val webby: Project = Project(
 lazy val root = Project(
   "webby-root",
   file("."),
-  aggregate = Seq(webby, elasticOrm, webbyHaxeBuild),
+  aggregate = Seq(webby, elasticOrm2, elasticOrm5, webbyHaxeBuild),
   settings = Seq(
     // Disable packaging & publishing artifact
     Keys.`package` := file(""),

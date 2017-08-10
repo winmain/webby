@@ -2,7 +2,8 @@
 /project/target
 /target
 /.idea
-/elastic-orm/target
+/elastic-orm-2/target
+/elastic-orm-5/target
 /routes/target
 /script-compiler/target
 /webby/target
