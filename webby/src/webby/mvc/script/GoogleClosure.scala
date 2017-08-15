@@ -34,6 +34,7 @@ object GoogleClosure {
     *     def main(args: Array[String]) {
     *       require(args.length == 1, "Must be one arg: profile name")
     *       GoogleClosure.runAdvancedCompiler(
+    *         AppPaths,
     *         GoogleClosureServers.builder(args(0)),
     *         Seq("main", "mobile", "adm"))
     *     }

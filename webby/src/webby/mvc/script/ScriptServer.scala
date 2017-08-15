@@ -89,6 +89,7 @@ class ScriptServer(val watchDir: Path,
         ScriptServer.maybeGzippedResult(Files.readAllBytes(path))
           .withHeader(CONTENT_TYPE, contentType)
           .withHeader(LAST_MODIFIED, StdDates.httpDateFormatMillis(lastModified))
+          .withHeader(CACHE_CONTROL, "no-cache, no-store, must-revalidate")
       }
     }
   }
