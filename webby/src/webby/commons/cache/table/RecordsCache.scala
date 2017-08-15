@@ -8,7 +8,7 @@ import scala.collection.immutable.IntMap
   * Простой кеш таблицы из БД. Кеширует все записи, поэтому таблица в БД не должна быть очень большой.
   */
 trait RecordsCache[TR] extends AbstractRecordsCache {
-  protected var _records: IntMap[TR] = null
+  protected var _records: Map[Int, TR] = null
 
   /**
     * Вернуть запись по id
@@ -22,7 +22,7 @@ trait RecordsCache[TR] extends AbstractRecordsCache {
   /**
     * Вернуть карту всех записей
     */
-  def allRecordsMap: IntMap[TR] = records
+  def allRecordsMap: Map[Int, TR] = records
 
   /**
     * Вернуть список всех записей
@@ -71,12 +71,12 @@ trait RecordsCache[TR] extends AbstractRecordsCache {
 
   // ------------------------------- Private & protected methods -------------------------------
 
-  private def records: IntMap[TR] = {
+  private def records: Map[Int, TR] = {
     if (_records == null) _records = readAllRecords()
     _records
   }
 
-  protected def readAllRecords(): IntMap[TR]
+  protected def readAllRecords(): Map[Int, TR]
 
   protected def readRecord(id: Int): Option[TR]
 }

@@ -2,16 +2,20 @@ package webby.commons.cache.table
 
 import querio._
 
-import scala.collection.immutable.IntMap
-
 
 /**
   * Стандартный кеш для таблицы #dbTable
   */
 class TableCache[TR <: TableRecord](db: DbTrait, val dbTable: TrTable[TR]) extends RecordsCache[TR] {
 
-  protected def readAllRecords(): IntMap[TR] = db.query(
-    _ selectFrom dbTable fetch()).foldLeft(IntMap[TR]())((m, r) => m.updated(idFromRecord(r), r))
+  protected def readAllRecords(): Map[Int, TR] = {
+    val builder = Map.newBuilder[Int, TR]
+    db.query(
+      _ selectFrom dbTable fetchLazy {it =>
+        it.foreach(r => builder += ((idFromRecord(r), r)))
+      })
+    builder.result()
+  }
 
   protected def readRecord(id: Int): Option[TR] = db.query(
     _ selectFrom dbTable where recordIdCondition(id) fetchOne())
