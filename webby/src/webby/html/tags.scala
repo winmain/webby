@@ -76,6 +76,7 @@ class CommonTag(val tag: String, val shortClose: Boolean = false)(implicit view:
   }
 
   def ~(rawBody: String): HtmlBase = {>; buf ++ rawBody; /}
+  def ~(charBody: Char): HtmlBase = {>; buf ++ charBody; /}
   def ~(intBody: Int): HtmlBase = {>; buf ++ intBody; /}
   def ~(longBody: Long): HtmlBase = {>; buf ++ longBody; /}
   def ~(rawBodyOption: Option[String]): HtmlBase = rawBodyOption match {
@@ -92,6 +93,7 @@ class CommonTag(val tag: String, val shortClose: Boolean = false)(implicit view:
 
   def +(v: String): HtmlBase = {view ++ v}
   def +(v: Option[String]): HtmlBase = {v.foreach(view ++ _); view}
+  def +(v: Char): HtmlBase = {view ++ v}
   def +(v: Int): HtmlBase = {view ++ v}
   def +(v: Long): HtmlBase = {view ++ v}
   def +(v: HtmlBase): HtmlBase = view
