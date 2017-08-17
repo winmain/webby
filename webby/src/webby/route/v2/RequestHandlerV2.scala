@@ -43,9 +43,8 @@ class RequestHandlerV2(val pc: ParsedRouteConfigV2) {
     for (row <- m) {
       row._1.fromDomain(domain) match {
         case Some(domainObj) =>
-          //val decodedPath = URLDecoder.decode(path, "utf-8") // Для чтения и разбора русских урлов
           val (basePath, mainPath) = basePathSplitter.split(path, learning = false, hasVar = false)
-          return row._2.get(basePath) match {
+          val result: Option[Handler] = row._2.get(basePath) match {
             case Some(inBasePath) =>
               var matcher: Matcher = null
               inBasePath.find {route: LinkedRouteV2 =>
@@ -59,6 +58,7 @@ class RequestHandlerV2(val pc: ParsedRouteConfigV2) {
               }
             case None => None
           }
+          if (result.isDefined) return result
         case None => None
       }
     }
