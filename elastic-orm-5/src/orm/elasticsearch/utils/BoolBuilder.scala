@@ -3,16 +3,19 @@ package orm.elasticsearch.utils
 import org.elasticsearch.index.query.{BoolQueryBuilder, MatchAllQueryBuilder, QueryBuilder}
 
 /**
- * Класс для удобного создания [[BoolQueryBuilder]] с человеческим интерфейсом.
- * На выходе необязательно будет [[BoolQueryBuilder]]. Если нет фильтров, то [[BoolQueryBuilder]]
- * не будет создан.
- */
+  * Класс для удобного создания [[BoolQueryBuilder]] с человеческим интерфейсом.
+  * На выходе необязательно будет [[BoolQueryBuilder]]. Если нет фильтров, то [[BoolQueryBuilder]]
+  * не будет создан.
+  */
 case class BoolBuilder() {
 
   private var _bool: BoolQueryBuilder = null
   private var _query: QueryBuilder = null
   private var _and: QueryBuilder = null
   private var _or: QueryBuilder = null
+
+  def isEmpty: Boolean = _bool == null && _query == null && _and == null && _or == null
+  def nonEmpty: Boolean = !isEmpty
 
   def query(query: QueryBuilder): BoolBuilder = {
     if (needBoolToAddClause) ensureBool.must(query)
@@ -35,7 +38,7 @@ case class BoolBuilder() {
     this
   }
 
-  def not(filter: QueryBuilder): BoolBuilder = { ensureBool.mustNot(filter); this }
+  def not(filter: QueryBuilder): BoolBuilder = {ensureBool.mustNot(filter); this}
 
   def result: QueryBuilder = {
     if (_bool != null) _bool
@@ -56,7 +59,7 @@ case class BoolBuilder() {
     case None => this
   }
 
-  def and(filters: Seq[QueryBuilder]): BoolBuilder = { filters.foreach(and); this }
+  def and(filters: Seq[QueryBuilder]): BoolBuilder = {filters.foreach(and); this}
   def and(boolBuilder: BoolBuilder): BoolBuilder = and(boolBuilder.result)
 
   def or(maybeFilter: Option[QueryBuilder]): BoolBuilder = maybeFilter match {
@@ -64,7 +67,7 @@ case class BoolBuilder() {
     case None => this
   }
 
-  def or(filters: Seq[QueryBuilder]): BoolBuilder = { filters.foreach(or); this }
+  def or(filters: Seq[QueryBuilder]): BoolBuilder = {filters.foreach(or); this}
   def or(boolBuilder: BoolBuilder): BoolBuilder = or(boolBuilder.result)
 
   def not(maybeFilter: Option[QueryBuilder]): BoolBuilder = maybeFilter match {

@@ -1,23 +1,23 @@
 package orm.elasticsearch
 
-import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneId}
+import java.time._
 
 import webby.commons.time.StdDates
 
 // ------------------------------- Conv -------------------------------
 
 /**
- * Конвертатор значений в формат эластика / из формата эластика
- */
+  * Values converter to/from Elastic format
+  */
 trait Conv[S] {
   /**
-   * Чтение значения из ElasticSearch
-   */
+    * Read value from Elastic
+    */
   def from(j: AnyRef): S
 
   /**
-   * Запись значения в ElasticSearch
-   */
+    * Write value to Elastic
+    */
   def to(v: S): AnyRef
 }
 
@@ -44,13 +44,13 @@ sealed class AsOption[T] extends Conv[Option[T]] {
 
 trait SimpleConv[S] {
   /**
-   * Чтение значения из ElasticSearch
-   */
+    * Read value from Elastic
+    */
   def from(j: AnyRef): S
 
   /**
-   * Запись значения в ElasticSearch
-   */
+    * Write value to Elastic
+    */
   def to(v: S): Any
 }
 
@@ -88,16 +88,21 @@ trait LocalDateIntConv extends SimpleConv[LocalDate] {
   def toInt(v: LocalDate): Int
 }
 
+object InstantEpochMillisConv extends SimpleConv[Instant] {
+  override def from(j: AnyRef): Instant = Instant.ofEpochMilli(j.asInstanceOf[Long])
+  override def to(v: Instant): Any = v.toEpochMilli
+}
+
 // ------------------------------- ObjectConv -------------------------------
 
 sealed trait ObjectConv[Class, Write] {
   /**
-   * Чтение значения из ElasticSearch
-   */
+    * Read value from Elastic
+    */
   def from(j: AnyRef): Class
 
   /**
-   * Запись значения в ElasticSearch
-   */
+    * Write value to Elastic
+    */
   def to(v: Write): AnyRef
 }

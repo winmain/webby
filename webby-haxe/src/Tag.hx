@@ -275,6 +275,9 @@ class Tag {
     return this;
   }
 
+  /*
+  Add this tag after specified #tag.
+   */
   public function addAfter(tag: EitherType<Tag, Node>): Tag {
     var node: Node = (untyped tag.el) ? (tag: Tag).el : (tag: Node);
     node.parentNode.insertBefore(el, node.nextSibling);

@@ -1,6 +1,7 @@
 package orm.elasticsearch
 
 import org.elasticsearch.search.aggregations.{Aggregation, Aggregations}
+import webby.commons.collection.Pager
 
 class EsResult[T](val took: Long,
                   val found: Int,
@@ -10,6 +11,8 @@ class EsResult[T](val took: Long,
   def esQuery = esQueryBuilder.toString
 
   def firstAgg[A <: Aggregation]: A = aggs.get.iterator().next().asInstanceOf[A]
+
+  def hasMore(pager: Pager): Boolean = pager.hasMore(found)
 }
 
 
