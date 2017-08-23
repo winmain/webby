@@ -33,10 +33,10 @@ class CommonUploadFieldPreview implements UploadFieldPreview {
   }
 
   function managePreview(field: UploadField, previewBlockTag: Tag, fileName: String): Void {
-    var typeTag = previewBlockTag.fnd('.' + uploadPreviewTypeCls);
+    var typeTag = previewBlockTag.fndByCls(uploadPreviewTypeCls);
     var tnParams = previewBlockTag.getAttr('tn-params');
     var tnAsJpeg = G.toBool(previewBlockTag.getAttr('[tn-asjpeg]'));
-    var imgTag: Tag = G.require(previewBlockTag.fnd('.' + uploadPreviewImgCls), "No ." + uploadPreviewImgCls);
+    var imgTag: Tag = G.require(previewBlockTag.fndByCls(uploadPreviewImgCls), "No ." + uploadPreviewImgCls);
     var imgEl: Image = cast imgTag.el;
     var ext = fileType.fromName(fileName);
     var imgSrc = fileType.getImageForType(ext);

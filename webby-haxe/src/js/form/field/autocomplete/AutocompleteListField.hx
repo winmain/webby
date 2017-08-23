@@ -29,7 +29,7 @@ class AutocompleteListField extends AbstractAutocompleteField {
     sourceArg = props.sourceArg;
     maxItems = props.maxItems;
 
-    itemsBox = G.require(box.fnd('.' + ac.autocompleteListItemsCls), "No autocomplete items found");
+    itemsBox = G.require(box.fndByCls(ac.autocompleteListItemsCls), "No autocomplete items found");
 
     readRows();
   }

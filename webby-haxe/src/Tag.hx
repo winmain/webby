@@ -7,6 +7,7 @@ import js.html.BodyElement;
 import js.html.ButtonElement;
 import js.html.Element;
 import js.html.FormElement;
+import js.html.HTMLCollection;
 import js.html.HtmlElement;
 import js.html.InputElement;
 import js.html.LabelElement;
@@ -45,11 +46,16 @@ class Tag {
   @:expose('Tag.find')
   public static function find(selectors: String): Null<Tag> return find2(G.document, selectors);
 
-  public static function findById(id: String): Null<Tag> return wrap(G.document.getElementById(id));
-
   public static function findAll(selectors: String): Array<Tag> return findAll2(G.document, selectors);
 
   public static function findAnd(selectors: String, action: Tag -> Void): Void return findAnd2(G.document, selectors, action);
+
+  public static function findById(id: String): Null<Tag> return wrap(G.document.getElementById(id));
+
+  public static function findByCls(cls: String): Null<Tag> return findByCls2(G.document, cls);
+
+  public static function findAllByCls(cls: String): Array<Tag> return findAllByCls2(G.document, cls);
+
 
   private static function find2(base: {function querySelector(s: String): Element;}, selectors: String): Null<Tag> {
     var el = base.querySelector(selectors);
@@ -70,6 +76,22 @@ class Tag {
     for (tag in findAll2(base, selectors)) {
       action(tag);
     }
+  }
+
+  private static function findByCls2(base: {function getElementsByClassName(s: String): HTMLCollection;}, cls: String): Null<Tag> {
+    var found = base.getElementsByClassName(cls);
+    return found.length == 0 ? null : wrap(found[0]);
+  }
+
+  private static function findAllByCls2(base: {function getElementsByClassName(s: String): HTMLCollection;}, cls: String): Array<Tag> {
+    var found = base.getElementsByClassName(cls);
+    var result: Array<Tag> = [];
+    var idx = 0, len = found.length;
+    while (idx < len) {
+      result.push(wrap(found[idx]));
+      idx++;
+    }
+    return result;
   }
 
   public static function getBody(): Tag return wrap(G.document.body);
@@ -365,6 +387,10 @@ class Tag {
   public function fndAll(selectors: String): Array<Tag> return findAll2(el, selectors);
 
   public function fndAnd(selectors: String, action: Tag -> Void): Void return findAnd2(el, selectors, action);
+
+  public function fndByCls(cls: String): Null<Tag> return findByCls2(el, cls);
+
+  public function fndAllByCls(cls: String): Array<Tag> return findAllByCls2(el, cls);
 
   /*
   Find first parent which satisfy `selector`.
