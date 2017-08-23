@@ -85,4 +85,5 @@ object StaticCtl extends StdCtl {
   private def filePlainResult(body: Array[Byte], fileName: String): PlainResult =
     PlainResult(HttpResponseStatus.OK, body)
       .withHeader(HttpHeaders.CONTENT_TYPE, MimeTypes.forFileName(fileName).getOrElse(MimeTypes.BINARY))
+      .withHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
 }
