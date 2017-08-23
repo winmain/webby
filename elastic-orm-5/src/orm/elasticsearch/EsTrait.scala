@@ -122,8 +122,8 @@ trait EsTrait {
   protected def instantOptionField(n: String, fr: Record => Option[Instant]) = optionField(n, fr, InstantEpochMillisConv)
 
   // ------------------------------- Geo point fields -------------------------------
-  protected def geoPointField(n: String, fr: Record => GeoPoint) = field[GeoPoint](n, fr, new AsIs[GeoPoint])
-  protected def geoPointOptionField(n: String, fr: Record => Option[GeoPoint]) = field[Option[GeoPoint]](n, fr, new AsOption[GeoPoint])
+  protected def geoPointField(n: String, fr: Record => GeoPoint) = commonField[GeoPoint](n, fr, GeoPointConv)
+  protected def geoPointOptionField(n: String, fr: Record => Option[GeoPoint]) = optionField[GeoPoint](n, fr, GeoPointConv)
 
   // ------------------------------- DbEnum fields -------------------------------
 

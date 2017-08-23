@@ -1,7 +1,9 @@
 package orm.elasticsearch
 
 import java.time._
+import java.util
 
+import org.elasticsearch.common.geo.GeoPoint
 import webby.commons.time.StdDates
 
 // ------------------------------- Conv -------------------------------
@@ -91,6 +93,19 @@ trait LocalDateIntConv extends SimpleConv[LocalDate] {
 object InstantEpochMillisConv extends SimpleConv[Instant] {
   override def from(j: AnyRef): Instant = Instant.ofEpochMilli(j.asInstanceOf[Long])
   override def to(v: Instant): Any = v.toEpochMilli
+}
+
+
+object GeoPointConv extends SimpleConv[GeoPoint] {
+  override def from(j: AnyRef): GeoPoint = j match {
+    case map: util.HashMap[_, _] =>
+      val lon = map.get("lon").asInstanceOf[Double]
+      val lat = map.get("lat").asInstanceOf[Double]
+      new GeoPoint(lat, lon)
+
+    case geoPoint: GeoPoint => geoPoint
+  }
+  override def to(v: GeoPoint): Any = v
 }
 
 // ------------------------------- ObjectConv -------------------------------
