@@ -32,7 +32,8 @@ class GoogleClosureServerBuilder {
 
   var _externs: Seq[SourceFile] = Nil
   def externs(v: Seq[SourceFile]) = {_externs = v; this}
-  def extern(v: SourceFile) = {_externs +:= v; this}
+  def extern(v: SourceFile): this.type = {_externs +:= v; this}
+  def extern(v: Path): this.type = extern(SourceFile.fromFile(v.toFile))
 
   var _targetDir: Path = _
   def targetDir(v: Path) = {_targetDir = v; this}
