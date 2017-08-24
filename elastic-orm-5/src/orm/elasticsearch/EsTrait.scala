@@ -363,7 +363,7 @@ class EsField[T, Record](val name: String, val fromRecord: Record => T, conv: Co
   def boostedName(boost: Int): String = if (boost == 1) name else name + "^" + boost
 
   def termQuery(value: Any): TermQueryBuilder = new TermQueryBuilder(name, value)
-  def inQuery(values: Seq[_]): TermsQueryBuilder = new TermsQueryBuilder(name, asJavaIterable(values))
+  def inQuery(values: Iterable[_]): TermsQueryBuilder = new TermsQueryBuilder(name, asJavaIterable(values))
   def rangeQuery: RangeQueryBuilder = new RangeQueryBuilder(name)
   def existsQuery: ExistsQueryBuilder = new ExistsQueryBuilder(name)
 }
