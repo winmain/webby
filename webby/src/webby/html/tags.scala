@@ -39,6 +39,16 @@ class CommonTag(val tag: String, val shortClose: Boolean = false)(implicit view:
     if (v != null) buf.addClass(this, v)
     this
   }
+  def cls(@Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v1: String,
+          @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v2: String): this.type = cls(v1).cls(v2)
+  def cls(@Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v1: String,
+          @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v2: String,
+          @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v3: String): this.type = cls(v1).cls(v2).cls(v3)
+  def cls(@Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v1: String,
+          @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v2: String,
+          @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v3: String,
+          @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v4: String): this.type = cls(v1).cls(v2).cls(v3).cls(v4)
+
   def clsIf(condition: Boolean, @Language(value = "HTML", prefix = "<div class='", suffix = "'") @Nullable v: String): this.type =
     if (condition) cls(v) else this
 
