@@ -15,8 +15,56 @@ import org.elasticsearch.index.query._
 import org.elasticsearch.search.{SearchHit, SearchHits}
 import querio.{DbEnum, ScalaDbEnum, ScalaDbEnumCls}
 
+import scala.collection.mutable
+
 // for Scala 2.11: import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+
+/*
+Live template for Intellij IDEA, named "elasticorm_estypetrait"
+--------------
+trait $CLASS_NAME$Trait extends EsTypeTrait {
+  override type Record = $TABLE_NAME$
+
+  $END$
+}
+
+class $CLASS_NAME$Write(val record: $TABLE_NAME$) extends $CLASS_NAME$Trait with EsWrite
+
+class $CLASS_NAME$(protected val data: EsClassData) extends $CLASS_NAME$Trait with EsRecord
+
+class $CLASS_NAME$Meta extends $CLASS_NAME$Trait with EsTypeMeta[$CLASS_NAME$] {
+  override def validateRecord(r: $TABLE_NAME$): Boolean = true
+  override def makeWrite(r: $TABLE_NAME$): EsWrite = new $CLASS_NAME$Write(r)
+  override def makeObject(cd: EsClassData): $CLASS_NAME$ = new $CLASS_NAME$(cd)
+}
+
+object $CLASS_NAME$ extends $CLASS_NAME$Meta
+--------------
+
+
+Live template for Intellij IDEA, named "elasticorm_essubtypetrait"
+--------------
+trait $CLASS_NAME$Trait extends EsTrait {
+  override type Record = $TABLE_NAME$
+
+  $END$
+}
+
+class $CLASS_NAME$Write(val record: $TABLE_NAME$) extends $CLASS_NAME$Trait with EsWrite
+
+class $CLASS_NAME$(protected val data: EsClassData) extends $CLASS_NAME$Trait with EsRecord
+
+class $CLASS_NAME$Meta(val fieldName: String, val path: String) extends $CLASS_NAME$Trait with EsSubTypeMeta[$CLASS_NAME$] {
+  override def validateRecord(r: $TABLE_NAME$): Boolean = true
+  override def makeWrite(r: $TABLE_NAME$): EsWrite = new $CLASS_NAME$Write(r)
+  override def makeObject(cd: EsClassData): $CLASS_NAME$ = new $CLASS_NAME$(cd)
+  override def withPath(name: String, path: String): EsSubTypeMeta[$CLASS_NAME$] = new $CLASS_NAME$Meta(name, path)
+}
+
+object $CLASS_NAME$ extends $CLASS_NAME$Meta("", "")
+--------------
+ */
 
 /**
   * Trait, реализующий этот trait должен задавать основную конфигурацию класса для индексации Elastic'ом.
@@ -43,19 +91,20 @@ import scala.collection.JavaConverters._
   * Иерархия классов следующая:
   * <pre>
   *
-  * +--------------------- [[EsSubTypeMeta]]
-  * |
-  * +- [[EsMeta]] ---+--------------------* [[EsTypeMeta]]
-  * |                                    /
-  * [[EsTrait]] -+--------------- [[EsTypeTrait]]--*-*
-  * |                                  \ \
-  * +- [[EsBaseRecord]] +- [[EsWrite]] -\-* [[EsTypeWrite]]
-  * |                \
-  * +- [[EsRecord]] --* [[EsTypeRecord]]
+  *          +-------------- [[EsSubTypeMeta]]
+  *          |
+  *   +- [[EsMeta]] -------------------------+--- [[EsTypeMeta]]
+  *   |                                      |
+  * [[EsTrait]] ------------------------ [[EsTypeTrait]]
+  *   |                                      |
+  *   +- [[EsBaseRecord]] -- [[EsWrite]] ----+--- [[EsTypeWrite]]
+  *                 |
+  *                 +------- [[EsRecord]] ------- [[EsTypeRecord]]
   *
   * [[EsTypeClient]]
   *
   * </pre>
+  *
   */
 trait EsTrait {
   import scala.language.higherKinds
@@ -69,35 +118,37 @@ trait EsTrait {
     * Волшебный тип, который меняет всё поведение класса. Описывает поля Эластика.
     * Для записей [[EsBaseRecord]], [[EsRecord]], [[EsWrite]] он превращается просто в T.
     * Для метакласса он превращается в описание поля [[EsField]]
-    * @tparam T Тип данных для этого поля
+    * @tparam R Тип данных для этого поля
     */
-  type F[T]
+  type F[R]
 
   /**
     * Тип, описывающий список вложенных объектов.
     */
   type FList[C <: EsRecord, M <: EsSubTypeMeta[C]]
 
-  protected def field[A](name: String, fromRecord: Record => A, conv: Conv[A]): F[A]
+  protected def field[W, R](name: String, fromRecord: Record => W, conv: Conv[W, R]): F[R]
   protected def objectListField[CC <: EsRecord, M <: EsSubTypeMeta[CC]]
-  (name: String, fromRecord: Record => Iterable[_], meta: M): FList[CC, M]
+  (name: String, fromRecord: Record => Iterable[M#Record], meta: M): FList[CC, M]
 
-  protected def commonField[A](name: String, fromRecord: Record => A, conv: SimpleConv[A]): F[A] = field[A](name, fromRecord, new Conv[A] {
+  protected def field1[A](name: String, fromRecord: Record => A, conv: Conv[A, A]): F[A] = field[A, A](name, fromRecord, conv)
+
+  protected def commonField[A](name: String, fromRecord: Record => A, conv: SimpleConv[A]): F[A] = field1[A](name, fromRecord, new ConvOne[A] {
     override def from(j: AnyRef): A = if (j == null) null.asInstanceOf[A] else conv.from(j)
     override def to(v: A): AnyRef = conv.to(v).asInstanceOf[AnyRef]
   })
-  protected def optionField[A](name: String, fromRecord: Record => Option[A], conv: SimpleConv[A]): F[Option[A]] = field[Option[A]](name, fromRecord, new Conv[Option[A]] {
+  protected def optionField[A](name: String, fromRecord: Record => Option[A], conv: SimpleConv[A]): F[Option[A]] = field1[Option[A]](name, fromRecord, new ConvOne[Option[A]] {
     override def from(j: AnyRef): Option[A] = if (j == null) None else Some(conv.from(j))
     override def to(v: Option[A]): AnyRef = v.map(conv.to(_).asInstanceOf[AnyRef]).orNull
   })
 
   // ------------------------------- Common fields -------------------------------
 
-  protected def intField(n: String, fr: Record => Int) = field[Int](n, fr, new AsIs[Int])
-  protected def longField(n: String, fr: Record => Long) = field[Long](n, fr, new AsIs[Long])
-  protected def doubleField(n: String, fr: Record => Double) = field[Double](n, fr, new AsIs[Double])
-  protected def stringField(n: String, fr: Record => String) = field[String](n, fr, new NullableAsIs[String])
-  protected def booleanField(n: String, fr: Record => Boolean) = field[Boolean](n, fr, new AsIs[Boolean])
+  protected def intField(n: String, fr: Record => Int) = field1[Int](n, fr, new AsIs[Int, Int])
+  protected def longField(n: String, fr: Record => Long) = field1[Long](n, fr, new AsIs[Long, Long])
+  protected def doubleField(n: String, fr: Record => Double) = field1[Double](n, fr, new AsIs[Double, Double])
+  protected def stringField(n: String, fr: Record => String) = field1[String](n, fr, new NullableAsIs[String, String])
+  protected def booleanField(n: String, fr: Record => Boolean) = field1[Boolean](n, fr, new AsIs[Boolean, Boolean])
 
   /** This field requires {type: "date", format: "epoch_millis"} or {type: "long"} */
   protected def dateTimeTimestampField(n: String, fr: Record => LocalDateTime) = commonField(n, fr, LocalDateTimeTimestampConv)
@@ -107,12 +158,16 @@ trait EsTrait {
   /** This field requires {type: "date", format: "epoch_millis"} or {type: "long"} */
   protected def instantField(n: String, fr: Record => Instant) = commonField(n, fr, InstantEpochMillisConv)
 
+  protected def objectField(n: String, fr: Record => ju.Map[String, Any]) = field1[ju.Map[String, Any]](n, fr, new AsIs)
+  /** This field like [[objectField()]], but it never returns null. So you don't need to bother with null checks. Also, your empty map will always be null in elastic. */
+  protected def objectEmptyAsNullField(n: String, fr: Record => ju.Map[String, Any]) = field1[ju.Map[String, Any]](n, fr, new EmptyMapAsNull)
+
   // ------------------------------- Option fields -------------------------------
 
-  protected def intOptionField(n: String, fr: Record => Option[Int]) = field[Option[Int]](n, fr, new AsOption[Int])
-  protected def longOptionField(n: String, fr: Record => Option[Long]) = field[Option[Long]](n, fr, new AsOption[Long])
-  protected def doubleOptionField(n: String, fr: Record => Option[Double]) = field[Option[Double]](n, fr, new AsOption[Double])
-  protected def stringOptionField(n: String, fr: Record => Option[String]) = field[Option[String]](n, fr, new AsOption[String])
+  protected def intOptionField(n: String, fr: Record => Option[Int]) = field1[Option[Int]](n, fr, new AsOption[Int, Int])
+  protected def longOptionField(n: String, fr: Record => Option[Long]) = field1[Option[Long]](n, fr, new AsOption[Long, Long])
+  protected def doubleOptionField(n: String, fr: Record => Option[Double]) = field1[Option[Double]](n, fr, new AsOption[Double, Double])
+  protected def stringOptionField(n: String, fr: Record => Option[String]) = field1[Option[String]](n, fr, new AsOption[String, String])
   /** This field requires {type: "date", format: "epoch_millis"} or {type: "long"} */
   protected def dateTimeTimestampOptionField(n: String, fr: Record => Option[LocalDateTime]) = optionField(n, fr, LocalDateTimeTimestampConv)
   /** This field requires {type: "date", format: "epoch_millis"} or {type: "long"} */
@@ -121,13 +176,15 @@ trait EsTrait {
   /** This field requires {type: "date", format: "epoch_millis"} or {type: "long"} */
   protected def instantOptionField(n: String, fr: Record => Option[Instant]) = optionField(n, fr, InstantEpochMillisConv)
 
+  protected def objectOptionField(n: String, fr: Record => Option[ju.Map[String, Any]]) = field1[Option[ju.Map[String, Any]]](n, fr, new AsOption)
+
   // ------------------------------- Geo point fields -------------------------------
   protected def geoPointField(n: String, fr: Record => GeoPoint) = commonField[GeoPoint](n, fr, GeoPointConv)
   protected def geoPointOptionField(n: String, fr: Record => Option[GeoPoint]) = optionField[GeoPoint](n, fr, GeoPointConv)
 
   // ------------------------------- DbEnum fields -------------------------------
 
-  protected def enumField[E <: DbEnum](n: String, fr: Record => E#V, enum: E) = field[E#V](n, fr, new Conv[E#V] {
+  protected def enumField[E <: DbEnum](n: String, fr: Record => E#V, enum: E) = field1[E#V](n, fr, new ConvOne[E#V] {
     /** Чтение значения из ElasticSearch */
     override def from(j: AnyRef): E#V = j match {
       case null => null.asInstanceOf[E#V]
@@ -139,7 +196,7 @@ trait EsTrait {
     /** Запись значения в ElasticSearch */
     override def to(v: E#V): AnyRef = v.getId.asInstanceOf[jl.Integer]
   })
-  protected def enumOptionField[E <: DbEnum](n: String, fr: Record => Option[E#V], enum: E) = field[Option[E#V]](n, fr, new Conv[Option[E#V]] {
+  protected def enumOptionField[E <: DbEnum](n: String, fr: Record => Option[E#V], enum: E) = field1[Option[E#V]](n, fr, new ConvOne[Option[E#V]] {
     /** Чтение значения из ElasticSearch */
     override def from(j: AnyRef): Option[E#V] = j match {
       case null => None
@@ -154,7 +211,7 @@ trait EsTrait {
 
   // ------------------------------- Old ScalaDbEnum fields -------------------------------
 
-  protected def enumIdxField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => E, enum: ScalaDbEnum[E]) = field[E](n, fr, new Conv[E] {
+  protected def enumIdxField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => E, enum: ScalaDbEnum[E]) = field1[E](n, fr, new ConvOne[E] {
     /** Чтение значения из ElasticSearch */
     override def from(j: AnyRef): E = j match {
       case null => null.asInstanceOf[E]
@@ -163,7 +220,7 @@ trait EsTrait {
     /** Запись значения в ElasticSearch */
     override def to(v: E): AnyRef = v.index.asInstanceOf[jl.Integer]
   })
-  protected def enumIdxOptionField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => Option[E], enum: ScalaDbEnum[E]) = field[Option[E]](n, fr, new Conv[Option[E]] {
+  protected def enumIdxOptionField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => Option[E], enum: ScalaDbEnum[E]) = field1[Option[E]](n, fr, new ConvOne[Option[E]] {
     /** Чтение значения из ElasticSearch */
     override def from(j: AnyRef): Option[E] = j match {
       case null => None
@@ -175,7 +232,7 @@ trait EsTrait {
       case Some(e) => e.index.asInstanceOf[jl.Integer]
     }
   })
-  protected def enumIdxSetField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => Set[E], enum: ScalaDbEnum[E]) = field[Set[E]](n, fr, new Conv[Set[E]] {
+  protected def enumIdxSetField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => Set[E], enum: ScalaDbEnum[E]) = field1[Set[E]](n, fr, new ConvOne[Set[E]] {
     /** Чтение значения из ElasticSearch */
     override def from(j: AnyRef): Set[E] = j match {
       case null => Set.empty
@@ -187,14 +244,23 @@ trait EsTrait {
       else asJavaCollection(v.map(_.index))
   })
 
-  // ------------------------------- / -------------------------------
+  // ------------------------------- Array fields -------------------------------
 
-  protected def arrayField[T](n: String, fr: Record => Iterable[T]) = field[Iterable[T]](n, fr, new Conv[Iterable[T]] {
-    override def from(j: AnyRef): Iterable[T] = if (j == null) Iterable.empty else j.asInstanceOf[jl.Iterable[T]].asScala
+  protected def arrayIterableField[T](n: String, fr: Record => Iterable[T]) = field1[Iterable[T]](n, fr, new ConvOne[Iterable[T]] {
+    override def from(j: AnyRef): Iterable[T] = if (j == null) Iterable.empty else iterableAsScalaIterable(j.asInstanceOf[jl.Iterable[T]])
     override def to(v: Iterable[T]): AnyRef = asJavaIterable(v)
   })
-  protected def intArrayField(n: String, fr: Record => Iterable[Int]) = arrayField[Int](n, fr)
-  protected def stringArrayField(n: String, fr: Record => Iterable[String]) = arrayField[String](n, fr)
+  protected def intIterableField(n: String, fr: Record => Iterable[Int]) = arrayIterableField[Int](n, fr)
+  protected def stringIterableField(n: String, fr: Record => Iterable[String]) = arrayIterableField[String](n, fr)
+
+  protected def arrayBufferField[T](n: String, fr: Record => Iterable[T]) = field[Iterable[T], mutable.Buffer[T]](n, fr, new Conv[Iterable[T], mutable.Buffer[T]] {
+    override def from(j: AnyRef): mutable.Buffer[T] = if (j == null) mutable.Buffer.empty else asScalaBuffer(j.asInstanceOf[ju.List[T]])
+    override def to(v: Iterable[T]): AnyRef = asJavaIterable(v)
+  })
+  protected def intBufferField(n: String, fr: Record => Iterable[Int]) = arrayBufferField[Int](n, fr)
+  protected def stringBufferField(n: String, fr: Record => Iterable[String]) = arrayBufferField[String](n, fr)
+
+  // ------------------------------- / -------------------------------
 
   protected def boostField(fr: Record => Double): F[Double]
 
@@ -230,8 +296,6 @@ trait EsBaseRecord extends EsTrait {
   * Таким образом, после создания объекта [[EsWrite]], его #valueMap уже заполнен и готов для записи в Elastic.
   */
 trait EsWrite extends EsBaseRecord {
-  //  if (!validateRecord(record)) throw new RuntimeException(s"Record $record not valid for creating EsRecord object")
-
   protected var _valueMap: ju.Map[String, AnyRef] = _
   protected def valueMap: ju.Map[String, AnyRef] = {
     if (_valueMap == null) _valueMap = new ju.HashMap[String, AnyRef]()
@@ -242,25 +306,28 @@ trait EsWrite extends EsBaseRecord {
 
   protected def record: Record
 
-  override protected def field[A](name: String, fromRecord: Record => A, conv: Conv[A]): F[A] = {
+
+  override protected def field[W, R](name: String, fromRecord: (Record) => W, conv: Conv[W, R]): F[R] = {
     val v = fromRecord(record)
     valueMap.put(name, conv.to(v))
-    v
+    null.asInstanceOf[R] // Значение возврата не используется в EsWrite
   }
   override protected def boostField(fromRecord: Record => Double): F[Double] = {
     val v = fromRecord(record)
     val map = valueMap
     map.put(_boostName, v.asInstanceOf[AnyRef])
     map.put(boostName, v.asInstanceOf[AnyRef])
-    v
+    0.0 // Значение возврата не используется в EsWrite
   }
   override protected def objectListField[CC <: EsRecord, M <: EsSubTypeMeta[CC]]
-  (name: String, fromRecord: Record => Iterable[_], meta: M): FList[CC, M] = {
+  (name: String, fromRecord: Record => Iterable[M#Record], meta: M): FList[CC, M] = {
     val list = fromRecord(record)
-    valueMap.put(name, asJavaCollection(list.flatMap {e =>
-      val r = e.asInstanceOf[meta.type#Record]
-      if (meta.validateRecord(r)) Seq(meta.makeWrite(r).valueMap) else Nil
-    }))
+    val value = new ju.ArrayList[ju.Map[String, AnyRef]](list.size)
+    for (v <- list) {
+      val r = v.asInstanceOf[meta.type#Record]
+      if (meta.validateRecord(r)) value.add(meta.makeWrite(r).valueMap)
+    }
+    valueMap.put(name, value)
     null.asInstanceOf[FList[CC, M]] // Заглушка для объекта. На самом деле, это значение не используется.
   }
 }
@@ -284,7 +351,7 @@ trait EsTypeWrite extends EsWrite with EsTypeTrait {
 trait EsRecord extends EsBaseRecord {
   protected def data: EsClassData
 
-  override protected def field[A](name: String, fromRecord: Record => A, conv: Conv[A]): F[A] = {
+  override protected def field[W, R](name: String, fromRecord: Record => W, conv: Conv[W, R]): F[R] = {
     try {
       data.getHighlightedField(name) match {
         case null => conv.from(data.get(name))
@@ -298,7 +365,7 @@ trait EsRecord extends EsBaseRecord {
     data.get(boostName).asInstanceOf[Double]
   }
   override protected def objectListField[CC <: EsRecord, A <: EsSubTypeMeta[CC]]
-  (name: String, fromRecord: Record => Iterable[_], adapter: A): FList[CC, A] = {
+  (name: String, fromRecord: Record => Iterable[A#Record], adapter: A): FList[CC, A] = {
     data.get(name) match {
       case null => Vector.empty
       case list => list.asInstanceOf[jl.Iterable[ju.Map[String, AnyRef]]].asScala.map(el => adapter.fromMap(el))
@@ -354,12 +421,8 @@ trait EsTypeRecord extends EsRecord {
   * Описание поля Elastic'а.
   *
   * @param name       Название поля в Эластике
-  * @param fromRecord Заполнение этого поля для Эластика из первоначальной записи [[Record]]
-  * @param conv       Конвертатор для этого поля
-  * @tparam T      Тип этого поля в Эластике
-  * @tparam Record Тип записи, которая используется для заполнения таких полей
   */
-class EsField[T, Record](val name: String, val fromRecord: Record => T, conv: Conv[T]) {
+class EsField(val name: String) {
   def boostedName(boost: Int): String = if (boost == 1) name else name + "^" + boost
 
   def termQuery(value: Any): TermQueryBuilder = new TermQueryBuilder(name, value)
@@ -373,7 +436,7 @@ class EsField[T, Record](val name: String, val fromRecord: Record => T, conv: Co
   * а также методы для создания и получения объектов [[EsRecord]] и [[EsTypeRecord]].
   */
 trait EsMeta[C <: EsRecord] extends EsTrait {
-  override type F[T] = EsField[T, Record]
+  override type F[T] = EsField
   override type FList[CC <: EsRecord, M <: EsSubTypeMeta[CC]] = M
 
   /** This field name (without dots), for example: "section" */
@@ -386,14 +449,14 @@ trait EsMeta[C <: EsRecord] extends EsTrait {
     if (p.isEmpty) name else p + "." + name
   }
 
-  override protected def field[A](name: String, fromRecord: Record => A, conv: Conv[A]): F[A] =
-    new EsField[A, Record](subFieldName(name), fromRecord, conv)
+  override protected def field[W, R](name: String, fromRecord: Record => W, conv: Conv[W, R]): F[R] =
+    new EsField(subFieldName(name))
 
   override protected def boostField(fromRecord: Record => Double): F[Double] =
-    new EsField[Double, Record](subFieldName(boostName), fromRecord, new AsIs[Double])
+    new EsField(subFieldName(boostName))
 
   override protected def objectListField[CC <: EsRecord, M <: EsSubTypeMeta[CC]]
-  (name: String, fromRecord: Record => Iterable[_], meta: M): FList[CC, M] =
+  (name: String, fromRecord: Record => Iterable[M#Record], meta: M): FList[CC, M] =
     meta.withPath(name, subFieldName(name)).asInstanceOf[FList[CC, M]]
 
   def validateRecord(r: Record): Boolean

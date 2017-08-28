@@ -1,7 +1,7 @@
 package orm.elasticsearch
 
 import java.time._
-import java.util
+import java.{util => ju}
 
 import org.elasticsearch.common.geo.GeoPoint
 import webby.commons.time.StdDates
@@ -11,36 +11,49 @@ import webby.commons.time.StdDates
 /**
   * Values converter to/from Elastic format
   */
-trait Conv[S] {
+trait Conv[W, R] {
   /**
     * Read value from Elastic
     */
-  def from(j: AnyRef): S
+  def from(j: AnyRef): R
 
   /**
     * Write value to Elastic
     */
-  def to(v: S): AnyRef
+  def to(v: W): AnyRef
 }
 
-sealed class AsIs[S] extends Conv[S] {
-  override def from(j: AnyRef): S = j.asInstanceOf[S]
-  override def to(v: S): AnyRef = v.asInstanceOf[AnyRef]
+trait ConvOne[S] extends Conv[S, S]
+
+sealed class AsIs[W, R] extends Conv[W, R] {
+  override def from(j: AnyRef): R = j.asInstanceOf[R]
+  override def to(v: W): AnyRef = v.asInstanceOf[AnyRef]
 }
 
-sealed class NullableAsIs[S] extends Conv[S] {
-  override def from(j: AnyRef): S = j.asInstanceOf[S]
-  override def to(v: S): AnyRef = if (v == null) null else v.asInstanceOf[AnyRef]
+sealed class NullableAsIs[W, R] extends Conv[W, R] {
+  override def from(j: AnyRef): R = j.asInstanceOf[R]
+  override def to(v: W): AnyRef = if (v == null) null else v.asInstanceOf[AnyRef]
 }
 
-sealed class AsOption[T] extends Conv[Option[T]] {
-  override def from(j: AnyRef): Option[T] = if (j == null) None else Some(j.asInstanceOf[T])
-  override def to(v: Option[T]): AnyRef = v match {
+sealed class AsOption[W, R] extends Conv[Option[W], Option[R]] {
+  override def from(j: AnyRef): Option[R] = if (j == null) None else Some(j.asInstanceOf[R])
+  override def to(v: Option[W]): AnyRef = v match {
     case None => null
     case Some(value) => value.asInstanceOf[AnyRef]
   }
 }
 
+/** Treats empty map in code as null in elastic.
+  * Conversions followed:
+  * [elastic] -- [code]
+  * null      -> {}
+  * null      <- {}
+  * null      <- null
+  */
+sealed class EmptyMapAsNull extends ConvOne[ju.Map[String, Any]] {
+  override def from(j: AnyRef): ju.Map[String, Any] = if (j == null) ju.Collections.emptyMap() else j.asInstanceOf[ju.Map[String, Any]]
+  override def to(v: ju.Map[String, Any]): AnyRef = if (v == null || v.isEmpty) null else v
+}
 
 // ------------------------------- SimpleConv -------------------------------
 
@@ -98,7 +111,7 @@ object InstantEpochMillisConv extends SimpleConv[Instant] {
 
 object GeoPointConv extends SimpleConv[GeoPoint] {
   override def from(j: AnyRef): GeoPoint = j match {
-    case map: util.HashMap[_, _] =>
+    case map: ju.HashMap[_, _] =>
       val lon = map.get("lon").asInstanceOf[Double]
       val lat = map.get("lat").asInstanceOf[Double]
       new GeoPoint(lat, lon)
