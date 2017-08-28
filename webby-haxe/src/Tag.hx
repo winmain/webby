@@ -306,7 +306,7 @@ class Tag {
     return this;
   }
 
-  public function attr(key: String, ?value: Dynamic): Tag {
+  public function attr(key: String, value: Dynamic): Tag {
     if (Goog.isBoolean(value)) {
       if (untyped value) el.setAttribute(key, '1');
       else el.removeAttribute(key);
