@@ -127,6 +127,7 @@ trait EsTrait {
     */
   type FList[C <: EsRecord, M <: EsSubTypeMeta[C]]
 
+  protected def idField(fr: Record => String): F[String]
   protected def field[W, R](name: String, fromRecord: Record => W, conv: Conv[W, R]): F[R]
   protected def objectListField[CC <: EsRecord, M <: EsSubTypeMeta[CC]]
   (name: String, fromRecord: Record => Iterable[M#Record], meta: M): FList[CC, M]
@@ -306,7 +307,11 @@ trait EsWrite extends EsBaseRecord {
 
   protected def record: Record
 
-
+  override protected def idField(fromRecord: (Record) => String): String = {
+    val id = fromRecord(record)
+    require(id != null, "Id cannot be null")
+    id
+  }
   override protected def field[W, R](name: String, fromRecord: (Record) => W, conv: Conv[W, R]): F[R] = {
     val v = fromRecord(record)
     valueMap.put(name, conv.to(v))
@@ -350,6 +355,8 @@ trait EsTypeWrite extends EsWrite with EsTypeTrait {
   */
 trait EsRecord extends EsBaseRecord {
   protected def data: EsClassData
+
+  override protected def idField(fr: (Record) => String): String = data.getId
 
   override protected def field[W, R](name: String, fromRecord: Record => W, conv: Conv[W, R]): F[R] = {
     try {
@@ -448,6 +455,9 @@ trait EsMeta[C <: EsRecord] extends EsTrait {
     val p: String = path
     if (p.isEmpty) name else p + "." + name
   }
+
+  override protected def idField(fr: (Record) => String): EsField =
+    new EsField(subFieldName("_id"))
 
   override protected def field[W, R](name: String, fromRecord: Record => W, conv: Conv[W, R]): F[R] =
     new EsField(subFieldName(name))
