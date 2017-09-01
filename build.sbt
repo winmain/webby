@@ -98,27 +98,6 @@ lazy val elasticOrm5: Project = Project(
 
 // ------------------------------ webby-haxe project ------------------------------
 
-/*
-// Haxe builds can publish only by this task `publishHaxe`
-// Because of scala cross version build
-val publishHaxe = taskKey[Unit]("publish-haxe")
-
-lazy val webbyHaxeBuild: Project = Project(
-  "webby-haxe-build",
-  file("webby-haxe/build"),
-  settings = baseSettings ++ haxeLibSettings ++ Seq(
-    name := "webby-haxe",
-    artifactPath := baseDirectory.value / "webby-haxe.jar",
-
-    publishHaxe := Classpaths.publishTask(publishConfiguration, deliver).value,
-    publish := {},
-
-    sourceDirectories in Compile := Seq(baseDirectory.value / "../src", baseDirectory.value / "../macro")
-
-    // TODO: add haxe build task before deploy
-  )
-)
-*/
 lazy val webbyHaxe: Project = Project(
   "webby-haxe",
   file("webby-haxe"),

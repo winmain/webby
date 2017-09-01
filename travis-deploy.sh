@@ -18,8 +18,3 @@ EOF
 
 make-bintray-credentials
 sbt ++$TRAVIS_SCALA_VERSION publish
-
-# Publish haxe module only for the latest scala version build
-if [ "${TRAVIS_SCALA_VERSION:0:4}" == "2.12" ]; then
-  sbt publishHaxe
-fi
