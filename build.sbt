@@ -1,5 +1,4 @@
-import haxeidea.HaxeLib._
-import sbt.Keys._
+import sbt.Keys.{publishArtifact, _}
 import sbt._
 
 val buildScalaVersion = "2.12.3"
@@ -7,7 +6,7 @@ val buildCrossScalaVersions = Seq(buildScalaVersion) // Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.5.5",
+  version := "0.5.6-SNAPSHOT",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(
@@ -99,6 +98,7 @@ lazy val elasticOrm5: Project = Project(
 
 // ------------------------------ webby-haxe project ------------------------------
 
+/*
 // Haxe builds can publish only by this task `publishHaxe`
 // Because of scala cross version build
 val publishHaxe = taskKey[Unit]("publish-haxe")
@@ -118,6 +118,25 @@ lazy val webbyHaxeBuild: Project = Project(
     // TODO: add haxe build task before deploy
   )
 )
+*/
+lazy val webbyHaxe: Project = Project(
+  "webby-haxe",
+  file("webby-haxe"),
+  settings = baseSettings ++ Seq(
+    name := "webby-haxe",
+    artifactClassifier := Some("haxe"),
+
+    libraryDependencies += "com.github.citrum" % "haxe-jar" % "3.4.2" classifier "haxe",
+
+    unmanagedResourceDirectories in Compile := Seq(baseDirectory.value / "src", baseDirectory.value / "macro"),
+
+    crossPaths := false, // Turn off scala versions
+    // Disable javadoc, source generation
+    publishArtifact in (Compile, packageDoc) := false,
+    publishArtifact in (Compile, packageSrc) := false
+  )
+)
+
 
 // ------------------------------ webby project ------------------------------
 
@@ -143,7 +162,7 @@ lazy val webby: Project = Project(
       // появляются лишние поля.
       deps += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.9" // Работа с json
       deps += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.8.9" exclude("com.google.guava", "guava") exclude("com.google.code.findbugs", "jsr305") // Работа с json
-      deps += "com.intellij" % "annotations" % "12.0" // для интеграции IDEA language injection
+      deps += "org.jetbrains" % "annotations" % "15.0" // для интеграции IDEA language injection
 
       // Optional dependencies
       deps += querio % "optional" // Querio ORM
@@ -178,7 +197,7 @@ lazy val webby: Project = Project(
 lazy val root = Project(
   "webby-root",
   file("."),
-  aggregate = Seq(webby, elasticOrm2, elasticOrm5, webbyHaxeBuild),
+  aggregate = Seq(webby, elasticOrm2, elasticOrm5, webbyHaxe),
   settings = Seq(
     // Disable packaging & publishing artifact
     Keys.`package` := file(""),
