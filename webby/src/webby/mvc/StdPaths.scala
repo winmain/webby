@@ -1,9 +1,10 @@
 package webby.mvc
 
 import java.io.File
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 
-import webby.api.App
+import org.apache.commons.lang3.StringUtils
+import webby.api.{App, Logger}
 import webby.commons.io.FileUtils
 import webby.commons.system.OverridableObject
 
@@ -22,6 +23,8 @@ object StdPaths extends OverridableObject {
     val root: Path = App.app.path
     @Deprecated val rootFile: File = root.toFile
 
+    val app = root / "app"
+
     val state = root / "state"
 
     val public = root / "public"
@@ -38,12 +41,9 @@ object StdPaths extends OverridableObject {
     def jsGccAssetType = AssetType("js-gcc")
     def jsSimpleAssetType = AssetType("js-simple")
 
-    val haxeModule = root / "app-js"
-    val haxeMainSrc = haxeModule / "src"
+    // ------------------------------- Convenience java.nio.file.Paths methods -------------------------------
 
-    // ------------------------------- convenience java.nio.file.Paths methods -------------------------------
-
-    def get(first: String, more: String*): Path = java.nio.file.Paths.get(first, more: _*)
+    def get(first: String, more: String*): Path = Paths.get(first, more: _*)
   }
 
   override protected def default: Value = new Value
@@ -55,5 +55,29 @@ object StdPaths extends OverridableObject {
   case class AssetType(name: String) {
     def assetsPath = StdPaths.get.assets.resolve(name)
     def targetAssetsPath = StdPaths.get.targetAssets.resolve(name)
+  }
+
+  // ------------------------------- Haxe parameters -------------------------------
+
+  trait HaxeValue {
+
+    protected def readHaxeProp[T](name: String, empty: => T, prepare: String => T): T =
+      System.getProperty(name) match {
+        case null =>
+          if (App.appOrNull != null && App.isDev) Logger.warn(s"No `$name` property defined")
+          empty
+        case value =>
+          prepare(value)
+      }
+    protected def readHaxePropPath(name: String): Path = readHaxeProp[Path](name, null, Paths.get(_))
+
+    /** Path to haxe binary */
+    val haxeBin: Path = readHaxePropPath("haxe.bin")
+
+    /** Path to haxe std library */
+    val haxeStd: Path = readHaxePropPath("haxe.std")
+
+    /** Haxe `cp` source directories */
+    val haxeCp: Vector[Path] = readHaxeProp("haxe.cp", Vector.empty, StringUtils.split(_, ':').map(Paths.get(_))(collection.breakOut))
   }
 }

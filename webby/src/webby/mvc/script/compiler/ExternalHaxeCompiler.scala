@@ -7,19 +7,20 @@ import com.fasterxml.jackson.core.JsonParser
 import org.apache.commons.lang3.StringUtils
 import webby.commons.io.StdJs
 import webby.commons.text.SB
+import webby.mvc.StdPaths
 
 import scala.collection.mutable.ArrayBuffer
 
 /**
   * Haxe-js компилятор, предназначенный для работы внутри [[webby.mvc.script.GoogleClosureServer]].
   *
-  * @param sourceDirs      Каталоги с haxe исходниками
   * @param profile         Профиль сборки (dev, jenkins, prod)
   * @param compilerOptions Опции компилятора
   */
-case class ExternalHaxeCompiler(sourceDirs: Seq[Path],
-                                profile: String,
+case class ExternalHaxeCompiler(profile: String,
                                 compilerOptions: HaxeCompilerOptions) extends ScriptCompiler {
+  def this(profile: String, paths: StdPaths.HaxeValue) = this(profile, HaxeCompilerOptions.default(paths))
+
   def sourceFileExt: String = "hx"
   def targetFileExt: String = "js"
   def targetContentType: String = "text/javascript"
@@ -31,7 +32,7 @@ case class ExternalHaxeCompiler(sourceDirs: Seq[Path],
   override def compileFile(sourcePath: Path, outputPath: Path): Either[String, Unit] = {
     val mainClass = StringUtils.removeEnd(sourcePath.getFileName.toString, ".hx")
     val command = ArrayBuffer(compilerOptions.runBinary, "-main", mainClass, "-js", outputPath.toString)
-    sourceDirs.foreach {include =>
+    compilerOptions.sourceDirs.foreach {include =>
       command += "-cp"
       command += include.toString
     }
@@ -123,12 +124,15 @@ case class ExternalHaxeCompiler(sourceDirs: Seq[Path],
   private val JsRequireR = "(?m)(^var [a-zA-Z0-9_]+ *= *)require\\([\"']([^\"']+)[\"']\\)(?:\\.([^;]+))?;\n?".r
 }
 
-class HaxeCompilerOptions(haxeHomeDir: Path) {
-  /** Путь к бинарнику haxe */
-  var runBinary: String = haxeHomeDir.resolve("haxe").toString
+class HaxeCompilerOptions {
+  /** Каталоги с haxe исходниками */
+  var sourceDirs: Seq[Path] = Nil
 
-  /** Путь к стандартной библиотеке haxe. Записывается в env HAXE_LIBRARY_PATH. */
-  var haxeStdPath: Path = haxeHomeDir.resolve("std")
+  /** Путь к бинарнику haxe */
+  var runBinary: String = _
+
+  /** Путь к стандартной библиотеке haxe (к папке `std`). Записывается в env HAXE_LIBRARY_PATH. */
+  var haxeStdPath: Path = _
 
   /** Параметр "-dce" */
   var deadCodeElimination: String = "full"
@@ -138,4 +142,14 @@ class HaxeCompilerOptions(haxeHomeDir: Path) {
 
   /** Дополнительные опции компиляции */
   var moreOptions: Seq[String] = Nil
+}
+
+object HaxeCompilerOptions {
+  def default(paths: StdPaths.HaxeValue): HaxeCompilerOptions = {
+    val opts = new HaxeCompilerOptions
+    opts.sourceDirs = paths.haxeCp
+    opts.runBinary = paths.haxeBin.toString
+    opts.haxeStdPath = paths.haxeStd
+    opts
+  }
 }
