@@ -48,7 +48,7 @@ class StdScriptRouteUtils(paths: StdPaths.Value, gccForProfile: String => Google
 
   // ------------------------------- Private & protected methods -------------------------------
 
-  private def magicServer(jenkinsAssetType: Option[StdPaths.AssetType])(localServer: => (String) => Action): (String) => Action =
+  protected def magicServer(jenkinsAssetType: Option[StdPaths.AssetType])(localServer: => (String) => Action): (String) => Action =
     App.profile match {
       case Profile.Dev => localServer
       case Profile.Jenkins =>
@@ -59,7 +59,7 @@ class StdScriptRouteUtils(paths: StdPaths.Value, gccForProfile: String => Google
       case _ => errorSimpleAction
     }
 
-  private val errorSimpleAction = {path: String =>
+  protected val errorSimpleAction = {path: String =>
     SimpleAction {_ => Results.InternalServerError("Cannot serve this file in " + App.profile)}
   }
 }

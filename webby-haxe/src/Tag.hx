@@ -95,7 +95,7 @@ class Tag {
   }
 
   public static function getBody(): Tag return wrap(G.document.body);
-  public static function getHtml(): Tag return wrap(G.document.documentElement);
+  public static function getDocument(): Tag return wrap(G.document.documentElement);
 
   // ------------------------------- Block elements -------------------------------
 
@@ -196,7 +196,7 @@ class Tag {
 
   // ------------------------------- Class Tag -------------------------------
 
-  public var el: Element;
+  public var el(default, null): Element;
 
   public function new(el: Element) {
     this.el = el;
@@ -238,19 +238,104 @@ class Tag {
 
   // ------------------------------- Getters -------------------------------
 
+  public function getId(): String return el.id;
+
   public function hasCls(v: String): Bool return el.classList.contains(v);
-
-  public function html(): String return el.innerHTML;
-
-  public function iterator(): Iterator<Tag> return new TagIterator(el.children);
 
   public function getAttr(key: String): String return el.getAttribute(key);
 
   public function hasAttr(key: String): Bool return el.hasAttribute(key);
 
-  public function getId(): String return el.id;
+  public function getVal(): String {
+    // TODO: нужны обработчики для других типов элементов типа radio, checkbox, textarea, select
+    return untyped el.value;
+  }
 
-  public function equals(other: Tag): Bool return el == other.el;
+  public function getHtml(): String return el.innerHTML;
+
+  public function getType(): String return untyped el.type;
+
+  public function getHref(): String return untyped el.href;
+
+  // ------------------------------- Setters -------------------------------
+
+  public function id(v: String): Tag {
+    el.id = v;
+    return this;
+  }
+
+
+  public function cls(v: String): Tag {
+    if (v.indexOf(' ') == -1) {
+      el.classList.add(v);
+    } else {
+      for (clazz in v.split(' ')) el.classList.add(clazz);
+    }
+    return this;
+  }
+
+  public function clsOff(v: String): Tag return setCls(v, false);
+
+  public function clsIf(cond: Bool, v: String): Tag return if (cond) cls(v) else this;
+
+  public function setCls(token: String, v: Bool): Tag {
+    el.classList.toggle(token, v);
+    return this;
+  }
+
+
+  public function attr(key: String, value: Dynamic): Tag {
+    if (Goog.isBoolean(value)) {
+      if (untyped value) el.setAttribute(key, '1');
+      else el.removeAttribute(key);
+    } else {
+      el.setAttribute(key, value);
+    }
+    return this;
+  }
+
+  public function removeAttr(key: String): Tag return attr(key, false);
+
+
+  public function setVal(v: Dynamic): Tag {
+    // TODO: нужны обработчики для других типов элементов типа radio, checkbox, textarea, select
+    untyped el.value = v;
+    return this;
+  }
+
+
+  public function setHtml(html: String): Tag {
+    el.innerHTML = html;
+    return this;
+  }
+
+  /*
+  Add html code to element
+   */
+  public function addHtml(v: String): Tag {
+    var div = G.document.createElement('div');
+    div.innerHTML = v;
+    for (node in div.childNodes) {
+      el.appendChild(node);
+    }
+    return this;
+  }
+
+
+  public function style(v: String): Tag {
+    untyped el.style.cssText = v; // cssText for Safari
+    return this;
+  }
+
+  public function type(v: String): Tag {
+    untyped el.type = v;
+    return this;
+  }
+
+  public function href(v: String): Tag {
+    untyped el.href = v;
+    return this;
+  }
 
   // ------------------------------- Element manipulation -------------------------------
 
@@ -276,18 +361,6 @@ class Tag {
     return v == null ? this : add(v);
   }
 
-  /*
-  Add html code to element
-   */
-  public function addHtml(v: String): Tag {
-    var div = G.document.createElement('div');
-    div.innerHTML = v;
-    for (node in div.childNodes) {
-      el.appendChild(node);
-    }
-    return this;
-  }
-
   public function addTo(tag: EitherType<Tag, Node>): Tag {
     if (untyped tag.el) {
       (tag: Tag).el.appendChild(el);
@@ -303,48 +376,6 @@ class Tag {
   public function addAfter(tag: EitherType<Tag, Node>): Tag {
     var node: Node = (untyped tag.el) ? (tag: Tag).el : (tag: Node);
     node.parentNode.insertBefore(el, node.nextSibling);
-    return this;
-  }
-
-  public function attr(key: String, value: Dynamic): Tag {
-    if (Goog.isBoolean(value)) {
-      if (untyped value) el.setAttribute(key, '1');
-      else el.removeAttribute(key);
-    } else {
-      el.setAttribute(key, value);
-    }
-    return this;
-  }
-
-  public function removeAttr(key: String): Tag return attr(key, false);
-
-  public function id(v: String): Tag {
-    el.id = v;
-    return this;
-  }
-
-  public function cls(v: String): Tag {
-    if (v.indexOf(' ') == -1) {
-      el.classList.add(v);
-    } else {
-      for (clazz in v.split(' ')) el.classList.add(clazz);
-    }
-    return this;
-  }
-
-  public function clsOff(v: String): Tag return setCls(v, false);
-
-  public function clsIf(cond: Bool, v: String): Tag {
-    return if (cond) cls(v) else this;
-  }
-
-  public function setCls(token: String, v: Bool): Tag {
-    el.classList.toggle(token, v);
-    return this;
-  }
-
-  public function setHtml(html: String): Tag {
-    el.innerHTML = html;
     return this;
   }
 
@@ -382,6 +413,8 @@ class Tag {
 
   // ------------------------------- Traverse -------------------------------
 
+  public function iterator(): Iterator<Tag> return new TagIterator(el.children);
+
   public function fnd(selectors: String): Null<Tag> return find2(el, selectors);
 
   public function fndAll(selectors: String): Array<Tag> return findAll2(el, selectors);
@@ -411,6 +444,8 @@ class Tag {
   public function next(): Null<Tag> return wrap(el.nextElementSibling);
 
   // ------------------------------- Misc -------------------------------
+
+  public function equals(other: Tag): Bool return el == other.el;
 
   public function clone(?deep: Bool): Tag return wrap(cast el.cloneNode(deep));
 
@@ -447,34 +482,6 @@ class Tag {
 
   // MouseEvent
   public function onClick(handler: Function): Tag return on('click', untyped handler);
-
-  // ------------------------------- Html properties -------------------------------
-
-  public function style(v: String): Tag {
-    untyped el.style = v;
-    return this;
-  }
-
-  public function type(v: String): Tag {
-    untyped el.type = v;
-    return this;
-  }
-
-  public function setVal(v: Dynamic): Tag {
-    // TODO: нужны обработчики для других типов элементов типа radio, checkbox, textarea, select
-    untyped el.value = v;
-    return this;
-  }
-
-  public function val(): String {
-    // TODO: нужны обработчики для других типов элементов типа radio, checkbox, textarea, select
-    return untyped el.value;
-  }
-
-  public function href(v: String): Tag {
-    untyped el.href = v;
-    return this;
-  }
 }
 
 

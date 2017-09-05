@@ -50,7 +50,7 @@ class InputMask {
 
     // TODO: сделать защиту от повторного вызова applyOn на том же элементе
     tag.on('input', function() {
-      var original: String = tag.val();
+      var original: String = tag.getVal();
 
       while (original.length > begin.length && original.charAt(original.length - 1) == placeholder.charAt(original.length - 1)) {
         original = original.substring(0, original.length - 1);
@@ -92,7 +92,7 @@ class InputMask {
 
     // Вставляем в начало инпута начало маски при фокусе
     tag.on('focus', function() {
-      if (tag.val() == "") tag.setVal(begin);
+      if (tag.getVal() == "") tag.setVal(begin);
       else {
         // TODO: нужно вызвать select event у tag, чтобы выделить весь его текст
         // $el.select()
@@ -101,7 +101,7 @@ class InputMask {
 
     // Если ввод не закончен - очистить поле
     tag.on('blur', function() {
-      if (!isCorrect(tag.val())) tag.setVal(null);
+      if (!isCorrect(tag.getVal())) tag.setVal(null);
     });
   }
 

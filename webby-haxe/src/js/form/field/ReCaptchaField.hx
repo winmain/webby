@@ -17,6 +17,6 @@ class ReCaptchaField extends Field {
 
   override public function value(): Dynamic {
     var tag = form.tag.fnd('#' + shortId);
-    return tag != null ? tag.val() : null;
+    return tag != null ? tag.getVal() : null;
   }
 }

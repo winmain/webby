@@ -80,7 +80,7 @@ class FormErrorBlock {
     if (selfErrors.length > 0) {
       var text: String = selfErrors.join('<br>');
       if (errorTags.nonEmpty()) {
-        if (errorTags[0].html() != text) {
+        if (errorTags[0].getHtml() != text) {
           for (t in errorTags) t.setHtml(text).clsOff(config.hiddenClass);
         }
       } else { // В некоторых формах бывает так, что нет блока с ошибками, а саму ошибку показать надо.

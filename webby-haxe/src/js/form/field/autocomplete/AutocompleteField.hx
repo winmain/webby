@@ -35,6 +35,6 @@ class AutocompleteField extends AbstractAutocompleteField {
 
   override function onBlur() {
     // Если значение введено неверно, то просто сбросить его.
-    setValue(G.toBool(tag.val()) ? source.getRowId(valueRow) : null);
+    setValue(G.toBool(tag.getVal()) ? source.getRowId(valueRow) : null);
   }
 }

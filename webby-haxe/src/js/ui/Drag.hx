@@ -72,7 +72,7 @@ class Drag extends EventTarget {
     if (initialized) return;
     initialized = true;
 
-    var docTag = Tag.getHtml();
+    var docTag = Tag.getDocument();
     htmlDrag = new Drag(docTag);
     htmlDrag.hoverClass(docTag, DocumentHoverCls);
 

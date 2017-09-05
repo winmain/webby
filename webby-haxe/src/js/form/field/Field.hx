@@ -101,7 +101,7 @@ class Field extends EventTarget {
     tag.setVal(isEmptyValue(value) ? null : value);
   }
 
-  public function value(): Dynamic return tag.val();
+  public function value(): Dynamic return tag.getVal();
 
   @:final public function isEmpty(): Bool return isEmptyValue(value());
 
@@ -157,7 +157,7 @@ class Field extends EventTarget {
   public function initElEvents() {
     tag.on('change', onChangeWithEvent);
     tag.on('keyup', function(e: KeyboardEvent) {
-      if ((e.which == 13 && !new RegExp('[\n\r]').test(tag.val())) || (e.which >= 33 && e.which <= 40)) {
+      if ((e.which == 13 && !new RegExp('[\n\r]').test(tag.getVal())) || (e.which >= 33 && e.which <= 40)) {
         // Проверка для случая, если был нажат enter, который привёл к сабмиту.
         // onChange() вызывать не следует, т.к. это приведёт к сбросу ошибки в этом поле, хотя само значение на самом деле не менялось.
         // Также, нажатие на стрелки и клавишы навигации не должно приводить к onChange()
