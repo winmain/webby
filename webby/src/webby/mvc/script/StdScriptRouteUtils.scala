@@ -53,7 +53,7 @@ class StdScriptRouteUtils(paths: StdPaths.Value, gccForProfile: String => Google
       case Profile.Dev => localServer
       case Profile.Jenkins =>
         jenkinsAssetType match {
-          case Some(assetType) => ScriptServer.simpleServer(assetType.assetsPath)
+          case Some(assetType) => ScriptServer.simpleServer(assetType.sourcePath)
           case None => errorSimpleAction
         }
       case _ => errorSimpleAction

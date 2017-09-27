@@ -6,7 +6,7 @@ val buildCrossScalaVersions = Seq(buildScalaVersion) // Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.6.1",
+  version := "0.6.2",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(

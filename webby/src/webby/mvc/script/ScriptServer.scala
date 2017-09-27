@@ -5,28 +5,30 @@ import java.nio.file.{Files, Path}
 import java.util.zip.GZIPOutputStream
 
 import com.google.common.net.HttpHeaders._
-import compiler.ScriptCompiler
 import io.netty.handler.codec.http.HttpResponseStatus
-import watcher.{FileExtTransform, TargetFileTransform, Watcher}
 import webby.api.App
 import webby.api.http.ContentTypes
 import webby.api.libs.MimeTypes
 import webby.api.mvc._
 import webby.commons.system.log.PageLog
 import webby.commons.time.StdDates
+import webby.mvc.script.compiler.ScriptCompiler
+import webby.mvc.script.watcher.{FileExtTransform, TargetFileTransform, Watcher}
 import webby.mvc.{StdCtl, StdPaths}
 
 import scala.annotation.tailrec
 
-class ScriptServer(val watchDir: Path,
+class ScriptServer(val sourceDir: Path,
                    val targetDir: Path,
                    val compilers: List[ScriptCompiler],
-                   val watcherFactory: Path => Watcher)
+                   val watcherFactory: Path => Watcher,
+                   val maybeWatchDir: Option[Path] = None)
   extends StdCtl {
 
   val log = webby.api.Logger(getClass)
 
   Files.createDirectories(targetDir)
+  val watchDir: Path = maybeWatchDir.getOrElse(sourceDir)
   val watchPath: String = watchDir.toAbsolutePath.toString
   val watcher: Watcher = watcherFactory(watchDir)
 
@@ -38,17 +40,17 @@ class ScriptServer(val watchDir: Path,
   @tailrec
   private def at(path: String, compilersLeft: List[ScriptCompiler])(implicit req: RequestHeader): PlainResult =
     compilersLeft match {
-      case Nil => serveFile(watchDir.resolve(path), compilers.head.targetContentType)
+      case Nil => serveFile(sourceDir.resolve(path), compilers.head.targetContentType)
       case compiler :: tail =>
         path match {
           case _ if path.endsWith(compiler.targetDotExt) =>
-            watchDir.resolve(new FileExtTransform(compiler.sourceFileExt).transform(path)) match {
+            sourceDir.resolve(new FileExtTransform(compiler.sourceFileExt).transform(path)) match {
               case p if Files.exists(p) =>
                 val filePath: String = p.toAbsolutePath.toString
                 if (!filePath.startsWith(watchPath)) {
                   BadRequest
                 } else {
-                  val targetPath: Path = TargetFileTransform(watchDir, targetDir, compiler.targetFileExt).transformToPath(filePath)
+                  val targetPath: Path = TargetFileTransform(sourceDir, targetDir, compiler.targetFileExt).transformToPath(filePath)
                   def checkRecompile(): Boolean = {
                     synchronized {
                       if (!Files.exists(targetPath) || watcher.pollFile(p, targetPath)) {
@@ -97,12 +99,17 @@ class ScriptServer(val watchDir: Path,
 
 object ScriptServer {
 
-  def apply(paths: StdPaths.Value, assetType: StdPaths.AssetType, compilers: List[ScriptCompiler], watcherFactory: Path => Watcher): String => Action = {
+  def apply(paths: StdPaths.Value,
+            assetType: StdPaths.AssetType,
+            compilers: List[ScriptCompiler],
+            watcherFactory: Path => Watcher): String => Action = {
     if (!App.isDev) sys.error("ScriptServer can work only with Profile.Dev")
     val server = new ScriptServer(
-      watchDir = assetType.assetsPath,
-      targetDir = assetType.targetAssetsPath,
-      compilers, watcherFactory)
+      sourceDir = assetType.sourcePath,
+      targetDir = assetType.targetPath,
+      compilers = compilers,
+      watcherFactory = watcherFactory,
+      maybeWatchDir = Some(assetType.watchPath))
     (path) => server.at(path)
   }
 

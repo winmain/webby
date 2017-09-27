@@ -19,8 +19,8 @@ class GoogleClosureServerBuilder {
   def jsSourceDirs(v: Seq[Path]) = {_jsSourceDirs = v; this}
   def jsSourceDir(add: Path) = {_jsSourceDirs +:= add; this}
   def addJsSourceDirs(v: Seq[Path]) = {_jsSourceDirs ++= v; this}
-  def simpleSourceDir = jsSourceDirs(Seq(StdPaths.get.jsAssetType.assetsPath))
-  def commonSourceDirsWithProfile(profile: String) = jsSourceDirs(Vector(StdPaths.get.jsAssetType.assetsPath, StdPaths.get.assetsProfile(profile)))
+  def simpleSourceDir = jsSourceDirs(Seq(StdPaths.get.jsAssetType.sourcePath))
+  def commonSourceDirsWithProfile(profile: String) = jsSourceDirs(Vector(StdPaths.get.jsAssetType.sourcePath, StdPaths.get.assetsProfile(profile)))
 
   var _preCompilers: List[ScriptCompiler] = Nil
   def preCompilers(v: List[ScriptCompiler]) = {_preCompilers = v; this}
@@ -77,8 +77,8 @@ class GoogleClosureServerBuilder {
       preCompilers = _preCompilers,
       prepends = _prepends,
       externs = _externs,
-      targetDir = withDefault(_targetDir, StdPaths.get.jsAssetType.targetAssetsPath),
-      targetGccDir = withDefault(_targetGccDir, StdPaths.get.jsGccAssetType.targetAssetsPath),
+      targetDir = withDefault(_targetDir, StdPaths.get.jsAssetType.targetPath),
+      targetGccDir = withDefault(_targetGccDir, StdPaths.get.jsGccAssetType.targetPath),
       remapEntryPoints = _remapEntryPoints,
       sourceMapConfig = Option(_sourceMapConfig),
       errorRenderer = withDefault(_errorRenderer, new DefaultScriptErrorRenderer),

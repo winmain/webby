@@ -11,7 +11,7 @@ import webby.commons.system.OverridableObject
 import scala.language.implicitConversions
 
 /**
-  * Базовые пути для проекта
+  * Application base paths
   */
 object StdPaths extends OverridableObject {
   class Value extends Base {
@@ -35,11 +35,11 @@ object StdPaths extends OverridableObject {
 
     val targetAssets = root / "target/assets"
 
-    def cssAssetType = AssetType("css")
-    def jsAssetType = AssetType("js")
+    def cssAssetType: AssetType = CommonAssetType("css")
+    def jsAssetType: AssetType = CommonAssetType("js")
     // Google Closure Compiled js, only for dev profile
-    def jsGccAssetType = AssetType("js-gcc")
-    def jsSimpleAssetType = AssetType("js-simple")
+    def jsGccAssetType: AssetType = CommonAssetType("js-gcc")
+    def jsSimpleAssetType: AssetType = CommonAssetType("js-simple")
 
     // ------------------------------- Convenience java.nio.file.Paths methods -------------------------------
 
@@ -49,12 +49,26 @@ object StdPaths extends OverridableObject {
   override protected def default: Value = new Value
 
   /**
-    * Тип ассетов: css, js, js-simple.
-    * Удобен как enum при генерации путей к каталогам ассетов.
+    * Asset types: css, js, js-simple.
+    * Useful as enum for resolving paths to assets.
     */
-  case class AssetType(name: String) {
-    def assetsPath = StdPaths.get.assets.resolve(name)
-    def targetAssetsPath = StdPaths.get.targetAssets.resolve(name)
+  trait AssetType {
+    def name: String
+    def sourcePath: Path
+    def watchPath: Path
+    def targetPath: Path
+  }
+
+  case class CommonAssetType(name: String) extends AssetType {
+    override def sourcePath: Path = StdPaths.get.assets.resolve(name)
+    override def watchPath: Path = sourcePath
+    override def targetPath: Path = StdPaths.get.targetAssets.resolve(name)
+  }
+
+  case class AppWatchAssetType(name: String) extends AssetType {
+    override def sourcePath: Path = StdPaths.get.assets.resolve(name)
+    override def watchPath: Path = StdPaths.get.app
+    override def targetPath: Path = StdPaths.get.targetAssets.resolve(name)
   }
 
   // ------------------------------- Haxe parameters -------------------------------
