@@ -27,7 +27,7 @@ object StdJs extends OverridableObject {
       * Сформировать результат для объекта, сконвертированного в json.
       */
     def result(obj: Any, jsMapper: ObjectMapper = mapper, status: HttpResponseStatus = HttpResponseStatus.OK): PlainResult =
-      new PlainResult(status, mapper.writeValueAsBytes(obj))
+      new PlainResult(status, jsMapper.writeValueAsBytes(obj))
         .withHeader(HttpHeaders.CONTENT_TYPE, "application/json; charset=utf-8")
 
     /**
