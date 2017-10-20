@@ -22,8 +22,10 @@ trait JsCodeAppender {
   */
 abstract class PageScripts extends JsCodeAppender {
   protected val jsParts: ArrayBuffer[JsPart] = new ArrayBuffer[JsPart](4)
+
   /** Optional jsParts. They will be loaded, but jsOnLoad does not require them to complete. */
   protected val optJsParts: ArrayBuffer[JsPart] = new ArrayBuffer[JsPart](4)
+
   protected val tags: StringBuilder = new StringBuilder()
   protected val uniqueExternalScriptUrls: ArrayBuffer[String] = new ArrayBuffer[String](4)
 
@@ -77,6 +79,14 @@ abstract class PageScripts extends JsCodeAppender {
     //restPart.foreach(buf ++ _.restPart)
     if (_onLoadCode != null) buf + "jsOnLoad(function(){" + code + "})"
     buf + "</script>"
+  }
+
+  /**
+    * Insert accumulated tags and code for HTML fragment
+    */
+  def printForHtmlFragment()(implicit buf: HtmlBuffer): Unit = {
+    buf + tags
+    if (_onLoadCode != null) buf + "\n<script>" + code + "</script>"
   }
 
   def getForExec: String = code.toString

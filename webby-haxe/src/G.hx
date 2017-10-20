@@ -18,6 +18,9 @@ class G {
 
   inline public static function toString(f: Dynamic): String return untyped __js__('""+{0}', f);
 
+  /* @see http://2ality.com/2012/03/converting-to-string.html */
+  inline public static function toString2(f: Dynamic): String return untyped __js__('String({0})', f);
+
   inline public static function toInt(s: Dynamic): Int return untyped __js__('(+({0}))', s);
 
   inline public static function toFloat(s: Dynamic): Float return untyped __js__('(+({0}))', s);

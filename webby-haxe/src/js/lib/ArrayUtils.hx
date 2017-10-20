@@ -117,4 +117,20 @@ class ArrayUtils {
   inline public static function splice1<T>(array: Array<T>, pos: Int, len: Int, item: T): Array<T> {
     return untyped __js__('{0}.splice({1}, {2}, {3})', array, pos, len, item);
   }
+
+  /*
+  The sort() method sorts the elements of an array in place and returns the array.
+  The sort is not necessarily stable. The default sort order is according to string Unicode code points.
+
+  compareFunction
+    Specifies a function that defines the sort order. If omitted, the array is sorted according
+    to each character's Unicode code point value, according to the string conversion of each element.
+   */
+  inline public static function sort1<T>(array: Array<T>, ?compareFn: T -> T -> Int): Void {
+    if (compareFn == null) {
+      untyped __js__('{0}.sort()', array);
+    } else {
+      untyped __js__('{0}.sort({1})', array, compareFn);
+    }
+  }
 }

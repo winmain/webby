@@ -17,7 +17,9 @@ extern class JMap<K, V> {
     return G.or(get(key), def);
   }
 
-  inline function contains(key: K): Bool {
+  inline function contains(key: K): Bool return G.toBool(containsNonBool(key));
+
+  inline function containsNonBool(key: K): Bool {
     return untyped this[cast key];
   }
 
