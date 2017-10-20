@@ -1,24 +1,19 @@
 package goog.ui.ac;
 
-import goog.ui.ac.ArrayMatcher;
-import haxe.Constraints.Function;
+import js.RegExp;
 import js.lib.Keyboard;
 
 /*
-Расширение ArrayMatcher, дополняющее возможные варианты ввода транслитом.
+SimilarArrayMatcher with russian transliteration feature.
  */
-class RusArrayMatcher<T> extends ArrayMatcher<T> {
+class RusArrayMatcher<T> extends SimilarArrayMatcher<T> {
 
-  override function requestMatchingRows(token: String, maxMatches: Int, matchHandler: Function, ?opt_fullString: String): Void {
-    function getMatches(t: String): Array<T> return
-      useSimilar_ ?
-      ArrayMatcher.getMatchesForRows(t, maxMatches, rows_) :
-      getPrefixMatches(t, maxMatches);
+  public function new(rows: Array<T>, ?minChars: Int) {
+    super(rows, minChars);
+    isLetterOrDigit = new RegExp('[0-9a-zA-Zа-яА-Я]');
+  }
 
-    var matches = getMatches(token);
-    if (untyped !matches.length) {
-      matches = getMatches(Keyboard.translitFromEnglish(token));
-    }
-    matchHandler(token, matches);
+  override public function secondTryMatch(token: String, maxMatches: Int, rows: Array<T>): Array<T> {
+    return SimilarArrayMatcher.getSimilarMatchesForRows(Keyboard.translitFromEnglish(token), maxMatches, rows, isLetterOrDigit);
   }
 }

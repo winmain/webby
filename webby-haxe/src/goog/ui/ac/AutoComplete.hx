@@ -348,10 +348,39 @@ extern class AutoComplete extends EventTarget {
 
 
 typedef RendererTypedef = {
+/**
+ * @return {boolean} True if the object is visible.
+ */
   function isVisible(): Bool;
-  function renderRows(rows: Array<RendRow>, token: String, target: Element): Void;
+
+/**
+ * Sets the anchor element for the subsequent call to renderRows.
+ * @param {Element} anchor The anchor element.
+ */
+  function setAnchorElement(anchor: Element): Void;
+
+/**
+ * Render the autocomplete UI
+ *
+ * @param {Array<!Object>} rows Matching UI rows.
+ * @param {string} token Token we are currently matching against.
+ * @param {Element=} opt_target Current HTML node, will position popup beneath
+ *     this node.
+ */
+  function renderRows(rows: Array<RendRow>, token: String, ?opt_target: Element): Void;
+
+/**
+ * Sets the 'active' class of the item with a given id.
+ * @param {number} id Id of the row to hilight. If id is -1 then no rows get
+ *     hilited.
+ */
   function hiliteId(rowId: Int): Void;
+
+/**
+ * Hide the object.
+ */
   function dismiss(): Void;
+
   function dispose(): Void;
 }
 

@@ -1,10 +1,13 @@
 package goog.ui.ac;
 
+import js.html.Node;
 import goog.array.GoogArray;
 import goog.string.GoogString;
 import goog.ui.ac.Renderer;
 import haxe.extern.EitherType;
 import js.RegExp;
+
+using js.lib.StrUtils;
 
 class RusRenderer extends Renderer {
   /**
@@ -16,7 +19,7 @@ class RusRenderer extends Renderer {
  * @private
  */
   @:keep
-  function getTokenRegExp_(tokenOrArray: EitherType<String, Array<String>>): String {
+  @:protected override function getTokenRegExp_(tokenOrArray: EitherType<String, Array<String>>): String {
     var token: String = '';
 
     if (untyped !tokenOrArray) {
@@ -65,7 +68,7 @@ class RusRenderer extends Renderer {
   }
 
   @:keep
-  function hiliteMatchingText_(node: Dynamic, tokenOrArray: Dynamic): Void {
+  @:protected override function hiliteMatchingText_(node: Node, tokenOrArray: EitherType<String, Array<String>>): Void {
     // patch - в оригинале было так:
     //
     // var re = this.matchWordBoundary_ ?

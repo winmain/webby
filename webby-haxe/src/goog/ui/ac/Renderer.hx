@@ -1,8 +1,9 @@
 package goog.ui.ac;
 
-import goog.positioning.Corner;
 import goog.events.EventTarget;
+import goog.positioning.Corner;
 import goog.ui.ac.AutoComplete.RendRow;
+import haxe.extern.EitherType;
 import js.html.Element;
 import js.html.Node;
 
@@ -268,6 +269,52 @@ extern class Renderer extends EventTarget {
  * @protected
  */
   @:protected override function disposeInternal(): Void;
+
+/**
+ * Generic function that takes a row and renders a DOM structure for that row.
+ *
+ * Normally this will only be matching a maximum of 20 or so items.  Even with
+ * 40 rows, DOM this building is fine.
+ *
+ * @param {Object} row Object representing row.
+ * @param {string} token Token to highlight.
+ * @param {Node} node The node to render into.
+ * @private
+ */
+  @:protected function renderRowContents_(row: Dynamic, token: String, node: Node): Void;
+
+/**
+ * Goes through a node and all of its child nodes, replacing HTML text that
+ * matches a token with <b>token</b>.
+ * The replacement will happen on the first match or all matches depending on
+ * this.highlightAllTokens_ value.
+ *
+ * @param {Node} node Node to match.
+ * @param {string|Array<string>} tokenOrArray Token to match or array of tokens
+ *     to match.  By default, only the first match will be highlighted.  If
+ *     highlightAllTokens is set, then all tokens appearing at the start of a
+ *     word, in whatever order and however many times, will be highlighted.
+ * @private
+ */
+  @:protected function startHiliteMatchingText_(node: Node, tokenOrArray: EitherType<String, Array<String>>): Void;
+
+/**
+ * @param {Node} node Node to match.
+ * @param {string|Array<string>} tokenOrArray Token to match or array of tokens
+ *     to match.
+ * @private
+ */
+  @:protected function hiliteMatchingText_(node: Node, tokenOrArray: EitherType<String, Array<String>>): Void;
+
+/**
+ * Transforms a token into a string ready to be put into the regular expression
+ * in hiliteMatchingText_.
+ * @param {string|Array<string>} tokenOrArray The token or array to get the
+ *     regex string from.
+ * @return {string} The regex-ready token.
+ * @private
+ */
+  @:protected function getTokenRegExp_(tokenOrArray: EitherType<String, Array<String>>): String;
 
 /**
  * Render a row by creating a div and then calling row rendering callback or
