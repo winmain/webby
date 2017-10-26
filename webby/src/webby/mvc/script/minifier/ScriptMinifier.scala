@@ -63,10 +63,11 @@ class ScriptMinifier(dirPrefix: String,
     }
   }
 
-  def minifyAll(): Unit = {
+  def minifyAll(): Boolean = {
     println("--- Minifier step: " + dirPrefix + " ---")
     val executorThreadNum = 4
     val t0 = System.currentTimeMillis()
+    var errors = 0
     Executors.withSynchronousQueueExecutor("minifier-%d", executorThreadNum) {executor =>
       def minifyDir(subDir: String): Unit = {
         val sourceDir = makeSourcePath(subDir)
@@ -77,6 +78,10 @@ class ScriptMinifier(dirPrefix: String,
               if (Files.isRegularFile(path) && path.getFileName.toString.endsWith(sourceFileEnding)) {
                 executor.execute {
                   minifyFile(path, sourceDir, targetDir, AsIsFileExtTransform)
+                    .left.foreach {error =>
+                    System.err.println(error)
+                    errors += 1
+                  }
                 }
               }
             }
@@ -87,21 +92,29 @@ class ScriptMinifier(dirPrefix: String,
       allowedSubDirs.foreach(dir => minifyDir(dir))
     }
 
-    val t1 = System.currentTimeMillis()
-    println("--- Minifier " + dirPrefix + " finished in " + (t1 - t0) + " ms ---")
+    if (errors == 0) {
+      val t1 = System.currentTimeMillis()
+      println("--- Minifier " + dirPrefix + " finished in " + (t1 - t0) + " ms ---")
+      true
+    } else {
+      System.err.println("--- Minifier " + dirPrefix + " finished with " + errors + " " + (if (errors == 1) "error" else "errors") + " ---")
+      false
+    }
   }
+
+  def minifyAllOrFail(): Unit = if (!minifyAll()) sys.exit(-1)
 
   // ------------------------------- Private & protected methods -------------------------------
 
-  protected def minifyFile(path: Path, sourceDir: Path, targetDir: Path, fileExtTransform: FileExtTransform): Unit = {
+  protected def minifyFile(path: Path, sourceDir: Path, targetDir: Path, fileExtTransform: FileExtTransform): Either[String, Unit] = {
     println("Minify: " + path)
     val targetPath: Path = Paths.get(fileExtTransform.transform(targetDir.resolve(sourceDir.relativize(path)).toString))
     minifier(IOUtils.readString(path)) match {
       case Left(errors) =>
-        System.err.println(errors)
-        sys.error("Error minifying " + path)
+        Left("Error minifying " + path + ":\n" + errors)
       case Right(code) =>
         saveMinified(path, targetPath, code)
+        Right(Unit)
     }
   }
 
@@ -126,8 +139,9 @@ class ScriptMinifierForStage(dirPrefix: String,
     * Minify specified files only.
     * Used on `stage` build step.
     */
-  def minifyFiles(subPaths: Seq[String], targetFileExt: String): Unit = {
+  def minifyFiles(subPaths: Seq[String], targetFileExt: String): Boolean = {
     println("--- Minifying files: " + subPaths.mkString(", ") + " ---")
+    var errors = 0
     val executorThreadNum = 4
     val t0 = System.currentTimeMillis()
     Executors.withSynchronousQueueExecutor("minifier-%d", executorThreadNum) {executor =>
@@ -140,11 +154,23 @@ class ScriptMinifierForStage(dirPrefix: String,
         require(Files.isRegularFile(path), "File not found: " + path)
         executor.execute {
           minifyFile(path, sourceDir, targetDir, fileExtTransform)
+            .left.foreach {error =>
+            System.err.println(error)
+            errors += 1
+          }
         }
       }
     }
 
-    val t1 = System.currentTimeMillis()
-    println("--- Minifier finished in " + (t1 - t0) + " ms ---")
+    if (errors == 0) {
+      val t1 = System.currentTimeMillis()
+      println("--- Minifier finished in " + (t1 - t0) + " ms ---")
+      true
+    } else {
+      System.err.println("--- Minifier finished with " + errors + " " + (if (errors == 1) "error" else "errors") + " ---")
+      false
+    }
   }
+
+  def minifyFilesOrFail(subPaths: Seq[String], targetFileExt: String): Unit = if (!minifyFiles(subPaths, targetFileExt)) sys.exit(-1)
 }

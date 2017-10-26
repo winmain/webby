@@ -26,7 +26,10 @@ object StdLessMinifier {
     * Run auto-minify for all simple `less` files specially for production.
     */
   def main(args: Array[String]) {
-    new StdLessMinifier(Profile.Prod).minifier.minifyAll()
+    require(args.length == 1, "Must be one arg: profile name")
+    val profile = Profile.fromString(args(0)).getOrElse(sys.error("Invalid profile: " + args(0)))
+
+    new StdLessMinifier(profile).minifier.minifyAllOrFail()
   }
 }
 

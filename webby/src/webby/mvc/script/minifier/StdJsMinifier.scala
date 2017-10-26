@@ -14,7 +14,7 @@ object StdJsMinifier
     * Запуск auto-minify для всех простых js-файлов специально для production.
     */
   def main(args: Array[String]) {
-    minifyAll()
+    minifyAllOrFail()
   }
 }
 
@@ -40,6 +40,6 @@ object StdJsSimpleMinifierForStage extends
     * Запуск auto-minify для всех js-simple файлов специально для production.
     */
   def main(args: Array[String]) {
-    minifyAll()
+    minifyAllOrFail()
   }
 }
