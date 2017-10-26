@@ -315,8 +315,8 @@ class Tag {
   public function addHtml(v: String): Tag {
     var div = G.document.createElement('div');
     div.innerHTML = v;
-    for (node in div.childNodes) {
-      el.appendChild(node);
+    while (div.childNodes.length > 0) {
+      el.appendChild(div.childNodes.item(0));
     }
     return this;
   }
