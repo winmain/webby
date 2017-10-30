@@ -149,7 +149,9 @@ abstract class BaseQuartzPlugin(val testMode: Boolean) extends Plugin {self =>
 
       // Сохранить состояние Quartz'а
       val quartzJsonState = QuartzJsonState(time = now, jobStates = jobStates)
-      IOUtils.writeToFile(statePath, jsMapper.writeValueAsBytes(quartzJsonState))
+      val stPath = statePath
+      Files.createDirectories(stPath.getParent)
+      IOUtils.writeToFile(stPath, jsMapper.writeValueAsBytes(quartzJsonState))
     }
   }
 

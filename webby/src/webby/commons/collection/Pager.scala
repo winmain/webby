@@ -43,7 +43,7 @@ object Pager {
   val default10 = new Pager(10)
   val default25 = new Pager(25)
 
-  def apply(step: Int, page: Int) = new Pager(step, page)
+  def apply(step: Int, page: Int = 1): Pager = new Pager(step, page)
 
   def isValidPage(page: Int): Boolean = page >= 1
 
