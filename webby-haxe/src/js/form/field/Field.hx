@@ -1,6 +1,7 @@
 package js.form.field;
 
 import goog.events.EventTarget;
+import haxe.Json;
 import js.form.Form;
 import js.html.Event;
 import js.html.InputElement;
@@ -88,7 +89,7 @@ class Field extends EventTarget {
       type: SetValueEvent,
       value: v
     });
-    if (JSON.stringify(value()) != JSON.stringify(oldValue)) {
+    if (Json.stringify(value()) != Json.stringify(oldValue)) {
       onChange();
       dispatchEvent({
         type: ChangeEvent,

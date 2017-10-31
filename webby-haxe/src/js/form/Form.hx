@@ -1,6 +1,7 @@
 package js.form;
 
 import goog.events.EventTarget;
+import haxe.Json;
 import js.form.field.Field;
 import js.form.field.FormListField;
 import js.form.rule.FormRule;
@@ -12,6 +13,7 @@ import js.lib.XhrUtils;
 import macros.ExternalFields;
 
 using js.lib.ArrayUtils;
+using js.lib.StrUtils;
 
 class Form extends EventTarget {
   // ------------------------------- Events -------------------------------
@@ -301,7 +303,7 @@ class Form extends EventTarget {
       });
     xhr.open('POST', formAction(), true);
     tuneXhrOnSubmit(xhr);
-    xhr.send(JSON.stringify(postData));
+    xhr.send(Json.stringify(postData));
   }
 
   function tuneXhrOnSubmit(xhr: XMLHttpRequest) {
@@ -327,7 +329,7 @@ class Form extends EventTarget {
     return data;
   }
 
-  public function hasChanges(): Bool return JSON.stringify(originalValue) != JSON.stringify(value());
+  public function hasChanges(): Bool return Json.stringify(originalValue) != Json.stringify(value());
 
   /*
   Эта форма изначально пустая? Эта проверка нужна, чтобы определить свежесозданную подформу,

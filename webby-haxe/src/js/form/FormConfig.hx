@@ -8,6 +8,8 @@ import js.form.field.upload.UploadConfig;
 import js.form.i18n.FormStrings;
 import js.html.XMLHttpRequest;
 
+using js.lib.StrUtils;
+
 class FormConfig {
   public function new() {}
 

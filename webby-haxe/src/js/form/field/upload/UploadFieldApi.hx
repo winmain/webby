@@ -1,5 +1,6 @@
 package js.form.field.upload;
 
+import haxe.Json;
 import js.form.field.upload.UploadField.UploadFieldApiAccess;
 import js.html.FileList;
 import js.html.FormData;
@@ -51,7 +52,7 @@ class StorageServerUploadFieldApi implements UploadFieldApi {
     xhr.onreadystatechange = function() {
       if (xhr.readyState == XMLHttpRequest.DONE) {
         if (xhr.status == 200) {
-          var resp: External = JSON.parse(xhr.responseText);
+          var resp: External = Json.parse(xhr.responseText);
           if (resp.get('error') != null) access.showError(resp.get('error'));
           else onSuccess(resp.get('filename'));
         } else {

@@ -1,6 +1,7 @@
 package js.form.field.upload;
 
 import js.html.Image;
+using js.lib.StrUtils;
 
 /*
 Managing previews of uploaded files and pictures for UploadField
