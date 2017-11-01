@@ -449,6 +449,9 @@ class Tag {
 
   public function clone(?deep: Bool): Tag return wrap(cast el.cloneNode(deep));
 
+  // force reflow, see http://matheusazzi.com/animating-from-display-none-with-css-and-callbacks/
+  public function forceReflow(): Bool return el.offsetWidth >= 0;
+
   // ------------------------------- Events -------------------------------
 
   public function on(eventName: String, handler: Function, ?options: Dynamic): Tag {
