@@ -101,6 +101,7 @@ trait Field[T] {self =>
   def ignore: this.type = ignore(v = true)
   def ignore(v: Boolean): this.type = { ignored = v; this }
   def used: Boolean = !ignored
+  def use: this.type = use(v = true)
   def use(v: Boolean): this.type = ignore(!v)
 
   /**
@@ -187,28 +188,53 @@ trait Field[T] {self =>
 
   def canAddDbConnector: Boolean = true
 
-  def dbConnector[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbConnector: DbConnector[T, TR, MTR])(implicit form: FormWithDb[TR, MTR]): this.type = {
+  def dbConnector[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (dbConnector: DbConnector[T, TR, MTR])
+  (implicit form: FormWithDb[TR, MTR]): this.type = {
     if (!canAddDbConnector) sys.error("Cannot use dbConnector for field " + getClass)
     if (hasDbConnector) sys.error("Field already have DbConnector")
     form.addFieldDbConnector(dbConnector)
     this
   }
-  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, T])(implicit form: FormWithDb[TR, MTR]): this.type =
-    dbConnector[TR, MTR](new DbFieldConnector[T, TR, MTR](self, dbField))
-  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, Option[T]])(implicit form: FormWithDb[TR, MTR], ct: ClassTag[TR]): this.type =
-    dbConnector[TR, MTR](new DbOptionFieldConnector[T, TR, MTR](self, dbField))
-  def ~:~[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, T])(implicit form: FormWithDb[TR, MTR]): this.type = connect(dbField)
-  def ~:~[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, Option[T]])(implicit form: FormWithDb[TR, MTR], ct: ClassTag[TR]): this.type = connect(dbField)
 
-  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]](implicit form: FormWithDb[TR, MTR]): FormWithDb[TR, MTR]#DbConnectorStart[T, this.type] =
+  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (dbField: Table[TR, MTR]#Field[_, T])
+  (implicit form: FormWithDb[TR, MTR]): this.type =
+    dbConnector[TR, MTR](new DbFieldConnector[T, TR, MTR](self, dbField))
+
+  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (dbField: Table[TR, MTR]#Field[_, Option[T]])
+  (implicit form: FormWithDb[TR, MTR], ct: ClassTag[TR]): this.type =
+    dbConnector[TR, MTR](new DbOptionFieldConnector[T, TR, MTR](self, dbField))
+
+  def ~:~[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (dbField: Table[TR, MTR]#Field[_, T])
+  (implicit form: FormWithDb[TR, MTR]): this.type = connect(dbField)
+
+  def ~:~[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (dbField: Table[TR, MTR]#Field[_, Option[T]])
+  (implicit form: FormWithDb[TR, MTR], ct: ClassTag[TR]): this.type = connect(dbField)
+
+  def ~:~[DbT, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (connector: PreparedDbConnector[T, TR, MTR])
+  (implicit form: FormWithDb[TR, MTR]): this.type =
+    dbConnector(connector.forField(this))
+
+  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (implicit form: FormWithDb[TR, MTR]): FormWithDb[TR, MTR]#DbConnectorStart[T, this.type] =
     new form.DbConnectorBuilder[T, this.type](this)
 
-  def connectCustom[TR <: TableRecord, MTR <: MutableTableRecord[TR]](connectorFn: this.type => DbConnector[T, TR, MTR])(implicit form: FormWithDb[TR, MTR]): this.type =
+  def connectCustom[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (connectorFn: this.type => DbConnector[T, TR, MTR])
+  (implicit form: FormWithDb[TR, MTR]): this.type =
     dbConnector[TR, MTR](connectorFn(this))
 
-  def connectStub[TR <: TableRecord, MTR <: MutableTableRecord[TR]](implicit form: FormWithDb[TR, MTR]): this.type =
+  def connectStub[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (implicit form: FormWithDb[TR, MTR]): this.type =
     dbConnector[TR, MTR](new StubDbConnector[T, TR, MTR](this))
-  def ~![TR <: TableRecord, MTR <: MutableTableRecord[TR]](implicit form: FormWithDb[TR, MTR]): this.type = connectStub
+
+  def ~![TR <: TableRecord, MTR <: MutableTableRecord[TR]]
+  (implicit form: FormWithDb[TR, MTR]): this.type = connectStub
 
   // ------------------------------- Reading data & js properties -------------------------------
 
