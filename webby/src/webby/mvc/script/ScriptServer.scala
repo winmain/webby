@@ -32,6 +32,13 @@ class ScriptServer(val sourceDir: Path,
   val watchPath: String = watchDir.toAbsolutePath.toString
   val watcher: Watcher = watcherFactory(watchDir)
 
+  /**
+    * Milliseconds to wait before starting compiler.
+    * Useful when working with Intellij IDEA which makes several filesystem operations on file save
+    * (save new file, rename old file to temp, rename new to old, remove temp file).
+    */
+  def quietPeriodMillis = 20
+
   def at(path: String): Action = SimpleAction {implicit req =>
     PageLog.noLog()
     at(path, compilers)
@@ -54,6 +61,7 @@ class ScriptServer(val sourceDir: Path,
                   def checkRecompile(): Boolean = {
                     synchronized {
                       if (!Files.exists(targetPath) || watcher.pollFile(p, targetPath)) {
+                        Thread.sleep(quietPeriodMillis)
                         val t0 = System.currentTimeMillis()
                         val compileResult = compiler.compileFile(p, targetPath)
                         val t1 = System.currentTimeMillis()
