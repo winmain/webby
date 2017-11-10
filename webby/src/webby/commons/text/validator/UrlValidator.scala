@@ -9,7 +9,7 @@ object UrlValidator {
    * Проверить url
    */
   def validate(givenUrl: String,
-               allowedSchemes: Iterable[String] = Array("http", "https")): Option[URL] = try {
+               allowedSchemes: Iterable[String] = Vector("http", "https")): Option[URL] = try {
     val url: URL = new URL(givenUrl)
     url.getProtocol match {
       case null | "" => return None

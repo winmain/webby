@@ -13,6 +13,9 @@ class EsResult[T](val took: Long,
   def firstAgg[A <: Aggregation]: A = aggs.get.iterator().next().asInstanceOf[A]
 
   def hasMore(pager: Pager): Boolean = pager.hasMore(found)
+
+  def isEmpty: Boolean = found == 0
+  def nonEmpty: Boolean = found != 0
 }
 
 

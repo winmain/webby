@@ -8,7 +8,7 @@ class UrlField(val form: Form,
                allowedDomains: Vector[String] = Vector.empty)
   extends ValueField[String] with PlaceholderField[String] {self =>
 
-  var allowedSchemes: Array[String] = Array("http", "https")
+  var allowedSchemes: Seq[String] = Vector("http", "https")
   var defaultScheme: String = "http"
 
   val MaxLength = 250
@@ -25,6 +25,10 @@ class UrlField(val form: Form,
   }
 
   // ------------------------------- Builder & validations -------------------------------
+
+  def allowedSchemes(v: Seq[String]): this.type = {allowedSchemes = v; this}
+  def defaultScheme(v: String): this.type = {defaultScheme = v; this}
+
   /**
     * Проверки, специфичные для конкретной реализации Field.
     * Эти проверки не включают в себя список constraints, и не должны их вызывать или дублировать.

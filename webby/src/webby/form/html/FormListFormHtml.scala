@@ -26,13 +26,13 @@ trait FormListFormHtml {self: StdFormHtml =>
     * @param tagFn Дополнительные действия с обрамляющим тегом
     * @param body  Тело шаблона
     */
-  def formListTemplate[F <: SubForm](field: FormListField[F], tag: String = "div", tagFn: CommonTag => CommonTag = a => a)(body: F => Any): HtmlBase =
+  def formListTemplate[F <: SubForm](field: FormListField[F], tag: String = "div", tagFn: CommonTag => CommonTag = identity)(body: F => Any): HtmlBase =
     tagFn(view.tag(tag).id(field.htmlTemplateId).cls(form.base.hiddenCls)) < body(field.formStub)
 
-  def formListRowTemplate[F <: SubForm](field: FormListField[F], tag: String = "div", tagFn: CommonTag => CommonTag = a => a)(body: F => Any): HtmlBase =
+  def formListRowTemplate[F <: SubForm](field: FormListField[F], tag: String = "div", tagFn: CommonTag => CommonTag = identity)(body: F => Any): HtmlBase =
     formListTemplate(field, tag, t => tagFn(t.cls(form.base.formRowCls)))(body)
 
-  def formListBlockTemplate[F <: SubForm](field: FormListField[F], tagFn: CommonTag => CommonTag = a => a)(body: F => Any): HtmlBase =
+  def formListBlockTemplate[F <: SubForm](field: FormListField[F], tagFn: CommonTag => CommonTag = identity)(body: F => Any): HtmlBase =
     tagFn(group.id(field.htmlTemplateId).cls(form.base.hiddenCls).cls(formSubFormCls)) {
       formListBlockRemoveTag(field)
       body(field.formStub)
