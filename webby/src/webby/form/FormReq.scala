@@ -30,6 +30,7 @@ class FormReq(val req: Either[Request[Unit], Request[Array[Byte]]],
     def modifyData(req: Request[_]): ModifyData
     def showForm: PlainResult
     def onSuccess(maybeRecord: Option[MTR]): FormResult
+    def onSuccessAfterTransaction(maybeRecord: Option[MTR], result: PlainResult): PlainResult = result
 
     /**
       * Запустить цикл обработки формы
@@ -37,30 +38,37 @@ class FormReq(val req: Either[Request[Unit], Request[Array[Byte]]],
     def process: PlainResult = {
       if (isNew && isGet) showForm
       else {
-        db.dataTrSerializable(null) {implicit dt =>
-          maybeRecord match {
-            case None => id.foreach(form.loadOrNotFoundRaw(_)(dt))
-            case Some(record) =>
-              if (!form.checkLoadedRecord.forall(_ (record))) throw ResultException(Results.NotFoundRaw)
-              form.load(record)
-          }
+        var onSuccessRecord: Option[MTR] = null
 
-          req match {
-            case Left(r) =>
-              showForm
+        val result: PlainResult =
+          db.dataTrSerializable(null) {implicit dt =>
+            maybeRecord match {
+              case None => id.foreach(form.loadOrNotFoundRaw(_)(dt))
+              case Some(record) =>
+                if (!form.checkLoadedRecord.forall(_ (record))) throw ResultException(Results.NotFoundRaw)
+                form.load(record)
+            }
 
-            case Right(r) =>
-              form.onPost(r.body) {
-                if (form.changed) {
-                  _md = modifyData(r)
-                  dt.updateMd(md)
-                  val record = form.save()
-                  onSuccess(Some(record))
-                } else
-                  onSuccess(None)
-              }
+            req match {
+              case Left(r) =>
+                showForm
+
+              case Right(r) =>
+                form.onPost(r.body) {
+                  if (form.changed) {
+                    _md = modifyData(r)
+                    dt.updateMd(md)
+                    val record = form.save()
+                    onSuccessRecord = Some(record)
+                  } else {
+                    onSuccessRecord = None
+                  }
+                  onSuccess(onSuccessRecord)
+                }
+            }
           }
-        }
+        if (onSuccessRecord != null) onSuccessAfterTransaction(onSuccessRecord, result)
+        else result
       }
     }
   }
