@@ -57,9 +57,16 @@ class StdStaffSessContainer[Adm <: AdmTrait](val adm: Adm) extends StaffSessCont
 
   override def setTimeout(now: Long, staffSess: StaffSess, timeoutInSeconds: Int): StaffSess = {
     db.dataTrReadUncommittedNoLog {implicit dt =>
-      db.updateRecordPatch(adm.staffSessTable, staffSess.asInstanceOf[adm.StaffSess]) {r =>
-        r.endTime = Instant.ofEpochMilli(now + timeoutInSeconds * StdDates.Second)
-      }.toRecord
+      // Update StaffSess.endTime via raw SQL Update query to avoid StaffSess table cache reset
+      val newEndTime: Instant = Instant.ofEpochMilli(now + timeoutInSeconds * StdDates.Second)
+      db.sql(_ updateRaw adm.staffSessTable
+        set(adm.staffSessTable.endTime := newEndTime)
+        where adm.staffSessTable.id == staffSess.id
+        execute())
+
+      val mut = staffSess.toMutable.asInstanceOf[MutableStaffSessTrait[StaffSess]]
+      mut.endTime = newEndTime
+      mut.toRecord
     }
   }
 
