@@ -52,7 +52,7 @@ val commonDependencies = {
 
   deps.result()
 }
-val querio = "com.github.citrum.querio" %% "querio" % "0.6.15" // querio orm
+val querio = "com.github.citrum.querio" %% "querio" % "0.7.0-rc1" // querio orm
 
 /**
   * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
@@ -85,13 +85,13 @@ lazy val elasticOrm2: Project = Project(
     libraryDependencies += querio
   )).dependsOn(webby)
 
-// Elastic-orm for Elastic v5.x
-lazy val elasticOrm5: Project = Project(
-  "elastic-orm-5",
-  file("elastic-orm-5"),
+// Elastic-orm for Elastic v6.x
+lazy val elasticOrm6: Project = Project(
+  "elastic-orm-6",
+  file("elastic-orm-6"),
   settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies += "org.elasticsearch.client" % "transport" % "5.5.1" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок)
+    libraryDependencies += "org.elasticsearch.client" % "transport" % "6.0.0-rc2" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок)
     libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.8.2",   // fixes bug https://discuss.elastic.co/t/issue-with-elastic-search-5-0-0-noclassdeffounderror-org-apache-logging-log4j-logger/64262
     libraryDependencies += querio
   )).dependsOn(webby)
@@ -145,6 +145,7 @@ lazy val webby: Project = Project(
 
       // Optional dependencies
       deps += querio % "optional" // Querio ORM
+      deps += "com.beachape" %% "enumeratum" % "1.5.12" // Enums
       deps += "com.typesafe.akka" %% "akka-actor" % "2.4.17" % "optional" // Used in webby.api.libs.concurrent.Akka
       deps += "com.typesafe.akka" %% "akka-slf4j" % "2.4.17" % "optional"
       deps += "org.scala-stm" %% "scala-stm" % "0.8" % "optional" // Used in webby.api.libs.concurrent.Promise
@@ -176,7 +177,7 @@ lazy val webby: Project = Project(
 lazy val root = Project(
   "webby-root",
   file("."),
-  aggregate = Seq(webby, elasticOrm2, elasticOrm5, webbyHaxe),
+  aggregate = Seq(webby, elasticOrm2, elasticOrm6, webbyHaxe),
   settings = Seq(
     // Disable packaging & publishing artifact
     Keys.`package` := file(""),

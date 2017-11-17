@@ -2,30 +2,40 @@ package orm.elasticsearch.utils
 
 import org.elasticsearch.action.index.IndexResponse
 import orm.elasticsearch._
-import webby.commons.collection.IterableWrapper.wrapIterable
 import querio.{DbTrait, TableRecord, TrTable}
+import webby.commons.collection.IterableWrapper.wrapIterable
 
+import scala.collection.mutable
 import scala.concurrent.Future
 
 /**
-  * Карта всех связей таблиц БД с таблицами ElasticSearch.
+  * Map for all links between DB tables and Elastic tables.
   *
-  * Для использования этого класса нужно создать объект из его наследника.
-  * Пример:
+  * Example usage:
   * {{{
-  *   object ElasticMap extends AbstractElasticMappings {
-  *     override protected def db: DbTrait = Db
+  * object ElasticMapList extends ElasticMapListTrait {
+  *   import ElasticMappings._
   *
-  *     private val vac = Mapping[Vac](Vac, VacDao.findVisibleById, EsVac.writeFactory, EsVacClientNoStat)
-  *     private val res = Mapping[Res2](Res2, ResDao.findByIdForEs, EsRes.writeFactory, EsResClientNoStat)
+  *   private val cat = Mapping[Cat](Db, Cat, CatDao.findVisibleById, EsCat.writeFactory, EsCatClientNoStat)
+  *   private val dog = Mapping[Dog](Db, Dog, DogDao.findByIdForEs, EsDog.writeFactory, EsDogClientNoStat)
   *
-  *     override val allMappings: Vector[Mapping[_ <: TableRecord]] = Vector(vac, res)
+  *   override def allMappings: Vector[Mapping[_ <: TableRecord]] = Vector(cat, dog)
   *
-  *     override val relatedMappings: Vector[RelatedMapping[_ <: TableRecord]] = Vector(
-  *       res.related(Res2Job)(_.resId),
-  *       res.related(Res2Exp)(_.resId)
-  *     )
+  *   override def relatedMappings: Vector[RelatedMapping[_ <: TableRecord]] = Vector(
+  *     cat.related(Cat2Color)(_.catId),
+  *     cat.related(Cat2House)(_.catId)
+  *   )
+  *
+  * object ElasticMap extends AbstractElasticMappings(ElasticMapList)
+  *
+  *
+  * object DbHooks {
+  *   def resetRecordCache(tableName: String, id: Int, change: TrRecordChange, propagateServers: Boolean) {
+  *     ...
+  *     ElasticMap.get(tableName).foreach(_.reindexRecord(id))
+  *     ...
   *   }
+  * }
   * }}}
   */
 abstract class AbstractElasticMappings(mapList: ElasticMapListTrait) {
@@ -38,13 +48,21 @@ abstract class AbstractElasticMappings(mapList: ElasticMapListTrait) {
     mapList.allMappings.mapToMap[String, Mapping[_ <: TableRecord]](m => m.table._fullTableName -> m)
   }
 
-  val allMap: Map[String, Reindexable[_ <: TableRecord]] =
-    ((mapList.allMappings: Vector[Reindexable[_ <: TableRecord]]) ++ mapList.relatedMappings)
-      .mapToMap[String, Reindexable[_ <: TableRecord]](m => m.table._fullTableName -> m)
+  val allMap: Map[String, Seq[Reindexable[_ <: TableRecord]]] = {
+    val map = mutable.Map[String, List[Reindexable[_ <: TableRecord]]]()
 
+    def addToMap(m: Reindexable[_ <: TableRecord]): Unit = {
+      val key: String = m.table._fullTableName
+      map.put(key, m :: map.getOrElse(key, Nil))
+    }
+
+    mapList.allMappings.foreach(addToMap)
+    mapList.relatedMappings.foreach(addToMap)
+    map.toMap
+  }
 
   /** Получить Mapping по его полному имени, например ros.tag */
-  def get(fullName: String): Option[Reindexable[_ <: TableRecord]] = allMap.get(fullName)
+  def get(fullName: String): Seq[Reindexable[_ <: TableRecord]] = allMap.getOrElse(fullName, Nil)
 }
 
 
@@ -79,23 +97,23 @@ object ElasticMappings {
   /**
     * Прямой mapping таблицы для индексации ElasticSearch.
     *
-    * @param db                 Соединение с БД
-    * @param table              Таблица БД
-    * @param getByIdForIndex    Получение записи по id для индексации. Здесь можно первоначально проверить, годится ли запись к индексации
-    * @param writeFactory       Фабрика создания EsTypeWrite из TableRecord для индексации
-    * @param esTypeClientNoStat Клиент эластика с выключенной статистикой, потому что он будет использоваться для удаления записей.
+    * @param db                  Соединение с БД
+    * @param table               Таблица БД
+    * @param getByIdForIndex     Получение записи по id для индексации. Здесь можно первоначально проверить, годится ли запись к индексации
+    * @param writeFactory        Фабрика создания EsTypeWrite из TableRecord для индексации
+    * @param esTypeClientsNoStat Клиенты эластика с выключенной статистикой для удаления несуществующих записей.
     */
   case class Mapping[TR <: TableRecord](db: DbTrait,
                                         table: TrTable[TR],
                                         getByIdForIndex: Int => Option[TR],
                                         writeFactory: TR => Option[EsTypeWrite],
-                                        esTypeClientNoStat: EsTypeClient[_ <: EsTypeRecord]) extends Reindexable[TR] {
+                                        esTypeClientsNoStat: Seq[EsTypeClient[_ <: EsTypeRecord]]) extends Reindexable[TR] {
     def reindexRecord(id: Int): Option[Future[IndexResponse]] =
       (for (tr <- getByIdForIndex(id);
             record <- writeFactory(tr))
         yield record) match {
         case Some(record) => Some(Future(ElasticSearch.executeAndGet(record.prepareIndex)))
-        case None => esTypeClientNoStat.delete(id.toString)(a => a); None
+        case None => esTypeClientsNoStat.foreach(_.delete(id.toString)(_ => ())); None
       }
 
     /**

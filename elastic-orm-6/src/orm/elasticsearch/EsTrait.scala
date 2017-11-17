@@ -3,6 +3,7 @@ package orm.elasticsearch
 import java.time.{Instant, LocalDate, LocalDateTime}
 import java.{lang => jl, util => ju}
 
+import enumeratum.values.{IntEnum, IntEnumEntry}
 import org.apache.lucene.search.join.ScoreMode
 import org.elasticsearch.action.delete.{DeleteRequestBuilder, DeleteResponse}
 import org.elasticsearch.action.get._
@@ -13,7 +14,7 @@ import org.elasticsearch.index.query.MoreLikeThisQueryBuilder.Item
 import org.elasticsearch.index.query.QueryBuilders._
 import org.elasticsearch.index.query._
 import org.elasticsearch.search.{SearchHit, SearchHits}
-import querio.{DbEnum, ScalaDbEnum, ScalaDbEnumCls}
+import querio.DbEnum
 
 import scala.collection.mutable
 
@@ -25,21 +26,34 @@ Live template for Intellij IDEA, named "elasticorm_estypetrait"
 --------------
 trait $CLASS_NAME$Trait extends EsTypeTrait {
   override type Record = $TABLE_NAME$
+  override def elasticMapping: ElasticIndexMapping = Elastic$CLASS_NAME$
 
+  val id = idField(r => String.valueOf(r.id))
   $END$
 }
 
-class $CLASS_NAME$Write(val record: $TABLE_NAME$) extends $CLASS_NAME$Trait with EsWrite
+class $CLASS_NAME$Write(val record: $TABLE_NAME$) extends $CLASS_NAME$Trait with EsTypeWrite
 
-class $CLASS_NAME$(protected val data: EsClassData) extends $CLASS_NAME$Trait with EsRecord
+class $CLASS_NAME$(protected val data: EsClassData) extends $CLASS_NAME$Trait with EsTypeRecord
 
 class $CLASS_NAME$Meta extends $CLASS_NAME$Trait with EsTypeMeta[$CLASS_NAME$] {
   override def validateRecord(r: $TABLE_NAME$): Boolean = true
-  override def makeWrite(r: $TABLE_NAME$): EsWrite = new $CLASS_NAME$Write(r)
+  override def makeWrite(r: $TABLE_NAME$): EsTypeWrite = new $CLASS_NAME$Write(r)
   override def makeObject(cd: EsClassData): $CLASS_NAME$ = new $CLASS_NAME$(cd)
 }
 
 object $CLASS_NAME$ extends $CLASS_NAME$Meta
+
+// ------------------------------- Clients -------------------------------
+
+class Base$CLASS_NAME$Client extends EsTypeClient[$CLASS_NAME$] {
+  override def meta: EsTypeMeta[$CLASS_NAME$] = $CLASS_NAME$
+}
+object $CLASS_NAME$ClientNoStat extends Base$CLASS_NAME$Client
+
+object $CLASS_NAME$Client extends Base$CLASS_NAME$Client with EsTypeClientWithStat[$CLASS_NAME$] {
+  override protected def elasticStatDim: ElasticStat.Dim = ElasticStat.Dimension.$DIMENSION$
+}
 --------------
 
 
@@ -91,15 +105,15 @@ object $CLASS_NAME$ extends $CLASS_NAME$Meta("", "")
   * Иерархия классов следующая:
   * <pre>
   *
-  *          +-------------- [[EsSubTypeMeta]]
-  *          |
-  *   +- [[EsMeta]] -------------------------+--- [[EsTypeMeta]]
-  *   |                                      |
+  * +-------------- [[EsSubTypeMeta]]
+  * |
+  * +- [[EsMeta]] -------------------------+--- [[EsTypeMeta]]
+  * |                                      |
   * [[EsTrait]] ------------------------ [[EsTypeTrait]]
-  *   |                                      |
-  *   +- [[EsBaseRecord]] -- [[EsWrite]] ----+--- [[EsTypeWrite]]
-  *                 |
-  *                 +------- [[EsRecord]] ------- [[EsTypeRecord]]
+  * |                                      |
+  * +- [[EsBaseRecord]] -- [[EsWrite]] ----+--- [[EsTypeWrite]]
+  * |
+  * +------- [[EsRecord]] ------- [[EsTypeRecord]]
   *
   * [[EsTypeClient]]
   *
@@ -146,7 +160,7 @@ trait EsTrait {
   // ------------------------------- Common fields -------------------------------
 
   protected def intField(n: String, fr: Record => Int) = field1[Int](n, fr, new AsIs[Int, Int])
-  protected def longField(n: String, fr: Record => Long) = field1[Long](n, fr, new AsIs[Long, Long])
+  protected def longField(n: String, fr: Record => Long) = field1[Long](n, fr, LongConv)
   protected def doubleField(n: String, fr: Record => Double) = field1[Double](n, fr, new AsIs[Double, Double])
   protected def stringField(n: String, fr: Record => String) = field1[String](n, fr, new NullableAsIs[String, String])
   protected def booleanField(n: String, fr: Record => Boolean) = field1[Boolean](n, fr, new AsIs[Boolean, Boolean])
@@ -185,8 +199,7 @@ trait EsTrait {
 
   // ------------------------------- DbEnum fields -------------------------------
 
-  protected def enumField[E <: DbEnum](n: String, fr: Record => E#V, enum: E) = field1[E#V](n, fr, new ConvOne[E#V] {
-    /** Чтение значения из ElasticSearch */
+  protected def dbEnumField[E <: DbEnum](n: String, enum: E)(fr: Record => E#V) = field1[E#V](n, fr, new ConvOne[E#V] {
     override def from(j: AnyRef): E#V = j match {
       case null => null.asInstanceOf[E#V]
       case v: jl.Integer =>
@@ -194,55 +207,71 @@ trait EsTrait {
         require(obj != null, "No enum " + enum + " for id:" + v)
         obj
     }
-    /** Запись значения в ElasticSearch */
+
     override def to(v: E#V): AnyRef = v.getId.asInstanceOf[jl.Integer]
   })
-  protected def enumOptionField[E <: DbEnum](n: String, fr: Record => Option[E#V], enum: E) = field1[Option[E#V]](n, fr, new ConvOne[Option[E#V]] {
-    /** Чтение значения из ElasticSearch */
+
+  protected def dbEnumOptionField[E <: DbEnum](n: String, enum: E)(fr: Record => Option[E#V]) = field1[Option[E#V]](n, fr, new ConvOne[Option[E#V]] {
     override def from(j: AnyRef): Option[E#V] = j match {
       case null => None
       case v: jl.Integer => enum.getValue(v.intValue())
     }
-    /** Запись значения в ElasticSearch */
+
     override def to(v: Option[E#V]): AnyRef = v match {
       case None => null
       case Some(e) => e.getId.asInstanceOf[jl.Integer]
     }
   })
 
-  // ------------------------------- Old ScalaDbEnum fields -------------------------------
-
-  protected def enumIdxField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => E, enum: ScalaDbEnum[E]) = field1[E](n, fr, new ConvOne[E] {
-    /** Чтение значения из ElasticSearch */
-    override def from(j: AnyRef): E = j match {
-      case null => null.asInstanceOf[E]
-      case v: jl.Integer => enum.values(v.intValue())
-    }
-    /** Запись значения в ElasticSearch */
-    override def to(v: E): AnyRef = v.index.asInstanceOf[jl.Integer]
-  })
-  protected def enumIdxOptionField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => Option[E], enum: ScalaDbEnum[E]) = field1[Option[E]](n, fr, new ConvOne[Option[E]] {
-    /** Чтение значения из ElasticSearch */
-    override def from(j: AnyRef): Option[E] = j match {
-      case null => None
-      case v: jl.Integer => Some(enum.values(v.intValue()))
-    }
-    /** Запись значения в ElasticSearch */
-    override def to(v: Option[E]): AnyRef = v match {
-      case None => null
-      case Some(e) => e.index.asInstanceOf[jl.Integer]
-    }
-  })
-  protected def enumIdxSetField[E <: ScalaDbEnumCls[E]](n: String, fr: Record => Set[E], enum: ScalaDbEnum[E]) = field1[Set[E]](n, fr, new ConvOne[Set[E]] {
-    /** Чтение значения из ElasticSearch */
-    override def from(j: AnyRef): Set[E] = j match {
+  protected def dbEnumSetField[E <: DbEnum](n: String, enum: E)(fr: Record => Set[E#V]) = field1[Set[E#V]](n, fr, new ConvOne[Set[E#V]] {
+    override def from(j: AnyRef): Set[E#V] = j match {
       case null => Set.empty
-      case v: jl.Iterable[_] => v.asScala.map(e => enum.values(e.asInstanceOf[jl.Integer])).toSet
+      case v: jl.Iterable[_] =>
+        val sb = Set.newBuilder[E#V]
+        v.forEach {case id: jl.Integer => enum.getValue(id).foreach(sb += _)}
+        sb.result()
     }
-    /** Запись значения в ElasticSearch */
-    override def to(v: Set[E]): AnyRef =
+
+    override def to(v: Set[E#V]): AnyRef =
       if (v.isEmpty) null
-      else asJavaCollection(v.map(_.index))
+      else asJavaCollection(v.map(_.getId))
+  })
+
+  // ------------------------------- Enumeratum fields -------------------------------
+
+  protected def intEnumField[EE <: IntEnumEntry](n: String, enum: IntEnum[EE])(fr: Record => EE) = field1[EE](n, fr, new ConvOne[EE] {
+    override def from(j: AnyRef): EE = j match {
+      case null => null.asInstanceOf[EE]
+      case v: jl.Integer => enum.withValue(v.intValue())
+    }
+
+    override def to(v: EE): AnyRef = v.value.asInstanceOf[jl.Integer]
+  })
+
+  protected def intEnumOptionField[EE <: IntEnumEntry](n: String, enum: IntEnum[EE])(fr: Record => Option[EE]) = field1[Option[EE]](n, fr, new ConvOne[Option[EE]] {
+    override def from(j: AnyRef): Option[EE] = j match {
+      case null => None
+      case v: jl.Integer => enum.withValueOpt(v.intValue())
+    }
+
+    override def to(v: Option[EE]): AnyRef = v match {
+      case None => null
+      case Some(e) => e.value.asInstanceOf[jl.Integer]
+    }
+  })
+
+  protected def intEnumSetField[EE <: IntEnumEntry](n: String, enum: IntEnum[EE])(fr: Record => Set[EE]) = field1[Set[EE]](n, fr, new ConvOne[Set[EE]] {
+    override def from(j: AnyRef): Set[EE] = j match {
+      case null => Set.empty
+      case v: jl.Iterable[_] =>
+        val sb = Set.newBuilder[EE]
+        v.forEach {case id: jl.Integer => enum.withValueOpt(id).foreach(sb += _)}
+        sb.result()
+    }
+
+    override def to(v: Set[EE]): AnyRef =
+      if (v.isEmpty) null
+      else asJavaCollection(v.map(_.value))
   })
 
   // ------------------------------- Array fields -------------------------------
@@ -427,7 +456,7 @@ trait EsTypeRecord extends EsRecord {
 /**
   * Описание поля Elastic'а.
   *
-  * @param name       Название поля в Эластике
+  * @param name Название поля в Эластике
   */
 class EsField(val name: String) {
   def boostedName(boost: Int): String = if (boost == 1) name else name + "^" + boost
@@ -519,7 +548,7 @@ trait EsTypeClient[C <: EsTypeRecord] {
   protected def searchResponse(search: Object, response: SearchResponse): EsResult[C] = {
     val hits: SearchHits = response.getHits
 
-    new EsResult[C](took = response.getTookInMillis,
+    new EsResult[C](took = response.getTook.millis(),
       found = hits.getTotalHits.toInt,
       rows = hits.getHits.map(meta.fromHit)(collection.breakOut),
       aggs = Option(response.getAggregations),
@@ -543,7 +572,7 @@ trait EsTypeClient[C <: EsTypeRecord] {
     * вызовом метода [[statAddOne()]].
     */
   protected def stat(result: EsResult[C]): EsResult[C] = {statAddOne(result.took); result}
-  protected def stat(result: SearchResponse): SearchResponse = {statAddOne(result.getTookInMillis); result}
+  protected def stat(result: SearchResponse): SearchResponse = {statAddOne(result.getTook.millis()); result}
 
   /**
     * Учесть время, выполненное этим запросом.

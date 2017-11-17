@@ -1,7 +1,7 @@
 package orm.elasticsearch
 
 import java.time._
-import java.{util => ju}
+import java.{lang => jl, util => ju}
 
 import org.elasticsearch.common.geo.GeoPoint
 import webby.commons.time.StdDates
@@ -33,6 +33,15 @@ sealed class AsIs[W, R] extends Conv[W, R] {
 sealed class NullableAsIs[W, R] extends Conv[W, R] {
   override def from(j: AnyRef): R = j.asInstanceOf[R]
   override def to(v: W): AnyRef = if (v == null) null else v.asInstanceOf[AnyRef]
+}
+
+/** For short numbers Elastic returns Integer instead of Long */
+object LongConv extends Conv[Long, Long] {
+  override def from(j: AnyRef): Long = j match {
+    case v: jl.Number => v.longValue()
+    case null => 0
+  }
+  override def to(v: Long): AnyRef = jl.Long.valueOf(v)
 }
 
 sealed class AsOption[W, R] extends Conv[Option[W], Option[R]] {

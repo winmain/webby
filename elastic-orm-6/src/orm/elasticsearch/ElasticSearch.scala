@@ -60,19 +60,23 @@ abstract class ElasticSearch {
     *
     * Результат возвращается строкой. Также, метод может бросить FileNotFoundException, IOException.
     */
-  def httpRequest(method: HttpMethod, path: String, data: Option[Array[Byte]] = None): String = {
+  def httpRequest(method: HttpMethod,
+                  path: String,
+                  data: Option[Array[Byte]] = None,
+                  contentType: String = "application/json"): String = {
     val es: ElasticPlugin = elasticPlugin.get
     val address = es.transportAddresses.head
-    val conn = new URL("http", address.getHost, es.httpPort, path).openConnection().asInstanceOf[HttpURLConnection]
+    val conn = new URL("http", address.getAddress, es.httpPort, path).openConnection().asInstanceOf[HttpURLConnection]
     conn.setRequestMethod(method.toString)
+    conn.setRequestProperty("Content-Type", contentType)
     data.foreach {bytes =>
       conn.setDoOutput(true)
       conn.getOutputStream.write(bytes)
     }
     conn.connect()
     conn.getResponseCode match {
-      case 400 => throw new IOException(IOUtils.readString(conn.getErrorStream))
-      case _ => IOUtils.readString(conn.getInputStream)
+      case 200 => IOUtils.readString(conn.getInputStream)
+      case _ => throw new IOException(IOUtils.readString(conn.getErrorStream))
     }
   }
 
@@ -83,7 +87,7 @@ abstract class ElasticSearch {
     */
   def getIndexInfo(index: String): Option[String] =
     try Some(httpRequest(HttpMethod.GET, "/" + index + "?format=yaml"))
-    catch {case e: FileNotFoundException => None}
+    catch {case _: FileNotFoundException => None}
 
   /** Вернуть настройки индекса */
   def getIndexSettings(index: String): Option[EsIndexSettings] =
@@ -92,7 +96,7 @@ abstract class ElasticSearch {
       val parser: JsonParser = jsMapper.readTree(response).get(index).get("settings").get("index").traverse()
       jsMapper.readValue(parser, classOf[EsIndexSettings])
     }
-    catch {case e: FileNotFoundException => None}
+    catch {case _: FileNotFoundException => None}
 
   def setNumberOfReplicas(index: String, number: Int): String = {
     val data: String = "{\"index\":{\"number_of_replicas\":" + number + "}}"
@@ -100,15 +104,15 @@ abstract class ElasticSearch {
   }
 
   /**
-    * Удалить и пересоздать индекс.
+    * Delete and recreate index.
     */
-  def resetAndCreateIndex(index: String, indexBytes: Array[Byte]): String = {
+  def resetAndCreateIndex(index: String, indexBytes: Array[Byte], contentType: String): String = {
     try {
       httpRequest(HttpMethod.DELETE, "/" + index)
     } catch {
-      case e: IOException => () // Индекс не найден - это нормально, продолжаем.
+      case _: IOException => () // Индекс не найден - это нормально, продолжаем.
     }
-    httpRequest(HttpMethod.PUT, "/" + index, Some(indexBytes))
+    httpRequest(HttpMethod.PUT, "/" + index, Some(indexBytes), contentType)
   }
 
   // ------------------------------- Mapping methods -------------------------------
@@ -136,7 +140,7 @@ abstract class ElasticSearch {
 
   def searchScroll(scrollId: String, keepAlive: TimeValue): SearchResponse = {
     val resp: SearchResponse = executeAndGet(client.prepareSearchScroll(scrollId).setScroll(keepAlive))
-    PageLog.addEsQuery(resp.getTookInMillis)
+    PageLog.addEsQuery(resp.getTook.millis())
     resp
   }
 

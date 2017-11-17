@@ -4,8 +4,9 @@ import java.{util => ju}
 import javax.annotation.Nullable
 
 import org.elasticsearch.action.get.GetResponse
+import org.elasticsearch.common.document.DocumentField
+import org.elasticsearch.search.SearchHit
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField
-import org.elasticsearch.search.{SearchHit, SearchHitField}
 
 /**
   * Источник данных, полученных от ElasticSearch'а.
@@ -30,7 +31,7 @@ class EsClassHitData(val hit: SearchHit) extends EsClassData {
 }
 
 class EsClassHitFieldsData(val hit: SearchHit) extends EsClassData {
-  val fields: ju.Map[String, SearchHitField] = hit.getFields
+  val fields: ju.Map[String, DocumentField] = hit.getFields
   val hf = hit.getHighlightFields
   @Nullable override def getId: String = hit.getId
   @Nullable override def get(field: String): AnyRef = fields.get(field).getValue

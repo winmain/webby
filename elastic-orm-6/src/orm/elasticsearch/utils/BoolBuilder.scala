@@ -40,6 +40,12 @@ case class BoolBuilder() {
 
   def not(filter: QueryBuilder): BoolBuilder = {ensureBool.mustNot(filter); this}
 
+  /**
+    * Returns optimized result:
+    * If only query defined in [[query()]] returns it.
+    * If filters defined returns [[BoolQueryBuilder]].
+    * If nothing defined returns [[MatchAllQueryBuilder]].
+    */
   def result: QueryBuilder = {
     if (_bool != null) _bool
     else {
@@ -50,6 +56,10 @@ case class BoolBuilder() {
     }
   }
 
+  /**
+    * Always returns [[BoolQueryBuilder]].
+    * For optimized result use [[result]] method.
+    */
   def resultBool: BoolQueryBuilder = ensureBool
 
   // ------------------------------- Additional helper methods -------------------------------

@@ -48,7 +48,7 @@ class ElasticIndexMapping(client: Client, val index: String, val tpe: String = "
     val builder = client.prepareSearch(index).setTypes(tpe)
     block(builder)
     val resp: SearchResponse = executeAndGet(builder)
-    PageLog.addEsQuery(resp.getTookInMillis)
+    PageLog.addEsQuery(resp.getTook.millis())
     resp
   }
 
@@ -58,7 +58,7 @@ class ElasticIndexMapping(client: Client, val index: String, val tpe: String = "
     val resp: MultiSearchResponse = executeAndGet(builder)
     var time = 0L
     for (item <- resp.getResponses) {
-      if (item.getResponse != null) time += item.getResponse.getTookInMillis
+      if (item.getResponse != null) time += item.getResponse.getTook.millis()
     }
     PageLog.addEsQuery(time)
     resp
