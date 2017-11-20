@@ -1,4 +1,5 @@
 package webby.commons.concurrent.longaction
+import com.fasterxml.jackson.annotation.JsonInclude
 import webby.api.mvc.{Action, SimpleAction}
 import webby.commons.io.StdJs
 
@@ -7,12 +8,16 @@ import webby.commons.io.StdJs
   */
 object LongActionCtl {
   case class ActionNotFound(notFound: Boolean = true)
-  case class ActionStatus(name: String, progress: Int, maxProgress: Int, message: String, error: String, state: String, cancelable: Boolean)
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  case class ActionStatus(name: String, progress: Int, maxProgress: Int, message: String, error: String,
+                          state: String, cancelable: Boolean, timeTook: Long)
+
   case class ActionCancelRequested(cancelRequested: Boolean)
 
   def status(id: Int) = withAction(id) {action =>
     val status = action.status.updated
-    ActionStatus(action.name, status.progress, status.maxProgress, status.message, status.error, status.state.toString, cancelable = action.cancelable)
+    ActionStatus(action.name, status.progress, status.maxProgress, status.message, status.error, status.state.toString, action.cancelable, status.timeTook)
   }
 
   def requestCancel(id: Int) = withAction(id) {action =>

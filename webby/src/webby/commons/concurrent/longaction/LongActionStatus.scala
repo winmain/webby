@@ -2,38 +2,35 @@ package webby.commons.concurrent.longaction
 
 import javax.annotation.Nullable
 
-import com.fasterxml.jackson.annotation.{JsonAutoDetect, JsonIgnore}
 import querio.{CountedLazyResult, ScalaDbEnum, ScalaDbEnumCls}
+import webby.commons.io.jackson.JacksonAnnotations._
 
 import scala.util.control.Breaks
 
-@JsonAutoDetect(
-  getterVisibility = JsonAutoDetect.Visibility.NONE,
-  isGetterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE,
-  creatorVisibility = JsonAutoDetect.Visibility.NONE,
-  fieldVisibility = JsonAutoDetect.Visibility.ANY)
-class LongActionStatus(var progress: Int = 0,
-                       var maxProgress: Int = 0,
-                       var message: String = "",
-                       var error: String = null) {
-  private var _state = LongActionState.ready
+class LongActionStatus(@JsonProperty var progress: Int = 0,
+                       @JsonProperty var maxProgress: Int = 0,
+                       @JsonProperty var message: String = "",
+                       @JsonProperty var error: String = null,
+                       @JsonProperty var timeTook: Long = 0) {
+  @JsonProperty private var _state = LongActionState.ready
+  def state: LongActionState = _state
+
+  @JsonProperty private var _startTime = 0L
+  def startTime: Long = _startTime
 
   /**
    * Cancelable определяется автоматически. Если action вызывает метод [[isCancelRequested]],
    * значит он поддерживает отмену.
    */
   private var _cancelable: Boolean = false
-  @JsonIgnore def cancelable: Boolean = _cancelable
+  def cancelable: Boolean = _cancelable
 
   /**
    * Если состояние берёт свои значения из другого места динамически, то эта функция обеспечивает
    * обновление значений этого состояния по колбеку. Оно вызывается каждый раз при выводе статуса
    * этого состояния.
    */
-  @JsonIgnore @Nullable var updater: LongActionStatus => Any = _
-
-  def state = _state
+  @Nullable var updater: LongActionStatus => Any = _
 
   /**
    * Обновить состояние, вызвав updater, и вернуть себя. Применяется для тех состояний, которые
@@ -43,7 +40,6 @@ class LongActionStatus(var progress: Int = 0,
 
   def percentProgress: Option[Int] = if (maxProgress == 0) None else Some((progress * 100) / maxProgress)
 
-  @JsonIgnore
   def isCancelRequested = {
     _cancelable = true
     _state == LongActionState.cancelRequested
@@ -51,17 +47,36 @@ class LongActionStatus(var progress: Int = 0,
 
   def start(statefulAction:Boolean) {
     _state match {
-      case LongActionState.ready => _state = LongActionState.started; message = "Started"
-      case LongActionState.started if statefulAction => message = "Resume"
+      case LongActionState.ready =>
+        _state = LongActionState.started
+        message = "Started"
+        _startTime = System.currentTimeMillis()
+
+      case LongActionState.started if statefulAction =>
+        message = "Resume"
+
       case s => sys.error("Cannot start action while in state " + s)
     }
   }
 
   def finish() {
+    def saveTime(): Unit = {
+      timeTook = System.currentTimeMillis() - _startTime
+    }
+
     _state match {
-      case LongActionState.cancelRequested => _state = LongActionState.cancelled
-      case LongActionState.started => _state = LongActionState.finished; progress = maxProgress
-      case LongActionState.cancelled => ()
+      case LongActionState.cancelRequested =>
+        _state = LongActionState.cancelled
+        saveTime()
+
+      case LongActionState.started =>
+        _state = LongActionState.finished
+        progress = maxProgress
+        saveTime()
+
+      case LongActionState.cancelled =>
+        saveTime()
+
       case s => sys.error("Cannot finish action while in state " + s)
     }
   }
@@ -88,7 +103,7 @@ class LongActionStatus(var progress: Int = 0,
   // ------------------------------- Utility method -------------------------------
 
   // Cancellable wrapped iterator
-  def wrap[R](result: CountedLazyResult[R], message: String)(body: Iterator[R] => Any) = {
+  def wrap[R](result: CountedLazyResult[R], message: String)(body: Iterator[R] => Any): Unit = {
     progress = 0
     maxProgress = result.count
     this.message = message
