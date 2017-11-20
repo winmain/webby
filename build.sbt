@@ -6,7 +6,7 @@ val buildCrossScalaVersions = Seq(buildScalaVersion) // Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.6.5",
+  version := "0.7.0",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(
@@ -91,7 +91,7 @@ lazy val elasticOrm6: Project = Project(
   file("elastic-orm-6"),
   settings = Defaults.coreDefaultSettings ++ commonSettings ++ makeSourceDirs() ++ Seq(
     libraryDependencies ++= commonDependencies,
-    libraryDependencies += "org.elasticsearch.client" % "transport" % "6.0.0-rc2" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок)
+    libraryDependencies += "org.elasticsearch.client" % "transport" % "6.0.0" exclude("com.google.guava", "guava"), // Клиент поискового движка (да и сам движок)
     libraryDependencies += "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.8.2",   // fixes bug https://discuss.elastic.co/t/issue-with-elastic-search-5-0-0-noclassdeffounderror-org-apache-logging-log4j-logger/64262
     libraryDependencies += querio
   )).dependsOn(webby)
