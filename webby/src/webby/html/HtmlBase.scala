@@ -62,6 +62,8 @@ abstract sealed class HtmlBase(val buf: HtmlBuffer) extends Appendable {self =>
 
   def +(v: String): HtmlBase = {buf ++ v; this}
   def +(v: Option[String]): HtmlBase = {v.foreach(buf ++ _); this}
+  def +(v: Char): HtmlBase = {buf ++ v; this}
+  def +(v: Short): HtmlBase = {buf ++ v; this}
   def +(v: Int): HtmlBase = {buf ++ v; this}
   def +(v: Long): HtmlBase = {buf ++ v; this}
   def +(v: HtmlBase): HtmlBase = this

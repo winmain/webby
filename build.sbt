@@ -105,7 +105,7 @@ lazy val webbyHaxe: Project = Project(
     name := "webby-haxe",
     artifactClassifier := Some("haxe"),
 
-    libraryDependencies += "com.github.citrum" % "haxe-jar" % "3.4.2" classifier "haxe",
+    libraryDependencies += "com.github.citrum" % "haxe-jar" % "3.4.4" classifier "haxe",
 
     unmanagedResourceDirectories in Compile := Seq(baseDirectory.value / "src", baseDirectory.value / "macro"),
 
