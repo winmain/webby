@@ -5,7 +5,7 @@ import java.nio.file.Path
 import io.netty.handler.codec.http.HttpHeaderNames
 import webby.api.mvc._
 import webby.commons.concurrent.Threads
-import webby.commons.system.log.SentryRavenFactory
+import webby.commons.system.log.SentryClientFactory
 import webby.commons.text.SB
 import webby.core.system.SourceMapper
 
@@ -141,7 +141,7 @@ abstract class Application {
 
   private[webby] def handleAction(action: Action, request: RequestHeader, body: Array[Byte]): Result = {
     def logError(e: Throwable, fromResultException: Boolean = false) {
-      SentryRavenFactory.setRequestContext(action, request, body)
+      SentryClientFactory.setRequestContext(action, request, body)
       Logger.error(new SB {
         +e.getClass.getSimpleName + ": " + e.getMessage + "\n"
         +"Error for " + request.method.name() + " " + request.domain + request.uri

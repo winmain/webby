@@ -6,7 +6,7 @@ val buildCrossScalaVersions = Seq(buildScalaVersion) // Seq("2.11.11", "2.12.2")
 
 val baseSettings = _root_.bintray.BintrayPlugin.bintrayPublishSettings ++ Seq(
   organization := "com.github.citrum.webby",
-  version := "0.7.0",
+  version := "0.7.1",
 
   incOptions := incOptions.value.withNameHashing(nameHashing = true),
   resolvers ++= Seq(
@@ -154,7 +154,7 @@ lazy val webby: Project = Project(
       deps += "org.zeroturnaround" % "jr-sdk" % "6.4.6" % "optional" // JRebel SDK (class reloader), used in webby.commons.system.JRebelUtils
       deps += "uk.co.caprica" % "juds" % "0.94.1" % "optional" // Unix socket support, used in webby.commons.system.SdDaemon
       deps += "javax.servlet" % "javax.servlet-api" % "3.1.0" % "optional" // Servlet api for dump Sentry client
-      deps += "com.getsentry.raven" % "raven-logback" % "7.8.6" % "optional" exclude("com.google.guava", "guava") // Sentry plugin for log processing. Guava excluded because of old version 18 used by raven. Used in webby.commons.system.log.SentryFilteredAppender
+      deps += "io.sentry" % "sentry-logback" % "1.6.3" % "optional" // Sentry plugin for log processing. Used in webby.commons.system.log.SentryFilteredAppender
       deps += "commons-validator" % "commons-validator" % "1.6" % "optional" intransitive() // Email validation, used in webby.commons.text.validator.EmailValidator
       deps += "org.apache.commons" % "commons-email" % "1.4" % "optional" // Email classes, used in webby.commons.text.validator.EmailValidator
       deps += "org.quartz-scheduler" % "quartz" % "2.2.3" % "optional" exclude("c3p0", "c3p0") // Cron, used in webby.commons.system.cron.BaseQuartzPlugin
