@@ -21,15 +21,29 @@ abstract sealed class HtmlBase(val buf: HtmlBuffer) extends Appendable {self =>
   implicit sealed class HtmlStringContext(val sc: StringContext) {
     def h(args: Any*): HtmlBase = {buf ++ sc.raw(args: _*); self}
   }
+  implicit sealed class HtmlCharSequenceWrapper(val s: CharSequence) {
+    def unary_+ : HtmlBase = {buf ++ s; self}
+    def unary_~ : HtmlBase = {buf ++ StringEscapeUtils.escapeXml10(s.toString); self}
+    /** html-комментарий */
+    def unary_! : HtmlBase = {buf ++ "<!-- " ++ s ++ " -->"; self}
+  }
   implicit sealed class HtmlStringWrapper(val s: String) {
     def unary_+ : HtmlBase = {buf ++ s; self}
     def unary_~ : HtmlBase = {buf ++ StringEscapeUtils.escapeXml10(s); self}
     /** html-комментарий */
     def unary_! : HtmlBase = {buf ++ "<!-- " ++ s ++ " -->"; self}
   }
+  implicit sealed class HtmlCharSequenceOptionWrapper(val s: Option[CharSequence]) {
+    def unary_+ : HtmlBase = {s.foreach(buf ++ _); self}
+    def unary_~ : HtmlBase = {s.foreach(ss => buf ++ StringEscapeUtils.escapeXml10(ss.toString)); self}
+    /** html-комментарий */
+    def unary_! : HtmlBase = {s.foreach(ss => buf ++ "<!-- " ++ ss ++ " -->"); self}
+  }
   implicit sealed class HtmlStringOptionWrapper(val s: Option[String]) {
     def unary_+ : HtmlBase = {s.foreach(buf ++ _); self}
-    def unary_~ : HtmlBase = {s.foreach(buf ++ StringEscapeUtils.escapeXml10(_)); self}
+    def unary_~ : HtmlBase = {s.foreach(ss => buf ++ StringEscapeUtils.escapeXml10(ss)); self}
+    /** html-комментарий */
+    def unary_! : HtmlBase = {s.foreach(ss => buf ++ "<!-- " ++ ss ++ " -->"); self}
   }
   implicit sealed class HtmlTextWrapper(val t: HtmlBase) {
     def unary_+ : HtmlBase = t
