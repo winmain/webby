@@ -30,8 +30,9 @@ object StdPaths extends OverridableObject {
     val public = root / "public"
 
     val assets = if (App.isDev) root / "app/assets" else root / "assets"
-    val assetsProfiles = assets / "profiles"
-    def assetsProfile(profileName: String) = assetsProfiles / profileName
+
+    val profiles = root / "profiles"
+    def profile(profileName: String) = profiles / profileName
 
     val targetAssets = root / "target/assets"
 
@@ -86,12 +87,12 @@ object StdPaths extends OverridableObject {
     protected def readHaxePropPath(name: String): Path = readHaxeProp[Path](name, null, Paths.get(_))
 
     /** Path to haxe binary */
-    val haxeBin: Path = readHaxePropPath("haxe.bin")
+    lazy val haxeBin: Path = readHaxePropPath("haxe.bin")
 
     /** Path to haxe std library */
-    val haxeStd: Path = readHaxePropPath("haxe.std")
+    lazy val haxeStd: Path = readHaxePropPath("haxe.std")
 
     /** Haxe `cp` source directories */
-    val haxeCp: Vector[Path] = readHaxeProp("haxe.cp", Vector.empty, StringUtils.split(_, ':').map(Paths.get(_))(collection.breakOut))
+    lazy val haxeCp: Vector[Path] = readHaxeProp("haxe.cp", Vector.empty, StringUtils.split(_, ':').map(Paths.get(_))(collection.breakOut))
   }
 }

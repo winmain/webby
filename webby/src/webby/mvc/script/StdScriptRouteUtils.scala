@@ -24,12 +24,12 @@ class StdScriptRouteUtils(paths: StdPaths.Value, gccForProfile: String => Google
 
   lazy val sassServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
     ScriptServer(paths, paths.cssAssetType, List(
-      LibSassCompiler(includePaths = Seq(paths.assetsProfile(App.profile.name).toString))), new WideWatcher(_))
+      LibSassCompiler(includePaths = Seq(paths.profile(App.profile.name).toString))), new WideWatcher(_))
   }
 
   lazy val lessServer: (String) => Action = magicServer(Some(paths.cssAssetType)) {
     ScriptServer(paths, paths.cssAssetType, List(
-      ExternalLessCompiler(includePaths = Seq(paths.assetsProfile(App.profile.name).toString))), new WideWatcher(_))
+      ExternalLessCompiler(includePaths = Seq(paths.profile(App.profile.name).toString))), new WideWatcher(_))
   }
 
   lazy val jsServer: (String) => Action = magicServer(Some(StdPaths.get.jsAssetType)) {

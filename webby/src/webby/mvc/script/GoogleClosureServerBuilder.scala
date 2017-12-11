@@ -6,6 +6,8 @@ import webby.api.App
 import webby.mvc.StdPaths
 import webby.mvc.script.compiler.{ExternalCoffeeScriptCompiler, ExternalJadeClosureCompiler, ScriptCompiler}
 
+import scala.collection.immutable
+
 /**
   * Билдер для [[GoogleClosureServer]].
   *
@@ -20,7 +22,7 @@ class GoogleClosureServerBuilder {
   def jsSourceDir(add: Path) = {_jsSourceDirs +:= add; this}
   def addJsSourceDirs(v: Seq[Path]) = {_jsSourceDirs ++= v; this}
   def simpleSourceDir = jsSourceDirs(Seq(StdPaths.get.jsAssetType.sourcePath))
-  def commonSourceDirsWithProfile(profile: String) = jsSourceDirs(Vector(StdPaths.get.jsAssetType.sourcePath, StdPaths.get.assetsProfile(profile)))
+  def commonSourceDirsWithProfile(profile: String) = jsSourceDirs(Vector(StdPaths.get.jsAssetType.sourcePath, StdPaths.get.profile(profile)))
 
   var _preCompilers: List[ScriptCompiler] = Nil
   def preCompilers(v: List[ScriptCompiler]) = {_preCompilers = v; this}
@@ -68,8 +70,18 @@ class GoogleClosureServerBuilder {
 
   private def withDefault[T <: AnyRef](v: T, onNull: => T): T = if (v == null) onNull else v
 
+  private def checkJsSourceDirs(): Unit = {
+    _jsSourceDirs = _jsSourceDirs.map(_.toAbsolutePath.normalize())
+    for (Seq(dir1, dir2) <- _jsSourceDirs.combinations(2)) {
+      if (dir1.startsWith(dir2) || dir2.startsWith(dir1)) {
+        webby.api.Logger(getClass).warn(s"jsSourceDirs should not have nested paths: $dir1 and $dir2")
+      }
+    }
+  }
+
   def build = {
     require(_jsSourceDirs.nonEmpty, "jsSourceDirs cannot be empty")
+    checkJsSourceDirs()
 
     new GoogleClosureServer(
       libSource = withDefault(_libSource, DefaultResourceGoogleClosureLibSource),
