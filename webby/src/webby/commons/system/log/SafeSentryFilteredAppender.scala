@@ -14,9 +14,14 @@ import io.sentry.logback.SentryAppender
   * Usage:
   * In logback config `logger.xml`:
   * {{{
-  *   <appender name="sentry" class="webby.commons.system.log.SafeSentryFilteredAppender" />
+  *   <appender name="sentry" class="webby.commons.system.log.SafeSentryFilteredAppender">
+  *     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+  *       <level>WARN</level>
+  *     </filter>
+  *   </appender>
   *
-  *   <root level="WARN">
+  *   <root level="INFO">
+  *     ...
   *     <appender-ref ref="sentry"/>
   *   </root>
   * }}}

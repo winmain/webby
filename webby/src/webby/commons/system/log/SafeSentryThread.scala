@@ -9,9 +9,13 @@ class SafeSentryThread extends Thread {
   private val queue = new LinkedBlockingQueue[EventBuilder](queueCapacity)
 
   override def run(): Unit = {
-    while (true) {
-      val eventBuilder = queue.take()
-      Sentry.capture(eventBuilder)
+    try {
+      while (true) {
+        val eventBuilder = queue.take()
+        Sentry.capture(eventBuilder)
+      }
+    } catch {
+      case _: InterruptedException => // ignore
     }
   }
 
