@@ -5,14 +5,11 @@ _webby_ is a scala web framework.
 
 ## Installation
 
-_TODO_
-
-## Usage
-
-_TODO_
+See [webby-skeleton] as an example of using _webby_.
 
 ## License
 
 _webby_ is licensed under [Apache License 2.0].
 
+  [webby-skeleton]: https://github.com/citrum/webby-skeleton
   [Apache License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
