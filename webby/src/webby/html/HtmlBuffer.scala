@@ -39,24 +39,24 @@ class HtmlBuffer(capacity: Int = 1024) extends SB(capacity) {
   }
 
   /** Директива, показывающая что мы сейчас будем писать атрибуты тега. */
-  private[html] def beginAttr(tag: BaseTag): this.type = {
+  def beginAttr(tag: BaseTag): this.type = {
     if (writingAttr) sys.error("Already writing attributes")
     if (curTag ne tag) sys.error("Cannot add attr when not in tag declaration")
     writingAttr = true
     this
   }
   /** Директива, закрывающая запись в атрибуты тега. */
-  private[html] def endAttr(): Unit = writingAttr = false
+  def endAttr(): Unit = writingAttr = false
 
   /** Открытие нового тега */
-  private[html] def newTag(tag: BaseTag) {
+  def newTag(tag: BaseTag) {
     if (curTag ne null) closeTag0(curTag)
     curTag = tag
     sb append '<' append tag.tag
   }
 
   /** Добавление класса в список классов для заданного тега */
-  private[html] def addClass(tag: BaseTag, cls: String) {
+  def addClass(tag: BaseTag, cls: String) {
     if (curTag ne tag) sys.error("Cannot addClass to tag " + tag + ": not in tag")
     classes += cls
   }
@@ -77,7 +77,7 @@ class HtmlBuffer(capacity: Int = 1024) extends SB(capacity) {
   }
 
   /** Войти в тег. Декларация тега завершается здесь и начинается тело тега. */
-  private[html] def goInTag(tag: BaseTag) {
+  def goInTag(tag: BaseTag) {
     if (curTag ne tag) sys.error("Not in tag " + tag)
     appendAndCleanClasses()
     sb append '>'
@@ -86,7 +86,7 @@ class HtmlBuffer(capacity: Int = 1024) extends SB(capacity) {
   }
 
   /** Закрыть открытый тег, либо завершить тело тега. */
-  private[html] def closeTag(tag: BaseTag) {
+  def closeTag(tag: BaseTag) {
     if (curTag eq tag) {
       closeTag0(tag)
       curTag = null

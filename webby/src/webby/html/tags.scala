@@ -112,7 +112,7 @@ class CommonTag(val tag: String, val shortClose: Boolean = false)(implicit view:
 
 // ------------------------- Tag traits -------------------------
 
-sealed trait BaseTag {
+trait BaseTag {
   def tag: String
   def shortClose: Boolean
 
@@ -125,14 +125,14 @@ sealed trait BaseTag {
   protected def escape(s: String): String = StringEscapeUtils.escapeXml10(s)
 }
 
-sealed trait SizedTag extends BaseTag {
+trait SizedTag extends BaseTag {
   def w(px: Int): this.type = attr("width", px)
   def w(v: String): this.type = attr("width", v)
   def h(px: Int): this.type = attr("height", px)
   def h(v: String): this.type = attr("height", v)
 }
 
-sealed trait ValuedTag extends BaseTag {
+trait ValuedTag extends BaseTag {
   def value(raw: String): this.type = attr("value", raw)
   def value(intValue: Int): this.type = attr("value", intValue)
   def value(rawOption: Option[String]): this.type = rawOption match {
@@ -146,26 +146,26 @@ sealed trait ValuedTag extends BaseTag {
   }
 }
 
-sealed trait NamedTag extends BaseTag {
+trait NamedTag extends BaseTag {
   def name(v: String): this.type = attr("name", v)
 }
 
-sealed trait DisableTag extends BaseTag {
+trait DisableTag extends BaseTag {
   def disabled(v: Boolean): this.type = if (v) attr("disabled", "1") else this
   def disabled: this.type = attr("disabled", "1")
 }
 
-sealed trait AlignedTag extends BaseTag {
+trait AlignedTag extends BaseTag {
   def align(v: String): this.type = attr("align", v)
   def valign(v: String): this.type = attr("valign", v)
 }
 
-sealed trait MinMaxTag extends BaseTag {
+trait MinMaxTag extends BaseTag {
   def min(v: Int): this.type = attr("min", v)
   def max(v: Int): this.type = attr("max", v)
 }
 
-sealed trait PlaceholderTag extends BaseTag {
+trait PlaceholderTag extends BaseTag {
   def placeholder(raw: String): this.type = attr("placeholder", raw)
   def placeholderSafe(safe: String): this.type = placeholder(escape(safe))
 }
