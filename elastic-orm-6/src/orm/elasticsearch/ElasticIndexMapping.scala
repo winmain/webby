@@ -3,15 +3,15 @@ package orm.elasticsearch
 import org.elasticsearch.action.delete.{DeleteRequestBuilder, DeleteResponse}
 import org.elasticsearch.action.get.{GetRequestBuilder, GetResponse, MultiGetRequestBuilder, MultiGetResponse}
 import org.elasticsearch.action.index.{IndexRequestBuilder, IndexResponse}
-import org.elasticsearch.action.search.{MultiSearchRequestBuilder, MultiSearchResponse, SearchRequestBuilder, SearchResponse}
+import org.elasticsearch.action.search._
 import org.elasticsearch.client.Client
 import org.slf4j.LoggerFactory
 import webby.commons.system.log.PageLog
 
 /**
- * Класс для выполнения прямых запросов к Эластику для заданного индекса и типа (index, tpe).
- */
-class ElasticIndexMapping(client: Client, val index: String, val tpe: String = "main") {
+  * Класс для выполнения прямых запросов к Эластику для заданного индекса и типа (index, tpe).
+  */
+class ElasticIndexMapping(val client: Client, val index: String, val tpe: String = "main") {
   import ElasticSearch.executeAndGet
 
   val log = LoggerFactory.getLogger(getClass)
@@ -72,6 +72,18 @@ class ElasticIndexMapping(client: Client, val index: String, val tpe: String = "
 
   def multiGet(block: MultiGetRequestBuilder => Any): MultiGetResponse = {
     val builder = client.prepareMultiGet
+    block(builder)
+    withPageLog(executeAndGet(builder))
+  }
+
+  def searchScroll(scrollId: String, block: SearchScrollRequestBuilder => Any): SearchResponse = {
+    val builder = client.prepareSearchScroll(scrollId)
+    block(builder)
+    withPageLog(executeAndGet(builder))
+  }
+
+  def clearScroll(block: ClearScrollRequestBuilder => Any): ClearScrollResponse = {
+    val builder = client.prepareClearScroll()
     block(builder)
     withPageLog(executeAndGet(builder))
   }

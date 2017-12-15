@@ -8,7 +8,7 @@ import org.apache.lucene.search.join.ScoreMode
 import org.elasticsearch.action.delete.{DeleteRequestBuilder, DeleteResponse}
 import org.elasticsearch.action.get._
 import org.elasticsearch.action.index.IndexRequestBuilder
-import org.elasticsearch.action.search.{SearchRequestBuilder, SearchResponse}
+import org.elasticsearch.action.search._
 import org.elasticsearch.common.geo.GeoPoint
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder.Item
 import org.elasticsearch.index.query.QueryBuilders._
@@ -642,5 +642,22 @@ trait EsTypeClient[C <: EsTypeRecord] {
       search = b
     }
     stat(searchResponse(search, resp))
+  }
+
+  def searchScrollRaw(scrollId: String, block: SearchScrollRequestBuilder => Any): SearchResponse = {
+    stat(em.searchScroll(scrollId, block))
+  }
+
+  def searchScroll(scrollId: String, block: SearchScrollRequestBuilder => Any): EsResult[C] = {
+    var search: SearchScrollRequestBuilder = null
+    val resp = em.searchScroll(scrollId, {b =>
+      block(b)
+      search = b
+    })
+    stat(searchResponse(search, resp))
+  }
+
+  def clearScroll(block: ClearScrollRequestBuilder => Any): ClearScrollResponse = {
+    em.clearScroll(block)
   }
 }
