@@ -35,9 +35,8 @@ class RichSelectField extends Field {
     super.setValueEl(value);
     var html: String = placeholder;
     var selEl: SelectElement = cast tag.el;
-    var selOpts: HTMLCollection = selEl.selectedOptions;
-    if (selOpts.length != 0) {
-      html = selOpts[0].innerHTML;
+    if (selEl.selectedIndex != -1) {
+      html = selEl.options[selEl.selectedIndex].innerHTML;
     } else {
       // If no option selected - try to find option with empty value manually
       for (opt in tag.fndAll('option')) {
