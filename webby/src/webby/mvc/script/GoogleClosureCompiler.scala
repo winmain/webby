@@ -50,7 +50,7 @@ class GoogleClosureCompiler(externs: Seq[SourceFile],
 
     // Enable sourcemaps
     sourceMapConfig.foreach {cfg =>
-      options.setSourceMapIncludeSourcesContent(true)
+      options.setSourceMapIncludeSourcesContent(cfg.includeSourceContent)
       options.setSourceMapOutputPath(cfg.resultDir.toString)
     }
 
