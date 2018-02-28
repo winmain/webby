@@ -1,6 +1,7 @@
 package webby.mvc.script
 import com.google.javascript.jscomp.SourceFile
 import webby.commons.io.Resources
+import webby.mvc.script.compiler.ExternalHaxeCompiler
 import webby.mvc.{AppStub, StdPaths}
 
 object GoogleClosure {
@@ -55,5 +56,15 @@ object GoogleClosure {
     }
     val t1 = System.currentTimeMillis()
     println("--- Google Closure Compiler finished in " + (t1 - t0) + " ms ---")
+  }
+
+
+  def serverBuilderForHaxeTests = {
+    GoogleClosure.serverBuilder
+      .jsSourceDirs(StdPaths.getHaxeValue.haxeCp)
+      .preCompiler(new ExternalHaxeCompiler(profile = "test", StdPaths.getHaxeValue))
+      .targetDir(StdPaths.get.jsTestAssetType.targetPath)
+      .targetGccDir(StdPaths.get.jsTestAssetType.targetPath)
+      .muteGCCWarnings(true)
   }
 }

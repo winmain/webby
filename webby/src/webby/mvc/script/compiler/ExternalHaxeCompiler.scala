@@ -43,6 +43,9 @@ case class ExternalHaxeCompiler(profile: String,
     command += "-D"
     command += "profile=" + profile
 
+    command += "-D"
+    command += "main=" + mainClass
+
     val env = Seq("HAXE_STD_PATH=" + compilerOptions.haxeStdPath.toString)
 
     runCommonProcess(command, env = env) match {
@@ -68,7 +71,9 @@ case class ExternalHaxeCompiler(profile: String,
 
   private def postProcess(body: String): String = {
     import scala.collection.JavaConverters._
-    val mapper = StdJs.get.newMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+    val mapper = StdJs.get.newMapper
+      .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
+      .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
 
     val globalPrepend = new SB()
     val googs = new SB()
@@ -98,9 +103,10 @@ case class ExternalHaxeCompiler(profile: String,
             // Пример: @googProvide('MainEntryPoint_js')
             entry.getValue.asScala.foreach {node => addGoogProvide(node.textValue())}
 
-          case unknown =>
-            sys.error("Unknown annotation " + unknown + " in haxe file. Supported annotations: " +
-              "@globalPrepend, @googRequire, @googProvide.")
+          case _ =>
+            // skip unknown annotations
+            //// sys.error("Unknown annotation " + unknown + " in haxe file. Supported annotations: " +
+            ////  "@globalPrepend, @googRequire, @googProvide.")
         }
       }
       ""

@@ -41,6 +41,7 @@ object StdPaths extends OverridableObject {
     // Google Closure Compiled js, only for dev profile
     def jsGccAssetType: AssetType = CommonAssetType("js-gcc")
     def jsSimpleAssetType: AssetType = CommonAssetType("js-simple")
+    def jsTestAssetType: AssetType = CommonAssetType("js-test")
 
     // ------------------------------- Convenience java.nio.file.Paths methods -------------------------------
 
@@ -94,5 +95,11 @@ object StdPaths extends OverridableObject {
 
     /** Haxe `cp` source directories */
     lazy val haxeCp: Vector[Path] = readHaxeProp("haxe.cp", Vector.empty, StringUtils.split(_, ':').map(Paths.get(_))(collection.breakOut))
+  }
+
+  /** For internal use in webby */
+  def getHaxeValue: HaxeValue = get match {
+    case v: HaxeValue => v
+    case _ => sys.error("HaxeValue is not defined in StdPaths. Use for example something like `object AppPaths extends StdPaths.Value with StdPaths.HaxeValue`")
   }
 }

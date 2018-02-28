@@ -52,21 +52,31 @@ class HaxeErrorBeautifier {
             messages.drop(1).foreach(msg => +"  " + msg + '\n')
 
             // Вставить код из файла
-            val lines = Source.fromFile(new File(key.filePathStr))(Codec.UTF8).getLines()
-            lines.drop(key.row - 1)
-            +lines.next() + '\n'
-            +' '.repeat(key.col1) + '^'.repeat(key.col2 - key.col1) + '\n'
+            val file = new File(key.filePathStr)
+            if (file.exists()) {
+              val lines = Source.fromFile(file)(Codec.UTF8).getLines()
+              lines.drop(key.row - 1)
+              +lines.next() + '\n'
+              +' '.repeat(key.col1) + '^'.repeat(key.col2 - key.col1) + '\n'
+            } else {
+              +"File not found: " + key.filePathStr + '\n'
+            }
 
           case key: ErrorKeyLines =>
             +key.filePathStr + ":" + key.row + " : " + messages.head + '\n'
             messages.drop(1).foreach(msg => +"  " + msg + '\n')
 
             // Вставить код из файла
-            val lines = Source.fromFile(new File(key.filePathStr))(Codec.UTF8).getLines()
-            lines.drop(key.line1 - 1)
-            val lineCount = math.min(10, key.line2 - key.line1 + 1)
-            for (i <- 0.until(lineCount)) {
-              +lines.next() + '\n'
+            val file = new File(key.filePathStr)
+            if (file.exists()) {
+              val lines = Source.fromFile(file)(Codec.UTF8).getLines()
+              lines.drop(key.line1 - 1)
+              val lineCount = math.min(10, key.line2 - key.line1 + 1)
+              for (i <- 0.until(lineCount)) {
+                +lines.next() + '\n'
+              }
+            } else {
+              +"File not found: " + key.filePathStr + '\n'
             }
         }
       }
