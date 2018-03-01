@@ -11,9 +11,9 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.commons.lang3.StringUtils
 import webby.api.mvc.{PlainResult, RequestHeader, ResultException, Results}
 import webby.commons.io.Using
-import webby.commons.text.SB
 import webby.commons.text.StringWrapper.wrapper
 import webby.commons.time.StdDates
+import webby.mvc.script.closure.{SourceMapComposer, StringBuilderWithLineCounter}
 import webby.mvc.script.compiler.ScriptCompiler
 import webby.mvc.script.watcher.{FileExtTransform, TargetFileTransform}
 
@@ -410,51 +410,61 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     }
   }
 
-  case class ComposeDevResult(result: String, etag: String, lastModified: Long)
+  case class ComposeDevResult(result: String,
+                              etag: String,
+                              lastModified: Long,
+                              sourceMapComposer: SourceMapComposer)
 
-  def composeDev(servePath: String): Option[ComposeDevResult] = {
+  def composeDev(servePath: String,
+                 prependString: String = ""): Option[ComposeDevResult] = {
+    val sourceMapComposer = new SourceMapComposer()
+
     //    val t0 = System.currentTimeMillis()
     lazyUpdateFiles()
 
     //    val t1 = System.currentTimeMillis()
+    val sb = new StringBuilderWithLineCounter(lastResultLength + 1024)
+    sb + prependString
     var totalCount = 0
     var lastModified = 0L
-    val result = new SB(lastResultLength + 1024) {
-      val isRest = servePath.endsWith("_rest.js")
-      if (isRest) +restModulePrepend + '\n'
-      val included = mutable.Set.empty[String]
-      def addFile(closureFile: ClosureFile) {
-        val name: String = closureFile.source.getName
-        if (!included.contains(name)) {
-          closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap.getOrElse(n, sys.error(s"Cannot find class '$n' for ignoreMainDeps directive in ${closureFile.source.getOriginalPath}"))))
-          if (closureFile.entryPoint) {
-            prepends.foreach(+_.source.getCode)
-            +baseJsBody
+    val isRest = servePath.endsWith("_rest.js")
+    if (isRest) sb + restModulePrepend nl()
+    val included = mutable.Set.empty[String]
+    def addFile(closureFile: ClosureFile) {
+      val name: String = closureFile.source.getName
+      if (!included.contains(name)) {
+        closureFile.ignoreMainDeps.foreach(n => ignoreJsWithDeps(classMap.getOrElse(n, sys.error(s"Cannot find class '$n' for ignoreMainDeps directive in ${closureFile.source.getOriginalPath}"))))
+        if (closureFile.entryPoint) {
+          prepends.foreach(v => sb + v.source.getCode)
+          sb + baseJsBody
+        }
+        included += name
+        for (cls <- closureFile.requires) {
+          classMap.get(cls) match {
+            case Some(file) => addFile(file)
+            case None => log.error("Cannot find class " + cls + "\n  in " + name)
           }
-          included += name
-          for (cls <- closureFile.requires) {
-            classMap.get(cls) match {
-              case Some(file) => addFile(file)
-              case None => log.error("Cannot find class " + cls + "\n  in " + name)
-            }
-          }
-          +"// ------------- " + name + " -------------\n"
-          +closureFile.source.getCode + "\n"
+        }
+        sb + "// ------------- " + name + " -------------" nl()
 
-          totalCount += 1
-          if (closureFile.lastModified > lastModified) lastModified = closureFile.lastModified
-        }
+        val (writeCode, codeLines) = sourceMapComposer.addSourceFile(closureFile.source, sb.getLine)
+        sb.addRaw(writeCode, codeLines) nl()
+
+        totalCount += 1
+        if (closureFile.lastModified > lastModified) lastModified = closureFile.lastModified
       }
-      def ignoreJsWithDeps(closureFile: ClosureFile): Unit = {
-        included += closureFile.source.getName
-        closureFile.requires.foreach {n =>
-          ignoreJsWithDeps(classMap.get(n).getOrElse(sys.error("Dependency not found " + n + " in " + closureFile)))
-        }
+    }
+    def ignoreJsWithDeps(closureFile: ClosureFile): Unit = {
+      included += closureFile.source.getName
+      closureFile.requires.foreach {n =>
+        ignoreJsWithDeps(classMap.get(n).getOrElse(sys.error("Dependency not found " + n + " in " + closureFile)))
       }
-      val remappedPath: String = remapEntryPoints.getOrElse(servePath, servePath)
-      tryEntryPoint(remappedPath).foreach(addFile)
-      if (isRest) +"\n" + restModuleAppend
-    }.toString
+    }
+    val remappedPath: String = remapEntryPoints.getOrElse(servePath, servePath)
+    tryEntryPoint(remappedPath).foreach(addFile)
+    if (isRest) sb nl() add restModuleAppend
+
+    val result: String = sb.str
 
     if (totalCount > 0) {
       lastResultLength = result.length
@@ -463,7 +473,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
       //println("Update time: " + (t1 - t0) + "ms, glue time: " + (t2 - t1) + "ms")
 
       val etag = lastResultLength + "-" + totalCount
-      Some(ComposeDevResult(result, etag, lastModified))
+      Some(ComposeDevResult(result, etag, lastModified, sourceMapComposer))
     } else {
       None
     }

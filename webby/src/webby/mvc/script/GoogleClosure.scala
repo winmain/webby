@@ -1,7 +1,7 @@
 package webby.mvc.script
 import com.google.javascript.jscomp.SourceFile
 import webby.commons.io.Resources
-import webby.mvc.script.compiler.ExternalHaxeCompiler
+import webby.mvc.script.compiler.{ExternalHaxeCompiler, HaxeCompilerOptions}
 import webby.mvc.{AppStub, StdPaths}
 
 object GoogleClosure {
@@ -59,12 +59,20 @@ object GoogleClosure {
   }
 
 
-  def serverBuilderForHaxeTests = {
+  /**
+    * Returns [[GoogleClosureServerBuilder]] for building haxe tests
+    */
+  def serverBuilderForHaxeTests: GoogleClosureServerBuilder = {
     GoogleClosure.serverBuilder
       .jsSourceDirs(StdPaths.getHaxeValue.haxeCp)
-      .preCompiler(new ExternalHaxeCompiler(profile = "test", StdPaths.getHaxeValue))
+      .preCompiler(new ExternalHaxeCompiler(profile = "test", {
+        val opts = HaxeCompilerOptions.default(StdPaths.getHaxeValue)
+        opts.sourceMap = true
+        opts
+      }))
       .targetDir(StdPaths.get.jsTestAssetType.targetPath)
       .targetGccDir(StdPaths.get.jsTestAssetType.targetPath)
+      .sourceMapConfig(GccSourceMapConfig())
       .muteGCCWarnings(true)
   }
 }
