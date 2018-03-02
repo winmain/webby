@@ -1,6 +1,7 @@
 package test;
 
 import goog.string.GoogString;
+import haxe.CallStack;
 import haxe.unit.TestCase;
 import haxe.unit.TestRunner;
 
@@ -36,6 +37,7 @@ class ExampleHaxeModuleTest extends TestCase {
 class HaxeTestRunner {
   public static function main(allTestClasses: Array<Class<TestCase>>) {
     var args: Array<String> = untyped __js__('process.argv.slice(2)');
+    setupSourceMapSupport();
 
     var runner = new TestRunner();
 
@@ -67,5 +69,20 @@ class HaxeTestRunner {
 
     var result = runner.run() ? 0 : -1;
     untyped __js__('process.exit({0})', result);
+  }
+
+  /*
+  https://www.npmjs.com/package/source-map-support must be installed
+   */
+  public static function setupSourceMapSupport(): Void {
+    try {
+      untyped __js__("require('source-map-support').install();");
+
+      // Workaround for HaxeUnit
+      untyped CallStack.getStack = function(e: js.Error): Array<StackItem> {
+        if (e == null) return [];
+        return CallStack.makeStack(e.stack);
+      }
+    }
   }
 }

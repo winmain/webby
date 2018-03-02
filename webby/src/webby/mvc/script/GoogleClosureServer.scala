@@ -9,6 +9,7 @@ import com.google.common.net.HttpHeaders
 import com.google.javascript.jscomp.SourceFile
 import io.netty.handler.codec.http.HttpResponseStatus
 import org.apache.commons.lang3.StringUtils
+import webby.api.App
 import webby.api.mvc.{PlainResult, RequestHeader, ResultException, Results}
 import webby.commons.io.Using
 import webby.commons.text.StringWrapper.wrapper
@@ -405,7 +406,9 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
     */
   def serveDev(servePath: String)(implicit req: RequestHeader): PlainResult = {
     composeDev(servePath) match {
-      case Some(result) => makeResult(result.etag, result.lastModified)(result.result.getBytes)
+      case Some(result) =>
+        val resultStr = result.result + "\n" + result.sourceMapComposer.makeSourceMappingUrlInplace
+        makeResult(result.etag, result.lastModified)(resultStr.getBytes)
       case None => Results.NotFoundRaw("File not found")
     }
   }
@@ -417,7 +420,7 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
 
   def composeDev(servePath: String,
                  prependString: String = ""): Option[ComposeDevResult] = {
-    val sourceMapComposer = new SourceMapComposer()
+    val sourceMapComposer = new SourceMapComposer(App.app.path)
 
     //    val t0 = System.currentTimeMillis()
     lazyUpdateFiles()
