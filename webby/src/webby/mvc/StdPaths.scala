@@ -100,6 +100,8 @@ object StdPaths extends OverridableObject {
   /** For internal use in webby */
   def getHaxeValue: HaxeValue = get match {
     case v: HaxeValue => v
-    case _ => sys.error("HaxeValue is not defined in StdPaths. Use for example something like `object AppPaths extends StdPaths.Value with StdPaths.HaxeValue`")
+    case _ => sys.error("HaxeValue is not defined in StdPaths. " +
+      "Use for example something like `object AppPaths extends StdPaths.Value with StdPaths.HaxeValue`. " +
+      "Also, you should register your `AppPaths` in `Global.initObjects` method.")
   }
 }

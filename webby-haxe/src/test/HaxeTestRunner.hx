@@ -83,6 +83,6 @@ class HaxeTestRunner {
         if (e == null) return [];
         return CallStack.makeStack(e.stack);
       }
-    }
+    } catch (e: Dynamic) {}
   }
 }

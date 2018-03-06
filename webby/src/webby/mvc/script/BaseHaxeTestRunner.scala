@@ -58,4 +58,7 @@ class BaseHaxeTestRunner(haxeTestClassName: String) {
 }
 
 
+/**
+  * @see ExampleHaxeTests.hx file
+  */
 object HaxeTestRunner extends BaseHaxeTestRunner("HaxeTests")
