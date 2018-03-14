@@ -170,7 +170,7 @@ class Form extends EventTarget {
     var fieldReg = fieldRegistry.get(fieldProps.jsField);
     if (fieldReg == null) throw new Error('Field "${fieldProps.jsField}" not registered');
 
-    var field: Field = fieldReg.constructor(this, fieldProps);
+    var field: Field = fieldReg.factory(this, fieldProps);
     field.init(fieldProps);
     fields.set(field.shortId, field);
   }
@@ -575,10 +575,10 @@ class FormSuccess implements ExternalFields {
  */
 class FormRegField {
   public var cls(default, null): Class<Field>;
-  public var constructor(default, null): Form -> FieldProps -> Field;
+  public var factory(default, null): Form -> FieldProps -> Field;
 
-  public function new(cls: Class<Field>, constructor: Form -> FieldProps -> Field) {
+  public function new(cls: Class<Field>, factory: Form -> FieldProps -> Field) {
     this.cls = cls;
-    this.constructor = constructor;
+    this.factory = factory;
   }
 }
