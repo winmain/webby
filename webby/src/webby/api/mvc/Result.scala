@@ -31,9 +31,16 @@ sealed trait WithHeaders[+A <: Result] {
   def withHeader(name: String, value: String): A
 
   def withLastModified(ltd: LocalDateTime): A = withHeader(LAST_MODIFIED, StdDates.httpDateFormatLDT(ltd))
-  def withNoCache: A = withHeader(CACHE_CONTROL, "no-cache")
 
-  /** Чтобы можно было делать кроссоменные запросы к этому урлу */
+  /** Completely disables browser cache.
+    * @see https://stackoverflow.com/questions/49547/how-to-control-web-page-caching-across-all-browsers
+    */
+  def withNoCache: A =
+    withHeader(CACHE_CONTROL, "no-store, must-revalidate")
+      .withHeader(PRAGMA, "no-cache")
+      .withHeader(EXPIRES, "0").asInstanceOf[A]
+
+  /** Enables CORS from any domain */
   def withAccessControlAllowOrigin: A = withHeader("Access-Control-Allow-Origin", "*")
 
   /**
