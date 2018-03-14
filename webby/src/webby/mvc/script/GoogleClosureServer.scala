@@ -407,7 +407,9 @@ class GoogleClosureServer(libSource: GoogleClosureLibSource,
   def serveDev(servePath: String)(implicit req: RequestHeader): PlainResult = {
     composeDev(servePath) match {
       case Some(result) =>
-        val resultStr = result.result + "\n" + result.sourceMapComposer.makeSourceMappingUrlInplace
+        val resultStr: String =
+          if (sourceMapConfig.isDefined) result.result + "\n" + result.sourceMapComposer.makeSourceMappingUrlInplace
+          else result.result
         makeResult(result.etag, result.lastModified)(resultStr.getBytes)
       case None => Results.NotFoundRaw("File not found")
     }
