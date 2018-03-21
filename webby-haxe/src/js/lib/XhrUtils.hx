@@ -23,7 +23,7 @@ class XhrUtils {
 
   public static function bind(xhr: XMLHttpRequest, onSuccess: Function, ?onFail: Function): Void {
     xhr.onload = function() {
-      if (xhr.status == 200) {
+      if (xhr.status >= 200 && xhr.status < 300) {
         onSuccess();
       } else if (untyped onFail) {
         onFail();

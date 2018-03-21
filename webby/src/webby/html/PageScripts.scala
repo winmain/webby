@@ -1,4 +1,6 @@
 package webby.html
+import java.lang.StringBuilder
+
 import org.intellij.lang.annotations.Language
 import webby.api.App
 import webby.commons.collection.IterableWrapper.wrapIterable
@@ -11,6 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 trait JsCodeAppender {
   def addCode(@Language("JavaScript") script: String): Unit
   def addCode(script: SB): Unit
+  def addCode(script: StringBuffer): Unit
   def addCode(script: StdHtmlView): Unit
 
   def prependCode(@Language("JavaScript") script: String): Unit
@@ -55,6 +58,7 @@ abstract class PageScripts extends JsCodeAppender {
 
   override def addCode(@Language("JavaScript") script: String): Unit = code append script append ';'
   override def addCode(script: SB): Unit = code append script.sb append ';'
+  override def addCode(script: StringBuffer): Unit = code append script append ';'
   override def addCode(script: StdHtmlView): Unit = code append script.buf.sb append ';'
 
   override def prependCode(@Language("JavaScript") script: String): Unit = code.insert(0, script)
