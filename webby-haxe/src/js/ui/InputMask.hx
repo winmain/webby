@@ -2,6 +2,7 @@ package js.ui;
 
 import js.html.InputElement;
 import Tag;
+using js.lib.StrUtils;
 
 /*
   Задание маски для input-элемента на странице
