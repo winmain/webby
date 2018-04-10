@@ -6,12 +6,12 @@ import java.nio.file.{Files, Path}
 import scala.collection.mutable
 
 class SourcePrinter {
-  private val sb = new java.lang.StringBuilder()
+  val sb = new java.lang.StringBuilder()
 
-  private var _package: String = null
-  private val _imports = mutable.SortedSet[String]()
-  private val _wildImports = mutable.Set[String]()
-  private var _indent = 0
+  protected var _package: String = null
+  protected val _imports = mutable.SortedSet[String]()
+  protected val _wildImports = mutable.Set[String]()
+  protected var _indent = 0
 
   def getSource: String = {
     val src = new java.lang.StringBuilder(sb.length() + 256)
@@ -42,14 +42,18 @@ class SourcePrinter {
   def indent: this.type = { _indent += 1; this }
   def dedent: this.type = { _indent -= 1; this }
 
-  def block(body: => Any): this.type = {
-    (this ++ " {").indent.nl
+  def block(body: => Any): this.type = blockChar(" {", "}")(body)
+
+  def blockParen(body: => Any): this.type = blockChar("(", ")")(body)
+
+  def blockChar(open: String, close: String)(body: => Any): this.type = {
+    (this ++ open).indent.nl
     body
     if (isEmptyLastLine) {
       sb.delete(sb.length() - 2, sb.length())
       dedent
     } else dedent.nl
-    ++("}").nl
+    ++(close).nl
   }
 
   def isEmptyLastLine: Boolean = sb.charAt(sb.length() - _indent * 2 - 1) == '\n'
