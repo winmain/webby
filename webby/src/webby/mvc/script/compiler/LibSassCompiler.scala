@@ -35,8 +35,13 @@ case class LibSassCompiler(includePaths: Seq[String] = Nil,
     options.setOutputStyle(outputStyle)
 
     try {
-      val css = compiler.compileString(source, sourcePath.toUri, null, options).getCss
-      Right(if (css == null) "" else css)
+      var css = compiler.compileString(source, sourcePath.toUri, null, options).getCss
+      if (css == null) Right("")
+      else {
+        // Remove BOM (byte-order-mark) from beginning of resulting file
+        if (css.length > 1 && css.charAt(0) == 0xfeff) css = css.substring(1)
+        Right(css)
+      }
     } catch {
       case e: CompilationException =>
         Left(e.getErrorMessage)
