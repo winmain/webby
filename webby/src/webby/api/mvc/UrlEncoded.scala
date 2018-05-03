@@ -67,7 +67,12 @@ class UrlEncodedFromDecoder(decoder: QueryStringDecoder, val original: String) e
   }
 
   override def getAll(key: String): Iterable[String] =
-    try {decoder.parameters().get(key).asScala}
+    try {
+      decoder.parameters().get(key) match {
+        case null => Nil
+        case params => collectionAsScalaIterable(params)
+      }
+    }
     catch {case _: IllegalArgumentException => Nil}
 
   override def contains(key: String): Boolean = decoder.parameters().containsKey(key)
