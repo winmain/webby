@@ -24,7 +24,7 @@ class RuDateField extends AbstractDateField {
         a.push(v);
       }
       if (a[2] > 1900) {
-        var d = new Date(a[2], a[1] - 1, a[0]);
+        var d = new Date(a[2], a[1] - 1, a[0], 0, 0, 0);
         if (G.toInt(a[0]) == d.getDate() && G.toInt(a[1]) == (d.getMonth() + 1) && G.toInt(a[2]) == d.getFullYear()) {
           return d;
         }
