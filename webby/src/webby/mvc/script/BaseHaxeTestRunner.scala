@@ -7,7 +7,7 @@ import webby.mvc.{AppStub, StdPaths}
 class BaseHaxeTestRunner(haxeTestClassName: String) {
   def gccServerBuilderForTests: GoogleClosureServerBuilder = GoogleClosure.serverBuilderForHaxeTests
 
-  def nodeJsCommand: String = "nodejs"
+  def nodeJsCommand: String = "node"
 
   def getComposedOutFile: Path = gccServerBuilderForTests._targetDir.resolve(haxeTestClassName + "-composed.js")
 
