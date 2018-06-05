@@ -12,25 +12,25 @@ import webby.form.{Form, FormWithDb, SubForm}
   */
 trait StdFormFields {self: Form =>
   protected def addField[F <: Field[_]](field: F): F
-  protected def addFormFieldWithDb[F <: FormListFieldWithDb[_, _, _]](field: F): F
+  protected def addFormFieldWithDb[F <: FormListFieldWithDb[Key, _, _, _, _]](field: F): F
 
   // ----------- !!! Все методы, возвращающие конструкторы полей должны быть обрамлены в addField() !!!
 
-  protected def formList[F <: SubForm](id: String, factory: => F) = addField(new FormListField(this, id, () => factory, strings.recordRPlural))
+  protected def formList[F <: SubForm, K <: F.Key forSome {type F forSome {type Key <: Int}}](id: String, factory: => F) = addField(new FormListField(this, id, () => factory, strings.recordRPlural, IntFormListKeyOps))
 
-  protected def formListWithDbLinked[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Int]) =
-    addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Int]](
+  protected def formListWithDbLinked[F <: FormWithDb[PK, TR, MTR] with SubForm, PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]]
+  (id: String, factory: => F, parentField: Table[PK, TR, MTR]#Field[Key, Key]) =
+    addFormFieldWithDb(new FormListFieldWithDbLinked[Key, F, PK, TR, MTR, Table[PK, TR, MTR]#Field[Key, Key]](
       this, id, () => factory, parentField, _.set(_, _), strings.recordRPlural))
 
-  protected def formListWithDbLinkedOpt[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Option[Int]]) =
-    addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Option[Int]]](
+  protected def formListWithDbLinkedOpt[F <: FormWithDb[PK, TR, MTR] with SubForm, PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]]
+  (id: String, factory: => F, parentField: Table[PK, TR, MTR]#Field[Key, Option[Key]]) =
+    addFormFieldWithDb(new FormListFieldWithDbLinked[Key, F, PK, TR, MTR, Table[PK, TR, MTR]#Field[Key, Option[Key]]](
       this, id, () => factory, parentField, (f, r, p) => f.set(r, Some(p)), strings.recordRPlural))
 
-  protected def formListWithDbStandalone[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (table: Table[TR, MTR])(id: String, factory: => F) =
-    addFormFieldWithDb(new FormListFieldWithDbStandalone[F, TR, MTR](
+  protected def formListWithDbStandalone[F <: FormWithDb[PK, TR, MTR] with SubForm, PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]]
+  (table: Table[PK, TR, MTR])(id: String, factory: => F) =
+    addFormFieldWithDb(new FormListFieldWithDbStandalone[Key, F, PK, TR, MTR](
       this, id, () => factory, strings.recordRPlural))
 
   protected def textField(id: String) = addField(new TextField(this, id))

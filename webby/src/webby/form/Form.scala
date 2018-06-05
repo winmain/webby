@@ -21,8 +21,10 @@ import scala.util.control.ControlThrowable
   */
 trait Form extends StdFormFields with StdFormJsRules {self =>
   type B <: BaseForms
+  type Key
   def base: B
   def initLocale: Locale
+  def initKeyValue: Key
 
   /** Form tag id. Used in rendering html form. Also it is prefix for field ids, see [[BaseForms.makeFieldHtmlId()]]. */
   def htmlId: String = base.formId
@@ -31,9 +33,9 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
     * Ключ подформы. Нужен для связи подформы с подтаблицей. По сути, это id подтаблицы.
     * Если подформа новая, то ключ должен быть равен 0.
     */
-  var key: Int = 0
+  var key: Key = initKeyValue
 
-  def isNew: Boolean = key == 0
+  def isNew: Boolean = key == initKeyValue
 
   /** This form locale. Can be changed in any time. */
   var locale: Locale = initLocale
@@ -86,9 +88,9 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   /** Список полей формы (поля подформ здесь не указываются) */
   val fields = mutable.Buffer.empty[Field[_]]
   /** Список полей-подформ. Все эти поля также входят в список fields. */
-  val formFieldsWithDb = mutable.Buffer.empty[FormListFieldWithDb[_, _, _]]
+  val formFieldsWithDb = mutable.Buffer.empty[FormListFieldWithDb[Key, _, _, _, _]]
   override protected def addField[F <: Field[_]](field: F): F = {fields += field; field}
-  override protected def addFormFieldWithDb[F <: FormListFieldWithDb[_, _, _]](field: F): F
+  override protected def addFormFieldWithDb[F <: FormListFieldWithDb[Key, _, _, _, _]](field: F): F
   = {fields += field; formFieldsWithDb += field; field}
 
   /**

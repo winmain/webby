@@ -14,7 +14,7 @@ trait StaffSessTableTrait { self: AnyTable =>
   def endTime: Instant_TF
 }
 
-trait StaffSessTrait extends TableRecord {
+trait StaffSessTrait extends TableRecord[Int] {
   def id: Int
   def token: Long
   def staffId: Int
@@ -34,7 +34,7 @@ trait StaffSessTrait extends TableRecord {
   def canAccessTo(perm: PermissionSet) = perm.canAccess(permissions)
 }
 
-trait MutableStaffSessTrait[TR <: StaffSessTrait] extends MutableTableRecord[TR] {
+trait MutableStaffSessTrait[TR <: StaffSessTrait] extends MutableTableRecord[Int, TR] {
   var id: Int
   var token: Long
   var staffId: Int

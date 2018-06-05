@@ -3,9 +3,9 @@ package webby.form
 import querio.{DbTrait, ModifyData, MutableTableRecord, TableRecord}
 import webby.api.mvc._
 
-class FormReq(val req: Either[Request[Unit], Request[Array[Byte]]],
-              val id: Option[Int],
-              db: DbTrait) {
+class FormReq[PK](val req: Either[Request[Unit], Request[Array[Byte]]],
+                  val id: Option[PK],
+                  db: DbTrait) {
   def isGet: Boolean = req.isLeft
   def isPost: Boolean = req.isRight
   def isNew: Boolean = id.isEmpty
@@ -20,7 +20,7 @@ class FormReq(val req: Either[Request[Unit], Request[Array[Byte]]],
     * > Если данные изменились и были сохранены, то на вход идёт Some(MTR).
     * > Если данные не изменились, то передаётся None
     */
-  abstract class DbFormAction[TR <: TableRecord, MTR <: MutableTableRecord[TR]](form: FormWithDb[TR, MTR]) {
+  abstract class DbFormAction[TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]](form: FormWithDb[PK, TR, MTR]) {
     private var _md: ModifyData = null
     protected def md: ModifyData = _md
 
@@ -84,8 +84,8 @@ class FormReq(val req: Either[Request[Unit], Request[Array[Byte]]],
     *                     Если данные не изменились, то вернётся None(MTR)
     * @return Результат для Action
     */
-  def dbFormAction[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (form: FormWithDb[TR, MTR],
+  def dbFormAction[TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]]
+  (form: FormWithDb[PK, TR, MTR],
    showFormFn: => PlainResult,
    modifyDataFn: Request[_] => ModifyData)
   (onSuccessFn: Option[MTR] => FormResult): PlainResult =
@@ -98,8 +98,8 @@ class FormReq(val req: Either[Request[Unit], Request[Array[Byte]]],
   /**
     * Вариант [[dbFormAction()]], который работает только с POST-запросом.
     */
-  def dbFormPost[TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (form: FormWithDb[TR, MTR],
+  def dbFormPost[TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]]
+  (form: FormWithDb[PK, TR, MTR],
    modifyDataFn: Request[_] => ModifyData)
   (onSuccessFn: Option[MTR] => FormResult): PlainResult =
     dbFormAction(form, sys.error("Unimplemented"), modifyDataFn)(onSuccessFn)

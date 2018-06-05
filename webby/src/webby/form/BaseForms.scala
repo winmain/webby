@@ -3,7 +3,6 @@ import java.util.Locale
 
 import querio._
 import webby.commons.io.StdJs
-import webby.commons.text.Plural
 import webby.form.field.Field
 import webby.form.i18n.FormStrings
 import webby.html._
@@ -18,7 +17,7 @@ abstract class BaseForms {self =>
 
   def js = StdJs.get
 
-  /** @see [[webby.form.Form.jsConfig]]*/
+  /** @see [[webby.form.Form.jsConfig]] */
   def jsConfig: String = null
 
   def formId = "form"
@@ -33,7 +32,7 @@ abstract class BaseForms {self =>
     override def jsConfig: String = self.jsConfig
   }
 
-  trait BaseWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends FormWithDb[TR, MTR] with BaseCommon
+  trait BaseWithDb[PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]] extends FormWithDb[PK, TR, MTR] with BaseCommon
 
   // ------------------------------- Html helpers -------------------------------
 
@@ -73,11 +72,11 @@ trait ChangedItemType
 trait ChangedFieldsDao {
   case class ChangedFieldValue(fieldTitle: String, path: String, value: String)
 
-  def query(tpe: ChangedItemType, item: TableRecord): Vector[ChangedFieldValue]
+  def query(tpe: ChangedItemType, item: TableRecord[_]): Vector[ChangedFieldValue]
 
   // ------------------------------- Modification methods -------------------------------
 
-  def insert(tpe: ChangedItemType, itemId: Int, field: AnyTable#ThisField, id: Int)(implicit tr: Transaction)
+  def insert(tpe: ChangedItemType, itemId: Any, field: AnyTable#ThisField, id: Any)(implicit tr: Transaction)
 
-  def delete(tpe: ChangedItemType, itemId: Int)(implicit tr: Transaction): Unit
+  def delete(tpe: ChangedItemType, itemId: Any)(implicit tr: Transaction): Unit
 }

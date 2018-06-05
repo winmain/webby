@@ -17,7 +17,7 @@ trait StdStaffCaches { adm: AdmTrait =>
   }
 
 
-  class StdStaffRoleCache extends TableCache[StaffRole](db, staffRoleTable) {
+  class StdStaffRoleCache extends TableCache[Int, StaffRole](db, staffRoleTable) {
     // We should reset all staff session cache because of cached values of StaffSess.staff and StaffSess.permissions
     addResetAnyListener(staffSessCache.resetCache())
   }

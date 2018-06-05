@@ -2,27 +2,25 @@ package webby.commons.cache.table
 
 import querio._
 
-import scala.collection.immutable.IntMap
-
 /**
   * Простой кеш таблицы из БД. Кеширует все записи, поэтому таблица в БД не должна быть очень большой.
   */
-trait RecordsCache[TR] extends AbstractRecordsCache {
-  protected var _records: Map[Int, TR] = null
+trait RecordsCache[PK, TR] extends AbstractRecordsCache[PK] {
+  protected var _records: Map[PK, TR] = null
 
   /**
     * Вернуть запись по id
     */
-  def byId(id: Int): Option[TR] = records.get(id)
+  def byId(id: PK): Option[TR] = records.get(id)
 
-  def get(id: Int): Option[TR] = byId(id)
+  def get(id: PK): Option[TR] = byId(id)
 
-  def apply(id: Int): TR = byId(id).get
+  def apply(id: PK): TR = byId(id).get
 
   /**
     * Вернуть карту всех записей
     */
-  def allRecordsMap: Map[Int, TR] = records
+  def allRecordsMap: Map[PK, TR] = records
 
   /**
     * Вернуть список всех записей
@@ -32,9 +30,9 @@ trait RecordsCache[TR] extends AbstractRecordsCache {
   /**
     * Map содержит запись с заданной id?
     */
-  def contains(id: Int): Boolean = records.contains(id)
+  def contains(id: PK): Boolean = records.contains(id)
 
-  def isValidId(id: Int) = contains(id)
+  def isValidId(id: PK) = contains(id)
 
   /**
     * Количество всех записей
@@ -52,7 +50,7 @@ trait RecordsCache[TR] extends AbstractRecordsCache {
   /**
     * Сбросить значение одной записи, т.е. перечитать кеш для этой записи.
     */
-  override def resetRecord(id: Int, change: TrRecordChange) {
+  override def resetRecord(id: PK, change: TrRecordChange) {
     _records match {
       case null =>
       case r =>
@@ -71,12 +69,12 @@ trait RecordsCache[TR] extends AbstractRecordsCache {
 
   // ------------------------------- Private & protected methods -------------------------------
 
-  private def records: Map[Int, TR] = {
+  private def records: Map[PK, TR] = {
     if (_records == null) _records = readAllRecords()
     _records
   }
 
-  protected def readAllRecords(): Map[Int, TR]
+  protected def readAllRecords(): Map[PK, TR]
 
-  protected def readRecord(id: Int): Option[TR]
+  protected def readRecord(id: PK): Option[TR]
 }

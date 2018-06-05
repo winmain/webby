@@ -27,7 +27,7 @@ class WeakTableCacheValue[V](factory: => V) extends TableCacheEventListener {
     initialized = false
   }
 
-  override def onResetRecord(id: Int, change: TrRecordChange): Unit = {
+  override def onResetRecord(id: Any, change: TrRecordChange): Unit = {
     initialized = false
   }
 }

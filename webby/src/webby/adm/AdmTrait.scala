@@ -62,16 +62,16 @@ trait AdmTrait extends StdStaffCaches { adm =>
   // Staff table
   type Staff <: StaffTrait
   type MutableStaff <: MutableStaffTrait[Staff]
-  type StaffTable <: StaffTableTrait with Table[Staff, MutableStaff]
+  type StaffTable <: StaffTableTrait with Table[Int, Staff, MutableStaff]
 
   // StaffRole table
   type StaffRole <: StaffRoleTrait
-  type StaffRoleTable <: StaffRoleTableTrait with TrTable[StaffRole]
+  type StaffRoleTable <: StaffRoleTableTrait with TrTable[Int, StaffRole]
 
   // StaffSess table
   type StaffSess <: StaffSessTrait
   type MutableStaffSess <: MutableStaffSessTrait[StaffSess]
-  type StaffSessTable <: StaffSessTableTrait with Table[StaffSess, MutableStaffSess]
+  type StaffSessTable <: StaffSessTableTrait with Table[Int, StaffSess, MutableStaffSess]
 
   def tokenSecret: String = App.app.configuration.getString("adm.secret").getOrElse(sys.error("Missing adm.secret config"))
   val tokenSigner = new CryptoSigner(tokenSecret.getBytes)
@@ -155,8 +155,8 @@ trait AdmTrait extends StdStaffCaches { adm =>
   def staffTable: StaffTable
   def staffRoleTable: StaffRoleTable
 
-  lazy val staffCache: RecordsCache[Staff] = new StdStaffCache
-  lazy val staffRoleCache: RecordsCache[StaffRole] = new StdStaffRoleCache
+  lazy val staffCache: RecordsCache[Int, Staff] = new StdStaffCache
+  lazy val staffRoleCache: RecordsCache[Int, StaffRole] = new StdStaffRoleCache
 
   def findAndCheckStaff(checkPassword: Boolean)(login: String, password: String): Option[Int] = {
     val pwHash = passwordHash(password)

@@ -35,7 +35,7 @@ class CheckListField[T](val form: Form,
 
   // ------------------------------- Builder & validations -------------------------------
 
-  def connect[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, Set[T]])(implicit form: FormWithDb[TR, MTR]): this.type =
-    dbConnector[TR, MTR](new DbSetFieldConnector[T, TR, MTR](self, dbField))
-  def ~:~[TR <: TableRecord, MTR <: MutableTableRecord[TR]](dbField: Table[TR, MTR]#Field[_, Set[T]])(implicit form: FormWithDb[TR, MTR]): this.type = connect(dbField)
+  def connect[PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]](dbField: Table[PK, TR, MTR]#Field[_, Set[T]])(implicit form: FormWithDb[PK, TR, MTR]): this.type =
+    dbConnector[PK, TR, MTR](new DbSetFieldConnector[T, PK, TR, MTR](self, dbField))
+  def ~:~[PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]](dbField: Table[PK, TR, MTR]#Field[_, Set[T]])(implicit form: FormWithDb[PK, TR, MTR]): this.type = connect(dbField)
 }

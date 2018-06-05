@@ -1,16 +1,20 @@
 package webby.form.field
-import javax.annotation.Nullable
-
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
+import javax.annotation.Nullable
 import webby.commons.text.Plural
 import webby.form._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class FormListField[F <: SubForm](val form: Form, val shortId: String, var factory: () => F, var recordPlural: Plural)
+class FormListField[F <: SubForm](val form: Form,
+                                  val shortId: String,
+                                  var factory: () => F,
+                                  var recordPlural: Plural,
+                                  keyOps: FormListKeyOps[F#Key])
   extends Field[Vector[F]] {self =>
+  final type Key = F#Key
 
   def htmlTemplateId: String = customTemplateId.getOrElse(htmlId + "-template")
   def htmlListId: String = htmlId + "-list"
@@ -23,14 +27,14 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
   var customTemplateId: Option[String] = None
 
   /** Специальная карта старых подформ, которые оказались неиспользованы после получения новых значений. Их следует удалить из БД. */
-  var removeOldForms: mutable.Map[Int, F] = mutable.Map.empty[Int, F]
+  var removeOldForms: mutable.Map[Key, F] = mutable.Map.empty[Key, F]
 
   /**
     * Ключ, который был выставлен у последней подформы с нулевым key.
     * Т.е., при вызове метода add() для у FormListField (но не FormListFieldWithDb), если у формы нулевой key,
     * то ей выставляется lastNewKey + 1, и сам lastNewKey увеличивается на 1.
     */
-  private var lastNewKey: Int = 0
+  private var lastNewKey: F#Key = keyOps.zeroKey
 
   silentlySetValue(nullValue)
 
@@ -77,16 +81,16 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
     } else {
       val formErrors = FormErrors()
       removeOldForms = super.get.map(f => f.key -> f)(scala.collection.breakOut)
-      removeOldForms.remove(0)
+      removeOldForms.remove(keyOps.zeroKey)
       // Нет смысла хранить значения без ключей - их всё равно нет в базе.
-      val processedKeys = mutable.Buffer.empty[Int]
+      val processedKeys = mutable.Buffer.empty[Key]
 
       val valueBuilder = Vector.newBuilder[F]
       for ((jsForm, index) <- node.asInstanceOf[ArrayNode].elements().asScala.zipWithIndex) {
-        val key = {val k = jsForm.get("_key"); if (k == null) 0 else k.asInt(0)}
+        val key: Key = keyOps.fromJsonNode(jsForm.get("_key"))
         // Попытаться найти уже готовую подформу по ключу. Если такой нет, то создать новую.
         val subForm: F =
-          if (key != 0) {
+          if (key != keyOps.zeroKey) {
             if (processedKeys.contains(key)) return FormErrors(errors = mutable.Map(shortId -> "Duplicate form key"))
             processedKeys += key
             removeOldForms.get(key) match {
@@ -122,7 +126,10 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
   }
 
   protected def checkAndSetNewKey(v: F) {
-    if (v.key == 0) {lastNewKey += 1; v.key = lastNewKey}
+    if (v.isNew) {
+      lastNewKey = keyOps.increment(lastNewKey)
+      v.key = lastNewKey.asInstanceOf[v.Key]
+    }
   }
 
   // ------------------------------- Builder & validations -------------------------------
@@ -160,7 +167,7 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
 
     // Проверка на уникальные ключи форм (если они не 0).
     locally {
-      val set = mutable.Set[Int]()
+      val set = mutable.Set[Key]()
       if (!get.forall(form => if (form.key != 0) set.add(form.key) else true))
         return Invalid("Non-unique subform key")
     }
@@ -188,4 +195,17 @@ class FormListField[F <: SubForm](val form: Form, val shortId: String, var facto
     removeOldForms.values.foreach(v => result.addSub(v.applyValues(formRemoved = true), name = shortId, index = 0))
     result.orSuccess
   }
+}
+
+
+trait FormListKeyOps[Key] {
+  def zeroKey: Key
+  def fromJsonNode(@Nullable node: JsonNode): Key
+  def increment(v: Key): Key
+}
+
+object IntFormListKeyOps extends FormListKeyOps[Int] {
+  override def zeroKey: Int = 0
+  override def fromJsonNode(node: JsonNode): Int = if (node == null) 0 else node.asInt(0)
+  override def increment(v: Int): Int = v + 1
 }

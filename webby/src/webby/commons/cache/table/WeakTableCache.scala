@@ -1,5 +1,5 @@
 package webby.commons.cache.table
-import querio.AnyTable
+import querio.AnyPKTable
 
 /**
   * Один из самых простых кешеров. Хранит один экземпляр [[V]], который высчитывает при первом
@@ -14,7 +14,8 @@ import querio.AnyTable
   * @param factory Фабрика создания кеша
   * @tparam V Тип хранимого объекта
   */
-class WeakTableCache[V](val dbTable: AnyTable, factory: => V) extends AbstractRecordsCache {
+class WeakTableCache[PK, V](val dbTable: AnyPKTable[PK],
+                            factory: => V) extends AbstractRecordsCache[PK] {
   private val cacher: WeakTableCacheValue[V] = new WeakTableCacheValue[V](factory)
   addEventListener(cacher)
 

@@ -5,7 +5,7 @@ import webby.commons.cache.table.AbstractRecordsCache
 
 import scala.collection.immutable.{IntMap, LongMap}
 
-trait StaffSessCacheTrait[StaffSess <: StaffSessTrait] extends AbstractRecordsCache {
+trait StaffSessCacheTrait[StaffSess <: StaffSessTrait] extends AbstractRecordsCache[Int] {
 
   def byId(now: Long, id: Int): Option[StaffSess]
 

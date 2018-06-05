@@ -11,7 +11,7 @@ trait StaffTableTrait { self: AnyTable =>
   def id: Int_TF
 }
 
-trait StaffTrait extends TableRecord {
+trait StaffTrait extends TableRecord[Int] {
   def id: Int
   def staffRoleId: Option[Int]
   def login: String
@@ -24,7 +24,7 @@ trait StaffTrait extends TableRecord {
   def fullname: String
 }
 
-trait MutableStaffTrait[TR <: StaffTrait] extends MutableTableRecord[TR] {
+trait MutableStaffTrait[TR <: StaffTrait] extends MutableTableRecord[Int, TR] {
   var id: Int
   var lastLoginOn: Option[Instant]
 }

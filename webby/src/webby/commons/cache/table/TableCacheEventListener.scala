@@ -6,5 +6,5 @@ import querio._
   */
 trait TableCacheEventListener {
   def onResetCache() {}
-  def onResetRecord(id: Int, change: TrRecordChange) {}
+  def onResetRecord(id: Any, change: TrRecordChange) {}
 }

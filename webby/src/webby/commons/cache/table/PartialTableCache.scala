@@ -1,12 +1,10 @@
 package webby.commons.cache.table
 
 import querio.{Condition, DbTrait, TableRecord, TrTable}
-import webby.commons.collection.IterableWrapper.wrapIterable
-
-import scala.collection.immutable.IntMap
 
 // TODO: класс недописан, его нельзя использовать
-abstract class PartialTableCache[TR <: TableRecord](db: DbTrait, val dbTable: TrTable[TR]) extends RecordsCache[TR] {
+abstract class PartialTableCache[PK, TR <: TableRecord[PK]](db: DbTrait,
+                                                            val dbTable: TrTable[PK, TR]) extends RecordsCache[PK, TR] {
 
   trait View[V] {
     /** Условие для выбора/фильтрации записи. */
@@ -22,13 +20,14 @@ abstract class PartialTableCache[TR <: TableRecord](db: DbTrait, val dbTable: Tr
   /**
     * Получить id из записи.
     */
-  protected def idFromRecord(record: TR): Int = record._primaryKey
+  protected def idFromRecord(record: TR): PK = record._primaryKey
 
-  protected def readAllRecords(): IntMap[TR] = {
-    val map: IntMap[TR] = db.query(
+  protected def readAllRecords(): Map[PK, TR] = {
+    val map: Map[PK, TR] = db.query(
       _ select dbTable from dbTable
         where views.map(_.condition).reduce(_ || _)
-        fetch()).mapToIntMap(r => idFromRecord(r) -> r)
+        fetch()
+    ).map(r => idFromRecord(r) -> r)(collection.breakOut)
     for (view <- views) {
       view.fillAll(map.valuesIterator.filter(view.test))
     }
@@ -38,6 +37,6 @@ abstract class PartialTableCache[TR <: TableRecord](db: DbTrait, val dbTable: Tr
   // TODO: Здесь нужна отдельная реализация resetRecord
   // Возможно, не стоит наследоваться от RecordsCache - тогда нужно разбить тот класс на составляющие.
 
-  protected def readRecord(id: Int): Option[TR] = ???
+  protected def readRecord(id: PK): Option[TR] = ???
 
 }

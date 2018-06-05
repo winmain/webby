@@ -5,14 +5,15 @@ import webby.form.field.{DbConnector, Field}
 
 import scala.collection.mutable
 
-trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form {
-  implicit def thisFormWithDb: FormWithDb[TR, MTR] = this
+trait FormWithDb[PK, TR <: TableRecord[PK], MTR <: MutableTableRecord[PK, TR]] extends Form {
+  override type Key = PK
+  implicit def thisFormWithDb: FormWithDb[PK, TR, MTR] = this
 
   protected var _original: Option[TR] = None
   def original: Option[TR] = _original
 
-  protected val dbConnectors: mutable.Buffer[DbConnector[_, TR, MTR]] = mutable.Buffer[DbConnector[_, TR, MTR]]()
-  protected[form] def addFieldDbConnector(dbConnector: DbConnector[_, TR, MTR]): Unit = dbConnectors += dbConnector
+  protected val dbConnectors: mutable.Buffer[DbConnector[_, PK, TR, MTR]] = mutable.Buffer[DbConnector[_, PK, TR, MTR]]()
+  protected[form] def addFieldDbConnector(dbConnector: DbConnector[_, PK, TR, MTR]): Unit = dbConnectors += dbConnector
 
   /**
     * Действия, проверяющие корректные ли мы данные загрузили?
@@ -63,13 +64,13 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
 
   // ------------------------------- Abstract methods -------------------------------
 
-  def table: Table[TR, MTR]
+  def table: Table[PK, TR, MTR]
   def loadRecord(r: TR) {}
   def saveRecord(r: MTR) {}
   /** Если задан этот параметр, то форма при сохранении, будет создавать записи изменённых полей в таблице changed_fields */
   def saveChangedItemType: Option[ChangedItemType] = None
   /** Набор полей, которые не нужно записывать в таблицу changed_fields */
-  def ignoreToAddChangedFields: Set[Table[TR, MTR]#Field[_, _]] = Set.empty
+  def ignoreToAddChangedFields: Set[Table[PK, TR, MTR]#Field[_, _]] = Set.empty
 
   // ------------------------------- Public methods -------------------------------
 
@@ -80,7 +81,7 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
     }
   }
 
-  def load(id: Int)(implicit conn: Conn): Boolean = {
+  def loadById(id: PK)(implicit conn: Conn): Boolean = {
     base.db.sql(_.findById(table, id)) match {
       case Some(record) if checkLoadedRecord.forall(_ (record)) => load(record); true
       case _ => false
@@ -100,16 +101,16 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
     afterLoadRecord2.foreach(_ (AfterLoadRecordCtx(record, conn)))
   }
 
-  def loadOrResult(id: Int)(orResult: => Result)(implicit conn: Conn): Unit = {
-    if (!load(id)) throw ResultException(orResult)
+  def loadOrResult(id: PK)(orResult: => Result)(implicit conn: Conn): Unit = {
+    if (!loadById(id)) throw ResultException(orResult)
   }
 
-  def loadOrNotFoundRaw(id: Int)(implicit conn: Conn): Unit = loadOrResult(id)(Results.NotFoundRaw)
+  def loadOrNotFoundRaw(id: PK)(implicit conn: Conn): Unit = loadOrResult(id)(Results.NotFoundRaw)
 
   def save()(implicit dt: DataTr): MTR =
     innerSave(None)
 
-  def innerSave(gotChangedItem: Option[(ChangedItemType, Int)])(implicit dt: DataTr): MTR = {
+  def innerSave(gotChangedItem: Option[(ChangedItemType, Any)])(implicit dt: DataTr): MTR = {
     checkDbConnectors()
     val record: MTR = original.fold(table._newMutableRecord)(_.toMutable.asInstanceOf[MTR])
     val body = {() =>
@@ -117,14 +118,14 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
       beforeSaveRecord2.foreach(_ (BeforeSaveRecordCtx(record, dt)))
       for (connector <- dbConnectors) connector.save(record)
       saveRecord(record)
-      val id: Int = original match {
+      val id: PK = original match {
         case Some(o) =>
           base.db.updateChanged(o, record)
           record._primaryKey
         case None =>
           base.db.insert(record).getOrElse(sys.error("Form must have primary key field (id)"))
       }
-      val changedItem: Option[(ChangedItemType, Int)] = gotChangedItem.orElse(saveChangedItemType.map(_ -> id))
+      val changedItem: Option[(ChangedItemType, Any)] = gotChangedItem.orElse(saveChangedItemType.map(_ -> id))
       // add changed fields
       base.maybeChangedFieldsDao.foreach {dao =>
         for ((tpe, itemId) <- changedItem; orig <- original) {
@@ -147,11 +148,11 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
 
   // ------------------------------- Inner classes -------------------------------
 
-  abstract class customDbConnector[T](val field: Field[T]) extends DbConnector[T, TR, MTR]
+  abstract class customDbConnector[T](val field: Field[T]) extends DbConnector[T, PK, TR, MTR]
 
   trait DbConnectorStart[T, F <: Field[T]] {
     def builder(block: DbConnectorBuilder[T, F] => Any): F
-    def custom(block: F => DbConnector[T, TR, MTR]): F
+    def custom(block: F => DbConnector[T, PK, TR, MTR]): F
   }
   class DbConnectorBuilder[T, F <: Field[T]](val field: F) extends DbConnectorStart[T, F] { builder =>
     var loadFn: TR => Any = a => ()
@@ -159,13 +160,13 @@ trait FormWithDb[TR <: TableRecord, MTR <: MutableTableRecord[TR]] extends Form 
 
     override def builder(block: DbConnectorBuilder[T, F] => Any): F = {
       block(this)
-      field.dbConnector[TR, MTR](new customDbConnector[T](field) {
+      field.dbConnector[PK, TR, MTR](new customDbConnector[T](field) {
         override def load(r: TR): Unit = loadFn(r)
         override def save(r: MTR): Unit = saveFn(r)
       })
     }
 
-    override def custom(block: (F) => DbConnector[T, TR, MTR]): F = field.dbConnector[TR, MTR](block(field))
+    override def custom(block: (F) => DbConnector[T, PK, TR, MTR]): F = field.dbConnector[PK, TR, MTR](block(field))
 
     def load(fn: TR => Any): this.type = {loadFn = fn; this}
     def save(fn: MTR => Any): this.type = {saveFn = fn; this}
