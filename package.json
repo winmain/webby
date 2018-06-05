@@ -1,0 +1,20 @@
+{
+  "name": "webby-haxe-test",
+  "version": "0.0.0",
+  "description": "Test config for running haxe tests",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "source-map-support": "^0.5.3",
+    "window": "^3.1.6",
+    "jsdom-global": "^3.0.2",
+    "jsdom": "^11.11.0"
+  }
+}

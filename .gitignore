@@ -11,3 +11,6 @@
 /webby-haxe/build
 /webby-haxe/out
 /webby-haxe/target
+/node_modules
+/package-lock.json
+/log

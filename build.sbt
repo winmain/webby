@@ -52,7 +52,7 @@ val commonDependencies = {
 
   deps.result()
 }
-val querio = "com.github.citrum.querio" %% "querio" % "0.7.0-rc1" // querio orm
+val querio = "com.github.citrum.querio" %% "querio" % "0.7.0" // querio orm
 
 /**
   * Создать список настроек, задающих стандартные пути исходников, ресурсов, тестов для проекта.
@@ -116,6 +116,36 @@ lazy val webbyHaxe: Project = Project(
   )
 )
 
+// ------------------------------ webby-haxe-test project ------------------------------
+
+val npmInstall = taskKey[Unit]("run npm install")
+lazy val npmInstallTask = npmInstall := Process("env npm install", file(".")).!!
+
+val haxeTestWithNpmInstall = taskKey[Unit]("run haxeTest with npm install")
+
+lazy val webbyHaxeTest: Project = Project(
+  "webby-haxe-test",
+  file("webby-haxe-test"),
+  settings = haxeIdeaSettings ++ makeSourceDirs() ++ Seq(
+    scalaVersion := buildScalaVersion,
+    // Disable packaging & publishing artifact
+    Keys.`package` := file(""),
+    publishArtifact := false,
+    publishLocal := {},
+    publish := {},
+    bintrayUnpublish := {},
+
+    npmInstallTask,
+    haxeTestWithNpmInstall := Def.sequential(npmInstall, haxeTest).value,
+    test in Test := {val _ = haxeTestWithNpmInstall.value; (test in Test).value},
+
+    managedHaxeSourceSubDirs in Test ++= (unmanagedResourceDirectories in Compile in webbyHaxe).value,
+
+    libraryDependencies += "com.google.javascript" % "closure-compiler" % "v20170124" exclude("com.google.guava", "guava"), // Google Closure Compiler
+    libraryDependencies += "org.clojure" % "google-closure-library" % "0.0-20160609-f42b4a24" // Google Closure Library
+  )
+).dependsOn(webby).dependsOn(webbyHaxe)
+
 
 // ------------------------------ webby project ------------------------------
 
@@ -177,7 +207,7 @@ lazy val webby: Project = Project(
 lazy val root = Project(
   "webby-root",
   file("."),
-  aggregate = Seq(webby, elasticOrm2, elasticOrm6, webbyHaxe),
+  aggregate = Seq(webby, elasticOrm2, elasticOrm6, webbyHaxe, webbyHaxeTest),
   settings = Seq(
     // Disable packaging & publishing artifact
     Keys.`package` := file(""),

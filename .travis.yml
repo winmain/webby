@@ -7,6 +7,7 @@ cache:
   directories:
   - "$HOME/.sbt"
   - "$HOME/.ivy2"
+  - node_modules
 deploy:
   provider: script
   script: ./travis-deploy.sh
