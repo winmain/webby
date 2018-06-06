@@ -324,14 +324,14 @@ trait Form extends StdFormFields with StdFormJsRules {self =>
   def jsValues: mutable.OpenHashMap[String, AnyRef] = {
     val ret = new mutable.OpenHashMap[String, AnyRef]
     ret.put("_key", key.asInstanceOf[AnyRef])
-    for (field <- fields if !field.ignored) ret += field.shortId -> field.toJsValue
+    for (field <- fields if !field.ignored) ret += field.shortId -> field.toJsVal
     ret
   }
 
   def changedJsValues: mutable.OpenHashMap[String, AnyRef] = {
     val ret = new mutable.OpenHashMap[String, AnyRef]
     if (key != 0) ret.put("_key", key.asInstanceOf[AnyRef])
-    for (field <- fields if !field.ignored && field.changed) ret += field.shortId -> field.toJsValue
+    for (field <- fields if !field.ignored && field.changed) ret += field.shortId -> field.toJsVal
     ret
   }
 }

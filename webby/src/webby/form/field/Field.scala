@@ -246,7 +246,7 @@ trait Field[T] {self =>
    * Также, хранимое значение может быть null.
    */
   def toJsValue(v: T): AnyRef = v.asInstanceOf[AnyRef]
-  final def toJsValue: AnyRef = toJsValue(_value)
+  final def toJsVal: AnyRef = toJsValue(_value)
   def setJsValueAndValidate(@Nullable node: JsonNode): FormResult
 
   @JsonInclude(JsonInclude.Include.NON_ABSENT)

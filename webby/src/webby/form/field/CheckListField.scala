@@ -19,7 +19,7 @@ class CheckListField[T](val form: Form,
 
   // ------------------------------- Reading data & js properties -------------------------------
   override def jsField: String = "checkList"
-  override def nullValue: Iterable[T] = mutable.Buffer.empty[T]
+  override def nullValue: Iterable[T] = Nil
   override def parseJsValue(node: JsonNode): Either[String, Iterable[T]] = {
     if (node == null) return Right(nullValue)
     Right(node.asScala.map {nodeEl =>
@@ -27,6 +27,7 @@ class CheckListField[T](val form: Form,
       items.find(valueFn(_) == value).getOrElse(return Left(form.strings.invalidValue))
     })
   }
+  override def toJsValue(v: Iterable[T]): AnyRef = v.map(valueFn)
 
   /** Конвертирует внешнее значение во внутренне значение поля. Вызывается в setValue, silentlySetValue. */
   override protected def convertValue(v: Iterable[T]): Iterable[T] = v.toSet
