@@ -19,17 +19,24 @@ trait StdFormFields {self: Form =>
   protected def formList[F <: SubForm](id: String, factory: => F) = addField(new FormListField(this, id, () => factory, strings.recordRPlural))
 
   protected def formListWithDbLinked[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Int]) =
+  (id: String,
+   factory: => F,
+   parentField: Table[TR, MTR]#Field[Int, Int],
+   sortRecords: Vector[TR] => Vector[TR] = null) =
     addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Int]](
-      this, id, () => factory, parentField, _.set(_, _), strings.recordRPlural))
+      this, id, () => factory, parentField, _.set(_, _), strings.recordRPlural, sortRecords))
 
   protected def formListWithDbLinkedOpt[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (id: String, factory: => F, parentField: Table[TR, MTR]#Field[Int, Option[Int]]) =
+  (id: String,
+   factory: => F,
+   parentField: Table[TR, MTR]#Field[Int, Option[Int]],
+   sortRecords: Vector[TR] => Vector[TR] = null) =
     addFormFieldWithDb(new FormListFieldWithDbLinked[F, TR, MTR, Table[TR, MTR]#Field[Int, Option[Int]]](
-      this, id, () => factory, parentField, (f, r, p) => f.set(r, Some(p)), strings.recordRPlural))
+      this, id, () => factory, parentField, (f, r, p) => f.set(r, Some(p)), strings.recordRPlural, sortRecords))
 
   protected def formListWithDbStandalone[F <: FormWithDb[TR, MTR] with SubForm, TR <: TableRecord, MTR <: MutableTableRecord[TR]]
-  (table: Table[TR, MTR])(id: String, factory: => F) =
+  (table: Table[TR, MTR])
+  (id: String, factory: => F) =
     addFormFieldWithDb(new FormListFieldWithDbStandalone[F, TR, MTR](
       this, id, () => factory, strings.recordRPlural))
 
