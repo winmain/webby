@@ -2,6 +2,7 @@ package js.form.field;
 
 import js.form.field.Field.FieldProps;
 import js.form.Form.FormProps;
+import js.html.Element;
 import js.html.Event;
 
 using goog.string.GoogString;
@@ -53,6 +54,10 @@ class FormListField extends Field {
       e.preventDefault();
     });
   }
+
+  // ------------------------------- Attribute names -------------------------------
+
+  public function dataTemplateAttr(): String return "data-template";
 
   // ------------------------------- All id functions -------------------------------
 
@@ -112,24 +117,40 @@ class FormListField extends Field {
   function makeSubFormId(subId: Int): String return htmlId + '-' + subId;
 
   /*
-  Создать новую подформу через клонирование шаблона
+  Create new sub-form via template cloning
    */
   function newFormEl(subId: Int, vis: Bool): Tag {
     var subFormId = makeSubFormId(subId);
-    var formTag = templateTag.clone(true).id(subFormId);
+    var idTemplate: String = templateTag.getAttr(dataTemplateAttr());
+    var formTag: Tag = templateTag.clone(true).id(subFormId);
     if (vis) formTag.clsOff(form.config.hiddenClass);
-    for (t in formTag.fndAll('*')) {
-      updateSubFormChildTag(t, subFormId);
-    }
+    updateSubFormChildrenTagsRecursive(formTag.el, subFormId, idTemplate);
     return formTag;
   }
 
-  function updateSubFormChildTag(t: Tag, subFormId: String) {
+  /*
+  Update attributes in all inner elements of `el` for cloned sub-form
+   */
+  function updateSubFormChildrenTagsRecursive(el: Element, subFormId: String, idTemplate: String) {
+    var children = el.children;
+    for (i in 0...children.length) {
+      var subEl: Element = children.item(i);
+      updateSubFormChildTag(subEl, subFormId, idTemplate);
+      if (!subEl.hasAttribute(dataTemplateAttr())) { // skip inner sub-form templates
+        updateSubFormChildrenTagsRecursive(subEl, subFormId, idTemplate);
+      }
+    }
+  }
+
+  /*
+  Update attributes for one element in cloned sub-form
+   */
+  function updateSubFormChildTag(el: Element, subFormId: String, idTemplate: String) {
     function processAttr(attrName: String): Bool {
-      var v = t.getAttr(attrName);
-      if (G.toBool(v) && v.startsWith(form.config.subformHtmlId)) {
-        v = subFormId + v.substr(form.config.subformHtmlId.length);
-        t.attr(attrName, v);
+      var v = el.getAttribute(attrName);
+      if (G.toBool(v) && v.startsWith(idTemplate)) {
+        v = subFormId + v.substr(idTemplate.length);
+        el.setAttribute(attrName, v);
         return true;
       }
       return false;
