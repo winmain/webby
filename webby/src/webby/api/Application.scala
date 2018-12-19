@@ -169,6 +169,10 @@ abstract class Application {
         if (profile.isProd) global.onError(request, e, None)
         else sys.exit(2)
 
+      /* Лучше не выходить из приложения, потому что:
+      1. Это может быть не JRebel,
+      2. Выход через sys.exit(2) оставляет работать запущенное приложение, и его можно выключить только через kill -9
+
       case e: NoClassDefFoundError =>
         if (profile.isDev) {
           // Вероятнее всего, эту ошибку выдал JRebel при неудачной попытке заменить класс,
@@ -179,6 +183,7 @@ abstract class Application {
           logError(e)
           global.onError(request, e, None)
         }
+      */
 
       case e: Throwable =>
         logError(e)
