@@ -39,8 +39,8 @@ abstract class NettyServer(appProvider: ApplicationProvider, port: Int, address:
     def initChannel(ch: SocketChannel) {
       val pipeline = ch.pipeline()
       pipeline.addLast("decoder", new HttpRequestDecoder())
-      pipeline.addLast("aggregator", new HttpObjectAggregator(1024 * 1024))
       pipeline.addLast("encoder", new HttpResponseEncoder())
+      pipeline.addLast("aggregator", new HttpObjectAggregator(1024 * 1024))
       pipeline.addLast("handler", defaultUpStreamHandler)
     }
   }
